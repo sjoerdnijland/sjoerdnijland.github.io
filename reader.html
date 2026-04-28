@@ -1479,6 +1479,11 @@ function renderChapter(ch) {
         </p>`;
 
       const parasHtml = sec.paragraphs.map(text => {
+        const pid   = `ch${currentChapter}-p${paraIndex}`;
+        const count = commentCounts[pid] || 0;
+        const linked = autoLink(parseMarkup(text));
+        paraIndex++;
+
         // Level 1 (system): all-caps e.g. **SOL SYSTEM**, **YREUS SYSTEM**, **MAIREE**
         // Level 2 (subset): mixed-case bold-only e.g. **En Route to Mairee**, **In Orbit**
         const trimmed = text.trim();
