@@ -193,6 +193,21 @@ body.wiki-hints-on .para.active .wiki-link {
 }
 .uplink-label a:hover { color: var(--ivory); }
 
+/* Uplink heading as a narratable para */
+.uplink-heading-para {
+  font-family: var(--mono) !important;
+  font-size: 0.72rem !important;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #6ecfde !important;
+  margin-bottom: 10px !important;
+  line-height: 1.4 !important;
+  display: flex; align-items: center; gap: 10px;
+}
+.uplink-heading-para::before { content: '◉'; font-size: 0.7rem; opacity: 0.8; }
+.uplink-heading-para:hover { background: rgba(74,154,170,0.06) !important; }
+.uplink-heading-para.active { border-left-color: var(--teal-soft) !important; background: rgba(74,154,170,0.1) !important; }
+
 /* Uplink paras are full .para elements — styles live there.
    These rules only add the mono font override and teal tint. */
 .uplink-block .para {
@@ -928,7 +943,6 @@ async function narrationGoTo(index) {
     if (narrationParaIds[index]) loadNarrationComments(narrationParaIds[index]);
   }
 
-  const scene = getSceneForPara(pid);
   const prevScene = index > 0 ? getSceneForPara(narrationParaIds[index - 1]) : -1;
   startAmbient(currentChapter, scene);
 
@@ -1446,13 +1460,25 @@ function renderChapter(ch) {
         ? `<a href="wiki.html?entry=time-system" target="_blank" rel="noopener">${sec.heading}</a>`
         : (sec.heading || 'UPLINK');
 
-      const parasHtml = sec.paragraphs.map(text => {
-        const pid   = `ch${currentChapter}-p${paraIndex}`;
-        const count = commentCounts[pid] || 0;
-        const linked = autoLink(parseMarkup(text));
-        paraIndex++;
+      const headingPid  = `ch${currentChapter}-p${paraIndex}`;
+      const headingText = sec.heading || 'UPLINK';
+      paraIndex++;
 
-        // Assets subtype: detect two header levels
+      const headingPara = `
+        <p class="para uplink-heading-para"
+           id="${headingPid}"
+           data-para-id="${headingPid}"
+           data-comment-count="0"
+           data-scene="${sceneIndex}"
+           onclick="selectPara('${headingPid}', this)">
+          <span class="para-toolbar">
+            <button class="pt-btn" onclick="event.stopPropagation();openThread('${headingPid}')">💬 Thread</button>
+            <button class="pt-btn pt-narrate" onclick="event.stopPropagation();startNarrationFrom('${headingPid}')">▶ Narrate</button>
+          </span>
+          ${labelHtml}
+        </p>`;
+
+      const parasHtml = sec.paragraphs.map(text => {
         // Level 1 (system): all-caps e.g. **SOL SYSTEM**, **YREUS SYSTEM**, **MAIREE**
         // Level 2 (subset): mixed-case bold-only e.g. **En Route to Mairee**, **In Orbit**
         const trimmed = text.trim();
@@ -1483,7 +1509,7 @@ function renderChapter(ch) {
       }).join('');
 
       html += `<div class="uplink-block${isAssets ? ' uplink-assets' : ''}">
-        <div class="uplink-label">${labelHtml}</div>
+        ${headingPara}
         ${parasHtml}
       </div>`;
       return;
