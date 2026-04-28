@@ -51,7 +51,7 @@
   padding: 5px 14px;
   border: 1px solid var(--line);
   background: transparent; color: var(--muted);
-  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
   cursor: pointer; border-radius: 2px; transition: all 0.15s;
 }
 .cp-btn:hover { border-color: var(--rose); color: var(--rose); }
@@ -61,19 +61,19 @@
   display: flex; align-items: center; gap: 8px;
   padding: 6px 14px; border: 1px solid var(--line-strong);
   background: transparent; color: var(--ivory);
-  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase;
   cursor: pointer; border-radius: 2px; transition: all 0.15s;
 }
 .auth-btn:hover { border-color: var(--rose); color: var(--rose); }
 .auth-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line-strong); }
-.auth-name { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; color: var(--ivory-2); }
+.auth-name { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; color: var(--ivory-2); }
 
 /* ── Font size controls ────────────────────────────────── */
 .font-size-controls { display: flex; gap: 4px; align-items: center; }
 .fs-btn {
   padding: 4px 10px; border: 1px solid var(--line);
   background: transparent; color: var(--muted);
-  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  font-family: var(--mono); font-size: 0.75rem; font-weight: 500;
   cursor: pointer; border-radius: 2px; transition: all 0.15s; line-height: 1;
 }
 .fs-btn:hover { border-color: var(--ivory); color: var(--ivory); }
@@ -85,7 +85,11 @@
   padding: 72px 48px 120px;
 }
 .ch-eyebrow {
-  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.3em;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--rose); margin-bottom: 12px;
+}
+
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.3em;
   text-transform: uppercase; color: var(--rose); margin-bottom: 12px;
 }
 .ch-title {
@@ -127,7 +131,7 @@
   position: absolute; right: -28px; top: 8px;
   width: 20px; height: 20px; border-radius: 50%;
   background: var(--teal); color: var(--ivory);
-  font-family: var(--mono); font-size: 0.58rem;
+  font-family: var(--mono); font-size: 0.72rem;
   display: flex; align-items: center; justify-content: center;
   line-height: 1;
 }
@@ -156,7 +160,7 @@ body.wiki-hints-on .wiki-link:hover { border-bottom-color: var(--rose); color: v
   font-size: 1.1rem; margin-bottom: 28px;
 }
 .ch-location-head {
-  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.3em;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.3em;
   text-transform: uppercase; color: var(--teal-soft);
   margin: 48px 0 24px; display: flex; align-items: center; gap: 12px;
 }
@@ -174,7 +178,7 @@ body.wiki-hints-on .wiki-link:hover { border-bottom-color: var(--rose); color: v
   border-radius: 0 3px 3px 0;
 }
 .uplink-label {
-  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.3em;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.3em;
   text-transform: uppercase; color: #6ecfde; margin-bottom: 10px;
   display: flex; align-items: center; gap: 10px;
 }
@@ -250,7 +254,7 @@ body.wiki-hints-on .wiki-link:hover { border-bottom-color: var(--rose); color: v
 .pt-btn {
   padding: 5px 10px;
   background: transparent; border: none; color: var(--muted);
-  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
   cursor: pointer; border-radius: 2px; transition: all 0.12s; white-space: nowrap;
 }
 .pt-btn:hover { background: rgba(233,74,124,0.12); color: var(--rose); }
@@ -302,8 +306,8 @@ body.wiki-hints-on .wiki-link:hover { border-bottom-color: var(--rose); color: v
   display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
 }
 .c-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--teal); }
-.c-name { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; color: var(--ivory); }
-.c-time { font-family: var(--mono); font-size: 0.58rem; color: var(--muted); margin-left: auto; }
+.c-name { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; color: var(--ivory); }
+.c-time { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-left: auto; }
 .c-body { font-family: var(--serif); font-size: 0.9rem; color: var(--ivory-2); line-height: 1.55; }
 .c-delete { background: transparent; border: none; color: var(--muted); font-size: 0.7rem; cursor: pointer; padding: 0; margin-left: 6px; transition: color 0.15s; }
 .c-delete:hover { color: var(--rose); }
@@ -332,10 +336,10 @@ body.wiki-hints-on .wiki-link:hover { border-bottom-color: var(--rose); color: v
 }
 .cf-textarea:focus { outline: none; border-color: var(--rose); }
 .cf-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-.cf-hint { font-family: var(--mono); font-size: 0.58rem; color: var(--muted); letter-spacing: 0.1em; }
+.cf-hint { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); letter-spacing: 0.1em; }
 .cf-submit {
   padding: 7px 16px; background: var(--rose); border: none; color: var(--ink);
-  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase;
   cursor: pointer; border-radius: 2px; transition: background 0.15s;
 }
 .cf-submit:hover { background: var(--rose-deep); color: var(--ivory); }
@@ -360,21 +364,21 @@ body.wiki-hints-on .wiki-link:hover { border-bottom-color: var(--rose); color: v
   border-bottom: 1px solid var(--line);
   display: flex; justify-content: space-between; align-items: flex-start;
 }
-.wp-tag { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--rose); margin-bottom: 4px; }
+.wp-tag { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--rose); margin-bottom: 4px; }
 .wp-title { font-family: var(--serif); font-size: 1.5rem; color: var(--ivory); }
-.wp-role { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); margin-top: 4px; letter-spacing: 0.12em; }
+.wp-role { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-top: 4px; letter-spacing: 0.12em; }
 .wp-close { background: transparent; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; transition: color 0.15s; padding: 0; }
 .wp-close:hover { color: var(--ivory); }
 .wp-body { padding: 20px 24px; }
 .wp-desc { font-family: var(--serif); font-style: italic; font-size: 1rem; color: var(--ivory-2); line-height: 1.7; }
 .wp-meta { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
 .wp-chip {
-  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
   padding: 4px 10px; border: 1px solid var(--line); color: var(--muted); border-radius: 2px;
 }
 .wp-full-link {
   display: inline-flex; align-items: center; gap: 6px; margin-top: 18px;
-  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase;
   color: var(--teal-soft); border-bottom: 1px solid var(--teal);
   transition: color 0.15s;
 }
@@ -397,7 +401,7 @@ body.wiki-hints-on .wiki-link:hover { border-bottom-color: var(--rose); color: v
   display: flex; align-items: center; gap: 8px;
   padding: 7px 12px; background: transparent;
   border: 1px solid var(--line); color: var(--muted);
-  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
   cursor: pointer; border-radius: 2px; transition: all 0.12s; text-decoration: none;
 }
 .lp-btn:hover { border-color: var(--rose); color: var(--rose); }
@@ -418,7 +422,7 @@ body.wiki-hints-on .wiki-link:hover { border-bottom-color: var(--rose); color: v
   position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
   background: var(--ink-2); border: 1px solid var(--line-strong);
   padding: 10px 20px; border-radius: 3px;
-  font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.12em;
+  font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.12em;
   color: var(--ivory); z-index: 9000;
   transition: opacity 0.3s; pointer-events: none;
 }
@@ -474,7 +478,7 @@ body.wiki-hints-on .wiki-link:hover { border-bottom-color: var(--rose); color: v
     <div class="sb-panel" id="sb-panel">
       <div class="sb-head">
         <div class="sb-head-left">
-          <div class="mono-label" style="font-size:0.58rem">Thread</div>
+          <div class="mono-label" style="font-size:0.72rem">Thread</div>
           <div class="sb-para-preview" id="sb-para-preview"></div>
         </div>
         <button class="sb-close" onclick="closeSidebar()">✕</button>
@@ -755,7 +759,7 @@ function openThread(pid) {
 
   // Preview text
   const paraEl = document.getElementById(pid);
-  const raw    = paraEl ? paraEl.innerText.slice(0, 120) + '…' : '';
+  const raw    = getParaText(pid).slice(0, 120) + '…';
   document.getElementById('sb-para-preview').textContent = raw;
 
   loadComments(pid);
@@ -786,7 +790,7 @@ async function loadCommentCounts(chapter) {
 
 async function loadComments(pid) {
   const list = document.getElementById('comments-list');
-  list.innerHTML = `<div style="font-family:var(--mono);font-size:0.62rem;color:var(--muted);text-align:center;padding:20px">Loading…</div>`;
+  list.innerHTML = `<div style="font-family:var(--mono);font-size:0.72rem;color:var(--muted);text-align:center;padding:20px">Loading…</div>`;
 
   const { data, error } = await db.from('comments')
     .select('*')
@@ -926,13 +930,20 @@ function closeWikiPopup(e) {
   document.getElementById('wiki-overlay').classList.remove('open');
 }
 
-// ── Word lookup ──────────────────────────────────────────
+function getParaText(pid) {
+  const el = document.getElementById(pid);
+  if (!el) return '';
+  // Clone and remove toolbar before reading text
+  const clone = el.cloneNode(true);
+  const toolbar = clone.querySelector('.para-toolbar');
+  if (toolbar) toolbar.remove();
+  return clone.innerText.trim();
+}
 function lookupSelection(pid) {
   const selection = window.getSelection()?.toString().trim();
-  const word = selection || (document.getElementById(pid)?.innerText.slice(0, 20).split(' ')[0] || '');
+  const paraText  = getParaText(pid);
+  const word = selection || paraText.split(' ')[0] || '';
   if (!word) return;
-  // Pass the full paragraph text for translate, selected word for dictionary
-  const paraText = document.getElementById(pid)?.innerText || word;
   showLookupPopup(word, paraText);
 }
 
