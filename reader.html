@@ -972,8 +972,9 @@ async function narrationGoTo(index) {
   document.getElementById('nch-count').textContent = count;
   hint.classList.toggle('visible', count > 0);
 
-  // Get plain text for this paragraph
-  const text = getParaText(pid);
+  // Get plain text for TTS, raw markup text for italic/bold display
+  const text    = getParaText(pid);
+  const rawText = getRawText(pid) || text;
   if (!text) { narrationLocked = false; await narrationGoTo(index + 1); return; }
 
   // Show loading
@@ -1050,7 +1051,7 @@ async function narrationGoTo(index) {
     return ranges;
   }
 
-  const markupRanges = getMarkupRanges(text);
+  const markupRanges = getMarkupRanges(rawText);
 
   // Tag each word with its formatting class if it appears in a markup range
   // Match by building sliding windows of words
@@ -1487,6 +1488,7 @@ function renderChapter(ch) {
            data-para-id="${headingPid}"
            data-comment-count="0"
            data-scene="${sceneIndex}"
+           data-raw="${escAttr(text)}"
            onclick="selectPara('${headingPid}', this)">
           <span class="para-toolbar">
             <button class="pt-btn" onclick="event.stopPropagation();openThread('${headingPid}')">💬 Thread</button>
@@ -1520,6 +1522,7 @@ function renderChapter(ch) {
              data-para-id="${pid}"
              data-comment-count="${count}"
              data-scene="${sceneIndex}"
+             data-raw="${escAttr(text)}"
              onclick="selectPara('${pid}', this)">
             <span class="para-toolbar">
               <button class="pt-btn" onclick="event.stopPropagation();lookupSelection('${pid}')">🔍 Look up</button>
@@ -1557,6 +1560,7 @@ function renderChapter(ch) {
              data-para-id="${pid}"
              data-comment-count="${count}"
              data-scene="${sceneIndex}"
+             data-raw="${escAttr(text)}"
              onclick="selectPara('${pid}', this)">
             <span class="para-toolbar">
               <button class="pt-btn" onclick="event.stopPropagation();lookupSelection('${pid}')">🔍 Look up</button>
@@ -1573,8 +1577,10 @@ function renderChapter(ch) {
     }
 
     // ── Normal section ──
-    // If coming from an uplink or epigraph, this is a new scene
-    if (prevSecType === 'uplink' || prevSecType === 'epigraph') {
+    // If coming from an uplink, that already incremented sceneIndex on entry.
+    // The prose after it is a new scene — but epigraph already incremented on exit,
+    // so only increment when transitioning FROM an uplink.
+    if (prevSecType === 'uplink') {
       sceneIndex++;
     }
     prevSecType = 'prose';
@@ -1597,6 +1603,7 @@ function renderChapter(ch) {
            data-para-id="${pid}"
            data-comment-count="${count}"
            data-scene="${sceneIndex}"
+           data-raw="${escAttr(text)}"
            onclick="selectPara('${pid}', this)">
           <span class="para-toolbar">
             <button class="pt-btn" onclick="event.stopPropagation();lookupSelection('${pid}')">🔍 Look up</button>
@@ -1941,6 +1948,14 @@ function timeAgo(iso) {
 
 function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+}
+function getRawText(pid) {
+  // Returns the original markup text (with *asterisks*) for narration italic parsing
+  const el = document.getElementById(pid);
+  return el ? (el.dataset.raw || '') : '';
 }
 
 function toast(msg, duration = 3000) {
