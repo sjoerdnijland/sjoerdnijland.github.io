@@ -39,6 +39,7 @@ function Nav({ onOpenTweaks, tweaksOn }) {
         <a href="index.html#synopsis">Story</a>
         <a href="index.html#excerpt">Excerpt</a>
         <a href="wiki.html">Wiki</a>
+        <a href="reader.html" target="_blank" rel="noopener">Read</a>
         <a href="map.html" target="unfolding-map" rel="noopener">Map</a>
         <a href="index.html#author">Author</a>
         <a href="index.html#buy" className="nav-buy-btn always-show">Available 1 May</a>
