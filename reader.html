@@ -543,6 +543,9 @@ body.wiki-hints-on .para.active .wiki-link {
   color: var(--ivory);
   text-shadow: 0 0 32px rgba(233,74,124,0.5);
 }
+.nw.nw-italic  { font-style: italic; }
+.nw.nw-bold    { font-weight: 600; }
+.nw.nw-smcaps  { font-variant: small-caps; letter-spacing: 0.06em; }
 
 /* Progress bar */
 .narration-progress {
@@ -576,8 +579,9 @@ body.wiki-hints-on .para.active .wiki-link {
 
 /* Para counter */
 .narration-counter {
-  font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.2em;
-  color: var(--muted); text-align: center; margin-bottom: 32px;
+  font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.18em;
+  color: var(--ivory-2); text-align: center; margin-bottom: 32px;
+  text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 0;
 }
 
 /* Comment indicator in narration mode */
@@ -905,9 +909,18 @@ async function narrationGoTo(index) {
   const pid = narrationParaIds[index];
   const total = narrationParaIds.length;
 
-  // Counter
-  document.getElementById('narration-counter').textContent =
-    `${index + 1} / ${total}`;
+  // Counter — chapter · scene · paragraph progress
+  const scene = getSceneForPara(pid);
+  const chapterNames = { 1:'Assembly', 2:'The Startend', 3:'Doubt and Certainty' };
+  const chName = chapterNames[currentChapter] || `Chapter ${currentChapter}`;
+  document.getElementById('narration-counter').innerHTML =
+    `<span style="color:var(--rose);letter-spacing:0.22em">CH. ${currentChapter}</span>`
+    + `<span style="color:var(--line-strong);margin:0 10px">·</span>`
+    + `<span style="color:var(--teal-soft)">${chName}</span>`
+    + `<span style="color:var(--line-strong);margin:0 10px">·</span>`
+    + `<span>Scene ${scene}</span>`
+    + `<span style="color:var(--line-strong);margin:0 10px">·</span>`
+    + `<span style="color:var(--muted)">${index + 1} / ${narrationParaIds.length}</span>`;
 
   // Refresh thread sidebar if open
   if (narrationThreadOpen) {
@@ -970,10 +983,71 @@ async function narrationGoTo(index) {
   narrationAlignment = data.alignment;
 
   // Build word spans from alignment
-  // ElevenLabs alignment is character-level; group into words
   const words = buildWordTimings(text, data.alignment);
-  textEl.innerHTML = words.map((w, i) =>
-    `<span class="nw" id="nw-${i}">${escHtml(w.text)}</span>${w.space ? ' ' : ''}`
+
+  // Parse italic/bold/small-caps ranges from the original text
+  // so we can apply them to the karaoke display
+  function getMarkupRanges(src) {
+    const ranges = [];
+    const patterns = [
+      { re: /\*\*(.+?)\*\*/g,  cls: 'nw-bold' },
+      { re: /~~(.+?)~~/g,      cls: 'nw-smcaps' },
+      { re: /\*([^*]+?)\*/g,   cls: 'nw-italic' },
+    ];
+    // Work on plain text (strip tags) to get char positions
+    // We strip markup markers progressively to map to plain positions
+    patterns.forEach(({ re, cls }) => {
+      let m;
+      // Clone and strip already-processed markers to get clean positions
+      const stripped = src
+        .replace(/\*\*(.+?)\*\*/g, (_, t) => '\x00'.repeat(2) + t + '\x00'.repeat(2))
+        .replace(/~~(.+?)~~/g,     (_, t) => '\x00'.repeat(2) + t + '\x00'.repeat(2))
+        .replace(/\*([^*]+?)\*/g,  (_, t) => '\x00' + t + '\x00');
+      // Find ranges in stripped (marker chars have zero display width concept)
+      // Simpler: just find word-level italic by checking if word appears in italic context
+    });
+    // Simple approach: find italic spans in original text, map their plain-text words
+    const italicRe = /\*\*?([^*]+?)\*\*?/g;
+    let m;
+    while ((m = italicRe.exec(src)) !== null) {
+      const isBold = src[m.index + 1] === '*';
+      ranges.push({
+        words: m[1].trim().toLowerCase().split(/\s+/),
+        cls: isBold ? 'nw-bold' : 'nw-italic'
+      });
+    }
+    const smRe = /~~(.+?)~~/g;
+    while ((m = smRe.exec(src)) !== null) {
+      ranges.push({ words: m[1].trim().toLowerCase().split(/\s+/), cls: 'nw-smcaps' });
+    }
+    return ranges;
+  }
+
+  const markupRanges = getMarkupRanges(text);
+
+  // Tag each word with its formatting class if it appears in a markup range
+  // Match by building sliding windows of words
+  function tagWords(words, ranges) {
+    const tagged = words.map(w => ({ ...w, fmt: '' }));
+    ranges.forEach(({ words: mw, cls }) => {
+      if (!mw.length) return;
+      for (let i = 0; i <= tagged.length - mw.length; i++) {
+        const match = mw.every((mword, j) =>
+          tagged[i + j].text.toLowerCase().replace(/[^a-z0-9']/g, '') ===
+          mword.replace(/[^a-z0-9']/g, '')
+        );
+        if (match) {
+          for (let j = 0; j < mw.length; j++) tagged[i + j].fmt = cls;
+        }
+      }
+    });
+    return tagged;
+  }
+
+  const taggedWords = tagWords(words, markupRanges);
+
+  textEl.innerHTML = taggedWords.map((w, i) =>
+    `<span class="nw ${w.fmt}" id="nw-${i}">${escHtml(w.text)}</span>${w.space ? ' ' : ''}`
   ).join('');
 
   // Create audio from base64
@@ -991,7 +1065,7 @@ async function narrationGoTo(index) {
   narrationAudio.play();
   narrationAudio.addEventListener('ended', () => {
     cancelAnimationFrame(narrationRAF);
-    narrationGoTo(index + 1);
+    setTimeout(() => narrationGoTo(index + 1), 1200);
   });
 
   function syncWords() {
