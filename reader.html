@@ -68,6 +68,16 @@
 .auth-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line-strong); }
 .auth-name { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; color: var(--ivory-2); }
 
+/* ── Font size controls ────────────────────────────────── */
+.font-size-controls { display: flex; gap: 4px; align-items: center; }
+.fs-btn {
+  padding: 4px 10px; border: 1px solid var(--line);
+  background: transparent; color: var(--muted);
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  cursor: pointer; border-radius: 2px; transition: all 0.15s; line-height: 1;
+}
+.fs-btn:hover { border-color: var(--ivory); color: var(--ivory); }
+
 /* ── Chapter content ───────────────────────────────────── */
 .chapter-content {
   max-width: 680px;
@@ -340,7 +350,13 @@
     <a href="index.html" class="cb-logo"><span class="dot"></span> THE UNFOLDING</a>
     <div class="chapter-pills" id="chapter-pills"></div>
   </div>
-  <div class="chapter-bar-right" id="auth-area"></div>
+  <div class="chapter-bar-right">
+    <div class="font-size-controls">
+      <button class="fs-btn" onclick="changeFontSize(-1)" title="Decrease font size">A−</button>
+      <button class="fs-btn" onclick="changeFontSize(+1)" title="Increase font size">A+</button>
+    </div>
+    <div id="auth-area" style="display:flex;align-items:center;gap:10px;"></div>
+  </div>
 </header>
 
 <!-- ── READER ───────────────────────────────────────────── -->
@@ -595,6 +611,7 @@ function renderChapter() {
   });
 
   el.innerHTML = html;
+  applyFontSize();
 }
 
 // ── Auto wiki linking ────────────────────────────────────
@@ -736,7 +753,10 @@ async function submitComment() {
   });
 
   if (error) {
-    toast('Error posting comment. Try again.');
+    const msg = error.message?.includes('Rate limit')
+      ? 'Slow down — max 5 comments per 10 minutes.'
+      : 'Error posting comment. Try again.';
+    toast(msg);
     btn.disabled = false; btn.textContent = 'Post';
     return;
   }
@@ -808,22 +828,24 @@ function lookupSelection(pid) {
   const selection = window.getSelection()?.toString().trim();
   const word = selection || (document.getElementById(pid)?.innerText.slice(0, 20).split(' ')[0] || '');
   if (!word) return;
-  showLookupPopup(word);
+  // Pass the full paragraph text for translate, selected word for dictionary
+  const paraText = document.getElementById(pid)?.innerText || word;
+  showLookupPopup(word, paraText);
 }
 
-function showLookupPopup(word) {
+function showLookupPopup(word, paraText) {
   const popup = document.getElementById('lookup-popup');
-  const clean = word.replace(/[^a-zA-Z0-9\s\-']/g, '');
+  const clean     = word.replace(/[^a-zA-Z0-9\s\-']/g, '');
+  const cleanPara = (paraText || clean).trim();
   popup.innerHTML = `
     <div class="lp-word">"${clean}"</div>
     <div class="lp-actions">
       <a class="lp-btn" href="https://www.merriam-webster.com/dictionary/${encodeURIComponent(clean)}" target="_blank" rel="noopener">📖 Merriam-Webster</a>
-      <a class="lp-btn" href="https://translate.google.com/?sl=en&text=${encodeURIComponent(clean)}" target="_blank" rel="noopener">🌍 Google Translate</a>
-      <a class="lp-btn" href="https://www.deepl.com/translator#en/nl/${encodeURIComponent(clean)}" target="_blank" rel="noopener">🔵 DeepL</a>
+      <a class="lp-btn" href="https://translate.google.com/?sl=en&text=${encodeURIComponent(cleanPara)}" target="_blank" rel="noopener">🌍 Google Translate — full paragraph</a>
+      <a class="lp-btn" href="https://www.deepl.com/translator#en/nl/${encodeURIComponent(cleanPara)}" target="_blank" rel="noopener">🔵 DeepL — full paragraph</a>
       <button class="lp-btn" onclick="closeLookup()">✕ Close</button>
     </div>`;
 
-  // Position near centre
   popup.style.top  = '50%';
   popup.style.left = '50%';
   popup.style.transform = 'translate(-50%, -50%)';
@@ -848,6 +870,22 @@ document.addEventListener('keydown', (e) => {
     closeSidebar();
   }
 });
+
+// ── Font size ────────────────────────────────────────────
+const FONT_SIZES = [0.95, 1.05, 1.18, 1.32, 1.48]; // rem steps
+let fontSizeIdx = parseInt(localStorage.getItem('readerFontSize') ?? '2', 10);
+
+function applyFontSize() {
+  document.querySelectorAll('.para').forEach(p => {
+    p.style.fontSize = FONT_SIZES[fontSizeIdx] + 'rem';
+  });
+}
+
+function changeFontSize(dir) {
+  fontSizeIdx = Math.max(0, Math.min(FONT_SIZES.length - 1, fontSizeIdx + dir));
+  localStorage.setItem('readerFontSize', fontSizeIdx);
+  applyFontSize();
+}
 
 // ── Utilities ────────────────────────────────────────────
 function timeAgo(iso) {
