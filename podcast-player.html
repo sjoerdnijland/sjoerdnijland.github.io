@@ -195,6 +195,14 @@ async function init() {
       onclick="${checks[i] ? `loadEpisode(${i})` : 'void(0)'}"
       title="${checks[i] ? '' : 'Episode not yet available'}"
     >Ch. ${ep.chapter}</button>`).join('');
+
+  // Auto-load chapter from URL param (?chapter=N)
+  const params  = new URLSearchParams(window.location.search);
+  const chParam = parseInt(params.get('chapter') || '0', 10);
+  const idx     = EPISODES.findIndex(ep => ep.chapter === chParam);
+  if (idx >= 0 && checks[idx]) {
+    loadEpisode(idx);
+  }
 }
 
 // ── Load episode ──────────────────────────────────────────
