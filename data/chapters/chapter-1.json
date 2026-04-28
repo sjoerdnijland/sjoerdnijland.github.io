@@ -5,7 +5,7 @@
     {
       "type": "epigraph",
       "paragraphs": [
-        "There is a song in the stone. And if you listen, you can hear the math starting to fail. To unfold. You weren't there. But you're next. I'm uplinking this to you because if I don't, only the stone will remember. It just sits there, waiting for you, before it can get back to being a rock. And if you were going to look away, don't. If you turn your head now, you'll miss the moment it decides to notice you. My name doesn't matter. Where we start does. Not Earth. Not Paradise. You're on the planet Mairee, the moment the hum of the station changed."
+        "There is a song in the stone. And if you listen, you can hear the math starting to fail. To unfold. You weren't there. But you're next. I'm uplinking this to you because if I don't, only the stone will remember. It just sits there, waiting for you, before it can get back to being a rock. And if you were going to look away, don't. If you turn your head now, you'll miss the moment it decides to** notice you. My name doesn't matter. Where we start does. Not Earth. Not Paradise. You're on the planet Mairee, the moment the hum of the station changed."
       ]
     },
     {
@@ -67,12 +67,28 @@
       "type": "uplink",
       "heading": "UPLINK · MISSION ASSETS",
       "paragraphs": [
-        "**SOL SYSTEM** — This is where we started. What we had. What we lost.\n\n**Solbay & Solac:** The harbor and the school. Where they taught you to dream of the stars before kicking you into the void. Irrelevant.\n**Kepler & Sol-Cetus Arrays:** The phone lines home. Severed. Dead.\n**The Stragglers** (Mimir, Alsvin, Muninn, Hugin): Freighters and labs on the wrong side. Useless.",
-        "**YREUS SYSTEM** — This is where we are. Where we will die. But also what keeps us alive. For now. Memorize it, because there is nothing else coming.\n\n**Mairee:** Our second home. The promise. The lie. From space, it looks like a jewel. Too bad we are the infection. And she knows it.\n**Yreus Array:** Can't connect us to Sol anymore. A piece of space junk.",
-        "**EN ROUTE**\n\n**FNS *Brisinger*:** The problem child. The last ship to breach the Fold. Dragging itself quietly forward.\n**FNS Dáinn:** Our machines. Without her, we return to the Stone Age.",
-        "**IN ORBIT**\n\n**FNS Bygul & FNS Trjegul:** Beasts of burden. Circling Mairee, waiting to be sucked dry.\n**FNS Yggdrasil:** Split apart to prop up the ceiling.\n**Orbital Command:** The brain. Here, they decide what moves where via the Corridor.\n**Orbital One 'The Eyes':** The Peeping Tom. Watches the weather.\n**Orbital Two 'The Lungs':** Strips usable particles from the atmosphere.\n**Orbital Three 'The Ears':** Muro's man cave. Mostly listens to static now.",
-        "**THE LANDED** — Ships that don't fly anymore.\n\n**FNS Freya:** The flagship. Now a village containing the Homestead and the Harbor.\n**FNS Ivaldi:** A dropped brick, anchored into the rocks of the Plateau. Our industry.\n**The Delta camps:** A churning petri dish. The perfect place to plant a garden — if you like crops that bite back."
-      ]
+        "**SOL SYSTEM** — This is where we started. What we had. What we lost.",
+        "**Solbay & Solac** — The harbor and the school. Where they taught you to dream of the stars before kicking you into the void. *Irrelevant.*",
+        "**Kepler & Sol-Cetus Arrays** — The phone lines home. *Severed. Dead.*",
+        "**The Stragglers** (Mimir, Alsvin, Muninn, Hugin) — Freighters and labs on the wrong side of the Fold when it closed. *Useless.*",
+        "**YREUS SYSTEM** — This is where we are. Where we will die. But also what keeps us alive. Memorize it, because there is nothing else coming.",
+        "**Mairee** — Our second home. The promise. The lie. From space, it looks like a jewel. Too bad we are the infection. *And she knows it.*",
+        "**Yreus Array** — Can't connect us to Sol anymore. *A piece of space junk.*",
+        "**EN ROUTE TO MAIREE**",
+        "**FNS Brisinger** — The problem child. The last ship to breach the Fold. Dragging itself quietly forward.",
+        "**FNS Dáinn** — Our machines. Without her, we return to the Stone Age.",
+        "**IN ORBIT**",
+        "**FNS Bygul & FNS Trjegul** — Beasts of burden. Two million tons each, circling Mairee, waiting to be sucked dry.",
+        "**FNS Yggdrasil · Orbital Command** — Split apart to prop up the ceiling. The brain. Here, they decide what moves where via the Corridor.",
+        "**Orbital One 'The Eyes'** — The Peeping Tom. Watches the weather and alerts us to the spore storms.",
+        "**Orbital Two 'The Lungs'** — Strips usable particles from the atmosphere. We need it for life support up here.",
+        "**Orbital Three 'The Ears'** — Muro's man cave. Mostly listens to static now.",
+        "**THE LANDED** — Ships that don't fly anymore. Settled on Mairee. Repurposed. Carcasses we survive in.",
+        "**FNS Freya** — The flagship. Now a village containing the Homestead and the Harbor. Three thousand people call it home.",
+        "**FNS Ivaldi** — A dropped brick, anchored into the rocks of the Plateau. Smelters, fabricators, repair bays.",
+        "**The Delta Camps** — A churning petri dish. The perfect place to plant a garden — *if you like crops that bite back.*"
+      ],
+      "subtype": "assets"
     }
   ]
 }
