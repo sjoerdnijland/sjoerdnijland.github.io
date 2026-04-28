@@ -148,24 +148,38 @@
 /* ── Uplink interlude ──────────────────────────────────── */
 .uplink-block {
   margin: 56px -10px;
-  padding: 24px 28px;
-  border-left: 2px solid var(--teal);
-  background: rgba(45,91,102,0.07);
+  padding: 20px 28px 12px;
+  border-left: 2px solid var(--teal-soft);
+  background: rgba(45,91,102,0.12);
   border-radius: 0 3px 3px 0;
 }
 .uplink-label {
   font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.3em;
-  text-transform: uppercase; color: var(--teal-soft); margin-bottom: 14px;
+  text-transform: uppercase; color: #6ecfde; margin-bottom: 10px;
   display: flex; align-items: center; gap: 10px;
 }
-.uplink-label::before {
-  content: '◉'; color: var(--teal-soft); font-size: 0.7rem;
+.uplink-label::before { content: '◉'; font-size: 0.7rem; }
+.uplink-label a {
+  color: inherit; border-bottom: 1px dotted currentColor;
+  transition: color 0.15s;
 }
-.uplink-para {
-  font-family: var(--mono); font-size: 0.8rem; line-height: 1.8;
-  color: var(--muted); margin-bottom: 6px; letter-spacing: 0.03em;
+.uplink-label a:hover { color: var(--ivory); }
+
+/* Uplink paras are full .para elements — styles live there.
+   These rules only add the mono font override and teal tint. */
+.uplink-block .para {
+  font-family: var(--mono);
+  font-size: 0.85rem; /* overridden by JS applyFontSize scaling below */
+  line-height: 1.75;
+  color: #b8d8de;
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
 }
-.uplink-para:last-child { margin-bottom: 0; }
+.uplink-block .para:hover  { background: rgba(74,154,170,0.08); }
+.uplink-block .para.active {
+  background: rgba(74,154,170,0.14);
+  border-left-color: var(--teal-soft);
+}
 
 /* ── Epigraph ──────────────────────────────────────────── */
 .epigraph-block {
@@ -556,9 +570,33 @@ function renderChapter(ch) {
 
     // ── Uplink interlude ──
     if (sec.type === 'uplink') {
+      const isTemporalOrientation = (sec.heading || '').toLowerCase().includes('temporal');
+      const labelHtml = isTemporalOrientation
+        ? `<a href="wiki.html?entry=time-system" target="_blank" rel="noopener">${sec.heading}</a>`
+        : (sec.heading || 'UPLINK');
+
+      const parasHtml = sec.paragraphs.map(text => {
+        const pid   = `ch${currentChapter}-p${paraIndex}`;
+        const count = commentCounts[pid] || 0;
+        const linked = autoLink(text);
+        paraIndex++;
+        return `
+          <p class="para${count > 0 ? ' has-comments' : ''}"
+             id="${pid}"
+             data-para-id="${pid}"
+             data-comment-count="${count}"
+             onclick="selectPara('${pid}', this)">
+            <span class="para-toolbar">
+              <button class="pt-btn" onclick="event.stopPropagation();lookupSelection('${pid}')">🔍 Look up</button>
+              <button class="pt-btn" onclick="event.stopPropagation();openThread('${pid}')">💬 Thread${count > 0 ? ` (${count})` : ''}</button>
+            </span>
+            ${linked}
+          </p>`;
+      }).join('');
+
       html += `<div class="uplink-block">
-        <div class="uplink-label">${sec.heading || 'UPLINK'}</div>
-        ${sec.paragraphs.map(p => `<p class="uplink-para">${p}</p>`).join('')}
+        <div class="uplink-label">${labelHtml}</div>
+        ${parasHtml}
       </div>`;
       return;
     }
@@ -861,8 +899,11 @@ const FONT_SIZES = [0.95, 1.05, 1.18, 1.32, 1.48]; // rem steps
 let fontSizeIdx = parseInt(localStorage.getItem('readerFontSize') ?? '2', 10);
 
 function applyFontSize() {
+  const size = FONT_SIZES[fontSizeIdx];
   document.querySelectorAll('.para').forEach(p => {
-    p.style.fontSize = FONT_SIZES[fontSizeIdx] + 'rem';
+    // Uplink paras scale at 72% of prose size to keep visual distinction
+    const isUplink = p.closest('.uplink-block');
+    p.style.fontSize = (isUplink ? Math.max(0.75, size * 0.72) : size) + 'rem';
   });
 }
 
