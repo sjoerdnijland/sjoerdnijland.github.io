@@ -577,9 +577,10 @@ function renderAuthArea() {
   const el = document.getElementById('auth-area');
   if (currentUser) {
     const meta = currentUser.user_metadata;
+    const name = meta?.custom_claims?.global_name || meta?.full_name || meta?.name || 'Reader';
     el.innerHTML = `
-      <img class="auth-avatar" src="${meta.avatar_url || ''}" alt="${meta.full_name || 'User'}"/>
-      <span class="auth-name">${meta.full_name || 'Reader'}</span>
+      <img class="auth-avatar" src="${meta.avatar_url || ''}" alt="${name}"/>
+      <span class="auth-name">${name}</span>
       <button class="auth-btn" onclick="signOut()">Sign out</button>`;
   } else {
     el.innerHTML = `<button class="auth-btn" onclick="signIn()">◎ Sign in with Discord</button>`;
@@ -841,11 +842,12 @@ async function submitComment() {
   btn.textContent = 'Posting…';
 
   const meta = currentUser.user_metadata;
+  const displayName = meta?.custom_claims?.global_name || meta?.full_name || meta?.name || 'Reader';
   const { error } = await db.from('comments').insert({
     chapter:      currentChapter,
     paragraph_id: currentParaId,
     user_id:      currentUser.id,
-    display_name: meta.full_name || 'Reader',
+    display_name: displayName,
     avatar_url:   meta.avatar_url || '',
     body
   });
