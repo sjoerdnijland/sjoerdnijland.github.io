@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>The Unfolding: Decoded — AI Podcast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink:       #060810;
+  --ink-2:     #0c1020;
+  --teal:      #2d5b66;
+  --teal-b:    #4a9aaa;
+  --rose:      #e94a7c;
+  --ivory:     #f4ead9;
+  --ivory-2:   #c8bea8;
+  --muted:     #5a6a7a;
+  --amber:     #d4a843;
+  --line:      rgba(74,154,170,0.15);
+  --line-s:    rgba(74,154,170,0.35);
+  --vera:      #e94a7c;
+  --milo:      #4a9aaa;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --mono:  'JetBrains Mono', monospace;
+}
+
+html, body {
+  background: var(--ink);
+  color: var(--ivory);
+  font-family: var(--mono);
+  font-size: 13px;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* Grain */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+  opacity: 0.055; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.4 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+}
+
+/* ── Layout ── */
+.app { max-width: 900px; margin: 0 auto; padding: 48px 32px 120px; }
+
+/* ── Header ── */
+.pod-header { text-align: center; margin-bottom: 56px; }
+.pod-show-label {
+  font-size: 0.6rem; letter-spacing: 0.4em; text-transform: uppercase;
+  color: var(--teal-b); margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+}
+.pod-show-label::before, .pod-show-label::after {
+  content: ''; display: block; width: 40px; height: 1px; background: var(--teal);
+}
+.pod-title {
+  font-family: var(--serif); font-size: clamp(2.2rem, 4vw, 3.4rem);
+  font-weight: 300; letter-spacing: -0.01em; color: var(--ivory);
+  margin-bottom: 8px;
+}
+.pod-subtitle {
+  font-family: var(--serif); font-style: italic;
+  font-size: 1.05rem; color: var(--muted);
+}
+
+/* ── Hosts ── */
+.hosts-bar {
+  display: flex; align-items: center; justify-content: center; gap: 48px;
+  margin-bottom: 48px; padding: 20px;
+  border: 1px solid var(--line); background: rgba(12,16,32,0.5);
+}
+.host {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.host-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; font-family: var(--serif);
+  border: 1px solid; transition: box-shadow 0.3s;
+}
+.host.vera .host-avatar { border-color: var(--vera); background: rgba(233,74,124,0.1); color: var(--vera); }
+.host.milo .host-avatar { border-color: var(--milo); background: rgba(74,154,170,0.1); color: var(--milo); }
+.host.speaking .host-avatar { box-shadow: 0 0 20px currentColor; }
+.host-name { font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; }
+.host.vera .host-name { color: var(--vera); }
+.host.milo .host-name { color: var(--milo); }
+.host-desc { font-family: var(--serif); font-style: italic; font-size: 0.8rem; color: var(--muted); }
+.hosts-divider { font-size: 1.2rem; color: var(--muted); opacity: 0.3; }
+
+/* ── Chapter selector ── */
+.chapter-select-wrap {
+  margin-bottom: 40px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.cs-label { font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
+.ch-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.ch-pill {
+  padding: 6px 16px; border: 1px solid var(--line-s);
+  background: transparent; color: var(--muted);
+  font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.15em;
+  text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.15s;
+}
+.ch-pill:hover { border-color: var(--rose); color: var(--rose); }
+.ch-pill.active { background: var(--rose); border-color: var(--rose); color: var(--ink); }
+.ch-pill:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Generate button ── */
+.generate-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 28px; border: 1px solid var(--rose);
+  background: rgba(233,74,124,0.1); color: var(--rose);
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.2em;
+  text-transform: uppercase; cursor: pointer; border-radius: 2px;
+  transition: all 0.2s; margin-bottom: 40px;
+  box-shadow: 0 0 20px rgba(233,74,124,0.1);
+}
+.generate-btn:hover { background: var(--rose); color: var(--ink); box-shadow: 0 0 30px rgba(233,74,124,0.3); }
+.generate-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.gen-icon { font-size: 1rem; }
+
+/* ── Status ── */
+.status-bar {
+  padding: 12px 20px; margin-bottom: 32px;
+  border: 1px solid var(--line); background: rgba(12,16,32,0.6);
+  font-size: 0.68rem; letter-spacing: 0.12em; color: var(--teal-b);
+  display: none; align-items: center; gap: 10px;
+}
+.status-bar.visible { display: flex; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal-b); animation: blink 1s step-end infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.1} }
+
+/* ── Player ── */
+.player-wrap { display: none; }
+.player-wrap.visible { display: block; }
+
+.now-playing {
+  padding: 20px 24px; margin-bottom: 24px;
+  border: 1px solid var(--line-s); background: rgba(12,16,32,0.7);
+  display: flex; align-items: center; gap: 16px;
+}
+.np-host-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.np-host-dot.vera { background: var(--vera); box-shadow: 0 0 8px var(--vera); }
+.np-host-dot.milo { background: var(--milo); box-shadow: 0 0 8px var(--milo); }
+.np-text { font-family: var(--serif); font-size: 1.1rem; color: var(--ivory); font-style: italic; flex: 1; line-height: 1.5; }
+.np-host { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+
+/* Progress */
+.progress-wrap { margin-bottom: 24px; }
+.progress-track {
+  height: 2px; background: rgba(74,154,170,0.15); cursor: pointer;
+  position: relative; margin-bottom: 8px;
+}
+.progress-fill { height: 100%; background: linear-gradient(to right, var(--teal), var(--rose)); width: 0%; transition: width 0.1s linear; }
+.progress-times { display: flex; justify-content: space-between; font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; }
+
+/* Controls */
+.controls {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin-bottom: 32px;
+}
+.ctrl-btn {
+  padding: 10px 20px; border: 1px solid var(--line-s);
+  background: transparent; color: var(--muted);
+  font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.15em;
+  text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.15s;
+}
+.ctrl-btn:hover { border-color: var(--ivory); color: var(--ivory); }
+.ctrl-btn.play { background: var(--rose); border-color: var(--rose); color: var(--ink); font-size: 0.8rem; padding: 10px 28px; }
+.ctrl-btn.play:hover { background: #c72f63; }
+
+/* ── Script transcript ── */
+.transcript { display: flex; flex-direction: column; gap: 16px; }
+.transcript-line {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 14px 18px; border: 1px solid transparent;
+  border-radius: 3px; transition: all 0.2s; cursor: pointer;
+  opacity: 0.45;
+}
+.transcript-line:hover { opacity: 0.75; background: rgba(74,154,170,0.04); }
+.transcript-line.active {
+  opacity: 1; border-color: var(--line-s);
+  background: rgba(12,16,32,0.6);
+}
+.transcript-line.vera.active { border-left: 2px solid var(--vera); }
+.transcript-line.milo.active { border-left: 2px solid var(--milo); }
+.tl-host {
+  font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+  min-width: 48px; padding-top: 3px; flex-shrink: 0;
+}
+.transcript-line.vera .tl-host { color: var(--vera); }
+.transcript-line.milo .tl-host { color: var(--milo); }
+.tl-text {
+  font-family: var(--serif); font-size: 1.05rem; color: var(--ivory-2); line-height: 1.65;
+}
+
+/* ── Loading skeleton ── */
+.skeleton-line {
+  height: 14px; background: linear-gradient(90deg, rgba(74,154,170,0.05) 25%, rgba(74,154,170,0.12) 50%, rgba(74,154,170,0.05) 75%);
+  background-size: 200% 100%; animation: shimmer 1.5s infinite;
+  border-radius: 2px; margin-bottom: 8px;
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--ink-2); border: 1px solid var(--line-s);
+  padding: 10px 20px; border-radius: 2px; font-size: 0.68rem; letter-spacing: 0.1em;
+  color: var(--ivory); z-index: 999; transition: opacity 0.3s; pointer-events: none;
+}
+.toast.hidden { opacity: 0; }
+
+@media (max-width: 600px) {
+  .app { padding: 32px 20px 80px; }
+  .hosts-bar { flex-direction: column; gap: 24px; }
+  .hosts-divider { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="pod-header">
+    <div class="pod-show-label">The Unfolding</div>
+    <h1 class="pod-title">Decoded</h1>
+    <p class="pod-subtitle">An AI podcast. Two voices. One story. Full context.</p>
+  </header>
+
+  <!-- Hosts -->
+  <div class="hosts-bar">
+    <div class="host vera" id="host-vera">
+      <div class="host-avatar">V</div>
+      <div class="host-name">Vera</div>
+      <div class="host-desc">Reads the subtext</div>
+    </div>
+    <div class="hosts-divider">⟡</div>
+    <div class="host milo" id="host-milo">
+      <div class="host-avatar">M</div>
+      <div class="host-name">Milo</div>
+      <div class="host-desc">Feels the atmosphere</div>
+    </div>
+  </div>
+
+  <!-- Chapter selector -->
+  <div class="chapter-select-wrap">
+    <span class="cs-label">Discuss chapter</span>
+    <div class="ch-pills" id="ch-pills"></div>
+  </div>
+
+  <!-- Generate -->
+  <button class="generate-btn" id="generate-btn" onclick="generatePodcast()">
+    <span class="gen-icon">◎</span>
+    Generate episode
+  </button>
+
+  <!-- Status -->
+  <div class="status-bar" id="status-bar">
+    <span class="status-dot"></span>
+    <span id="status-text">Writing script…</span>
+  </div>
+
+  <!-- Player -->
+  <div class="player-wrap" id="player-wrap">
+
+    <div class="now-playing" id="now-playing">
+      <div class="np-host-dot vera" id="np-dot"></div>
+      <div>
+        <div class="np-text" id="np-text">—</div>
+        <div class="np-host" id="np-host">—</div>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-track" onclick="seekTo(event)">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-times">
+        <span id="time-current">0:00</span>
+        <span id="time-total">0:00</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn" onclick="prevLine()">← Prev</button>
+      <button class="ctrl-btn play" id="play-btn" onclick="togglePlay()">▶ Play</button>
+      <button class="ctrl-btn" onclick="nextLine()">Next →</button>
+    </div>
+
+    <div class="transcript" id="transcript"></div>
+
+  </div>
+
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+// ── Config ───────────────────────────────────────────────
+const SUPA_URL   = 'https://sscpikfblqtmcefegrpv.supabase.co';
+const SUPA_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzY3Bpa2ZibHF0bWNlZmVncnB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNzUzMzgsImV4cCI6MjA5Mjk1MTMzOH0.I9qzVnzmiYxwZ6RPLV7KWva8P9L0Q1MHFqgmlmr3g0g';
+const NARRATE_URL = `${SUPA_URL}/functions/v1/narrate`;
+const SCRIPT_URL  = `${SUPA_URL}/functions/v1/podcast-script`;
+
+// Voice IDs — Charlotte = Vera, second voice = Milo (set below)
+const VOICES = {
+  VERA: 'aRlmTYIQo6Tlg5SlulGC', // Charlotte
+  MILO: 'ljX1ZrXuDIIRVcmiVSyR', // Michael
+};
+
+const CHAPTERS = {
+  1: { title: 'Assembly',           subtitle: 'Freya Homestead, Mairee' },
+  2: { title: 'The Startend',       subtitle: '33 Clicks Post Unfolding' },
+  3: { title: 'Doubt and Certainty',subtitle: '4 Clicks Post Unfolding'  },
+};
+
+// ── State ────────────────────────────────────────────────
+let selectedChapter = 1;
+let scriptLines     = []; // [{host, text, audio}]
+let currentLine     = 0;
+let podAudio        = null;
+let podPlaying      = false;
+let rafId           = null;
+
+// ── Init ─────────────────────────────────────────────────
+function init() {
+  const pills = document.getElementById('ch-pills');
+  pills.innerHTML = Object.keys(CHAPTERS).map(n => `
+    <button class="ch-pill ${n == selectedChapter ? 'active' : ''}"
+      onclick="selectChapter(${n})">${CHAPTERS[n].title}</button>`).join('');
+}
+
+function selectChapter(n) {
+  selectedChapter = n;
+  document.querySelectorAll('.ch-pill').forEach((p, i) => {
+    p.classList.toggle('active', i + 1 === n);
+  });
+  // Reset player
+  resetPlayer();
+}
+
+function resetPlayer() {
+  if (podAudio) { podAudio.pause(); podAudio = null; }
+  cancelAnimationFrame(rafId);
+  scriptLines  = [];
+  currentLine  = 0;
+  podPlaying   = false;
+  document.getElementById('player-wrap').classList.remove('visible');
+  document.getElementById('status-bar').classList.remove('visible');
+  document.getElementById('play-btn').textContent = '▶ Play';
+}
+
+// ── Generate ─────────────────────────────────────────────
+async function generatePodcast() {
+  const btn = document.getElementById('generate-btn');
+  btn.disabled = true;
+  resetPlayer();
+  setStatus('Fetching chapter text…', true);
+
+  // Load chapter JSON
+  let paragraphs = [];
+  try {
+    const res = await fetch(`data/chapters/chapter-${selectedChapter}.json`);
+    const ch  = await res.json();
+    ch.sections.forEach(sec => {
+      if (sec.paragraphs) paragraphs.push(...sec.paragraphs);
+    });
+  } catch(e) {
+    toast('Could not load chapter data');
+    btn.disabled = false;
+    setStatus('', false);
+    return;
+  }
+
+  setStatus('Vera and Milo are writing the script…', true);
+
+  // Generate script via Claude
+  let lines = [];
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
+      body: JSON.stringify({
+        chapterNumber: selectedChapter,
+        chapterTitle:  CHAPTERS[selectedChapter].title,
+        paragraphs,
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    lines = data.lines;
+  } catch(e) {
+    toast('Script generation failed: ' + e.message);
+    btn.disabled = false;
+    setStatus('', false);
+    return;
+  }
+
+  if (!lines.length) {
+    toast('No script lines generated');
+    btn.disabled = false;
+    setStatus('', false);
+    return;
+  }
+
+  scriptLines = lines.map(l => ({ ...l, audio: null }));
+  renderTranscript();
+
+  // Generate audio for first line, prefetch rest
+  setStatus(`Generating audio — line 1 of ${lines.length}…`, true);
+  await generateLineAudio(0);
+
+  setStatus('', false);
+  btn.disabled = false;
+  document.getElementById('player-wrap').classList.add('visible');
+  goToLine(0);
+  startPlay();
+}
+
+async function generateLineAudio(index) {
+  if (index >= scriptLines.length) return;
+  const line = scriptLines[index];
+  if (line.audio) return;
+
+  try {
+    const res = await fetch(NARRATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
+      body: JSON.stringify({
+        text:    line.text,
+        voiceId: VOICES[line.host], // pass voice override
+      })
+    });
+    const data = await res.json();
+    if (data.audio) {
+      const blob = base64ToBlob(data.audio, 'audio/mpeg');
+      line.audio = URL.createObjectURL(blob);
+    }
+  } catch(e) {
+    console.warn('Audio gen failed for line', index, e);
+  }
+}
+
+// ── Playback ─────────────────────────────────────────────
+async function goToLine(index) {
+  if (podAudio) { podAudio.pause(); podAudio = null; }
+  cancelAnimationFrame(rafId);
+  currentLine = index;
+
+  // Highlight transcript
+  document.querySelectorAll('.transcript-line').forEach((el, i) => {
+    el.classList.toggle('active', i === index);
+    if (i === index) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+
+  const line = scriptLines[index];
+  if (!line) return;
+
+  // Update now playing
+  document.getElementById('np-text').textContent = line.text;
+  document.getElementById('np-host').textContent = line.host === 'VERA' ? 'Vera' : 'Milo';
+  document.getElementById('np-dot').className = `np-host-dot ${line.host.toLowerCase()}`;
+
+  // Update host speaking indicator
+  document.getElementById('host-vera').classList.toggle('speaking', line.host === 'VERA');
+  document.getElementById('host-milo').classList.toggle('speaking', line.host === 'MILO');
+
+  // Prefetch next lines
+  for (let i = index + 1; i <= index + 2 && i < scriptLines.length; i++) {
+    generateLineAudio(i);
+  }
+
+  // Wait for audio if not ready
+  if (!line.audio) {
+    setStatus(`Generating audio…`, true);
+    await generateLineAudio(index);
+    setStatus('', false);
+  }
+
+  if (!line.audio) return;
+
+  podAudio = new Audio(line.audio);
+  podAudio.addEventListener('ended', () => {
+    cancelAnimationFrame(rafId);
+    setTimeout(() => {
+      if (currentLine + 1 < scriptLines.length) {
+        goToLine(currentLine + 1);
+      } else {
+        podPlaying = false;
+        document.getElementById('play-btn').textContent = '▶ Play';
+        updateProgress(1);
+      }
+    }, 600);
+  });
+
+  if (podPlaying) {
+    podAudio.play();
+    trackProgress();
+  }
+}
+
+function trackProgress() {
+  cancelAnimationFrame(rafId);
+  function tick() {
+    if (!podAudio) return;
+    const pct = podAudio.duration ? podAudio.currentTime / podAudio.duration : 0;
+    updateProgress(pct);
+    rafId = requestAnimationFrame(tick);
+  }
+  rafId = requestAnimationFrame(tick);
+}
+
+function updateProgress(pct) {
+  document.getElementById('progress-fill').style.width = (pct * 100) + '%';
+  if (podAudio?.duration) {
+    document.getElementById('time-current').textContent = fmtTime(podAudio.currentTime);
+    document.getElementById('time-total').textContent   = fmtTime(podAudio.duration);
+  }
+}
+
+function startPlay() {
+  podPlaying = true;
+  document.getElementById('play-btn').textContent = '⏸ Pause';
+  if (podAudio) { podAudio.play(); trackProgress(); }
+}
+
+function togglePlay() {
+  if (!podAudio) return;
+  if (podAudio.paused) {
+    podAudio.play(); podPlaying = true;
+    document.getElementById('play-btn').textContent = '⏸ Pause';
+    trackProgress();
+  } else {
+    podAudio.pause(); podPlaying = false;
+    cancelAnimationFrame(rafId);
+    document.getElementById('play-btn').textContent = '▶ Play';
+  }
+}
+
+function prevLine() {
+  if (currentLine > 0) { podPlaying = true; goToLine(currentLine - 1); }
+}
+function nextLine() {
+  if (currentLine + 1 < scriptLines.length) { podPlaying = true; goToLine(currentLine + 1); }
+}
+
+function seekTo(e) {
+  // seek within current line
+  if (!podAudio?.duration) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct  = (e.clientX - rect.left) / rect.width;
+  podAudio.currentTime = pct * podAudio.duration;
+}
+
+// ── Transcript ───────────────────────────────────────────
+function renderTranscript() {
+  const el = document.getElementById('transcript');
+  el.innerHTML = scriptLines.map((l, i) => `
+    <div class="transcript-line ${l.host.toLowerCase()}" onclick="jumpTo(${i})">
+      <div class="tl-host">${l.host === 'VERA' ? 'Vera' : 'Milo'}</div>
+      <div class="tl-text">${escHtml(l.text)}</div>
+    </div>`).join('');
+}
+
+function jumpTo(i) {
+  podPlaying = true;
+  goToLine(i);
+}
+
+// ── Helpers ──────────────────────────────────────────────
+function setStatus(msg, visible) {
+  const bar = document.getElementById('status-bar');
+  bar.classList.toggle('visible', visible);
+  if (msg) document.getElementById('status-text').textContent = msg;
+}
+
+function fmtTime(s) {
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2,'0')}`;
+}
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function base64ToBlob(b64, mime) {
+  const bin = atob(b64), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 3500);
+}
+
+init();
+</script>
+</body>
+</html>
