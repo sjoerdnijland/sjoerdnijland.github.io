@@ -72,7 +72,7 @@
     "id": "the-caldera"
   },
   {
-    "name": "Orbital Three — The Ears",
+    "name": "Orbital Three",
     "tag": "loc",
     "role": "Communication satellite",
     "affil": "FNS Dáinn / Muro",
@@ -136,7 +136,7 @@
     "tag": "loc",
     "role": "Interdimensional passage",
     "affil": "Seiðr",
-    "aliases": "The Fold, the Aperture, the Zaytsev Fold",
+    "aliases": "The Fold, the Aperture, Zaytsev Fold",
     "desc": "A spatial fold discovered near Sol connecting to the Yreus system. Collapsed after the Brisinger's transit. Its loss strands the colony permanently.",
     "chapter": 2,
     "image": "/assets/locations/fold.png",
@@ -160,7 +160,7 @@
     "tag": "loc",
     "role": "Transit network",
     "affil": "Directorate / Bellamy",
-    "aliases": "The Corridor",
+    "aliases": "",
     "desc": "The orbital guidance network enabling smooth transit between the Homestead, Delta, Plateau, and orbital stations. Ground-based relay antennas dot the landscape.",
     "chapter": 3,
     "image": "",
@@ -233,7 +233,7 @@
     "tag": "loc",
     "role": "Moon — Mairee System",
     "affil": "Mairee",
-    "aliases": "—",
+    "aliases": "",
     "desc": "The largest of Mairee's three moons. Named for the Norn of the future. Tidally locked, heavily cratered on its far side. Its gravitational interaction with Mairee is thought to contribute to the planet's unusually stable axial tilt — one of the reasons Mairee was hospitable enough to colonise in the first place.",
     "chapter": 1,
     "image": "",
@@ -245,7 +245,7 @@
     "tag": "loc",
     "role": "Moon — Mairee System",
     "affil": "Mairee",
-    "aliases": "—",
+    "aliases": "",
     "desc": "The middle moon of Mairee. Named for the Norn of the present. Smaller and faster than Skuld, completing its orbit in just over a Mairee day. From the surface, it rises and sets twice in a single click. Some colonists track it compulsively — there is something about its speed that feels like time passing faster than it should.",
     "chapter": 1,
     "image": "",
@@ -277,7 +277,7 @@
   },
   {
     "id": "orbit-one-the-eyes",
-    "name": "Orbit One — The Eyes",
+    "name": "Orbit One",
     "tag": "loc",
     "role": "Surveillance Station — Close Orbit",
     "affil": "Orbital Command",
@@ -289,7 +289,7 @@
   },
   {
     "id": "orbit-two-the-lungs",
-    "name": "Orbit Two — The Lungs",
+    "name": "Orbital Two",
     "tag": "loc",
     "role": "Atmospheric Processor — Close Orbit",
     "affil": "Orbital Command",
@@ -324,7 +324,7 @@
     "mj_prompt": "A vast orbital harbor station above Earth, colony ships of different classes docking and departing, Earth's curvature visible below, the harbor lights warm against the dark, a place of departure, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7"
   },
   {
-    "name": "Yreus Relay (The Holm)",
+    "name": "Yreus Relay",
     "tag": "ship",
     "role": "Covert research station",
     "affil": "Mission Command",
