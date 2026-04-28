@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Chapter Editor — The Unfolding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:        #061619;
+  --ink-2:      #0b2227;
+  --ink-3:      #0f2c33;
+  --teal:       #2d5b66;
+  --teal-soft:  #3b7682;
+  --teal-bright:#4a9aaa;
+  --rose:       #e94a7c;
+  --rose-soft:  #f39bb4;
+  --ivory:      #f4ead9;
+  --ivory-2:    #e8dcc5;
+  --muted:      #5a7a82;
+  --amber:      #d4a843;
+  --line:       rgba(74,154,170,0.18);
+  --line-strong:rgba(74,154,170,0.38);
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --mono:  'JetBrains Mono', monospace;
+}
+
+html, body {
+  background: var(--ink);
+  color: var(--ivory);
+  font-family: var(--mono);
+  font-size: 13px;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── Layout ────────────────────────────────────────── */
+.app { display: grid; grid-template-rows: 48px 1fr; height: 100vh; }
+
+/* ── Top bar ───────────────────────────────────────── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(6,22,25,0.97);
+  border-bottom: 1px solid var(--line-strong);
+  gap: 16px;
+}
+.tb-left  { display: flex; align-items: center; gap: 16px; }
+.tb-right { display: flex; align-items: center; gap: 8px; }
+.tb-logo {
+  font-family: var(--serif); font-size: 0.95rem; letter-spacing: 0.1em;
+  display: flex; align-items: center; gap: 8px; color: var(--ivory);
+}
+.tb-logo .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rose); box-shadow: 0 0 8px var(--rose); }
+.tb-title { font-size: 0.6rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--teal-bright); }
+
+.tb-btn {
+  padding: 5px 14px; border: 1px solid var(--line-strong);
+  background: transparent; color: var(--ivory);
+  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px; transition: all 0.15s;
+}
+.tb-btn:hover { background: var(--line); }
+.tb-btn.primary { background: var(--rose); border-color: var(--rose); color: var(--ink); }
+.tb-btn.primary:hover { background: #c72f63; }
+.tb-btn.amber { border-color: var(--amber); color: var(--amber); }
+.tb-btn.amber:hover { background: rgba(212,168,67,0.12); }
+
+.tb-meta {
+  display: flex; align-items: center; gap: 8px;
+}
+.tb-input {
+  background: rgba(74,154,170,0.08); border: 1px solid var(--line-strong);
+  color: var(--ivory); font-family: var(--mono); font-size: 0.62rem;
+  padding: 4px 10px; border-radius: 2px; width: 160px;
+  letter-spacing: 0.06em;
+}
+.tb-input:focus { outline: none; border-color: var(--rose); }
+.tb-select {
+  background: rgba(74,154,170,0.08); border: 1px solid var(--line-strong);
+  color: var(--ivory); font-family: var(--mono); font-size: 0.62rem;
+  padding: 4px 8px; border-radius: 2px; cursor: pointer;
+}
+.tb-select:focus { outline: none; border-color: var(--rose); }
+
+/* ── Main columns ──────────────────────────────────── */
+.columns { display: grid; grid-template-columns: 1fr 1fr; height: 100%; overflow: hidden; }
+
+/* ── Editor pane ───────────────────────────────────── */
+.editor-pane {
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--line);
+  overflow: hidden;
+}
+.pane-head {
+  padding: 10px 20px 8px;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(6,22,25,0.5); flex-shrink: 0;
+}
+.pane-label {
+  font-size: 0.58rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--teal-bright);
+}
+.markup-btns { display: flex; gap: 4px; }
+.mk-btn {
+  padding: 3px 9px; border: 1px solid var(--line);
+  background: transparent; color: var(--muted);
+  font-family: var(--mono); font-size: 0.6rem; cursor: pointer;
+  border-radius: 2px; transition: all 0.12s;
+}
+.mk-btn:hover { border-color: var(--ivory); color: var(--ivory); }
+.mk-btn.active { border-color: var(--rose); color: var(--rose); background: rgba(233,74,124,0.08); }
+
+.editor-area {
+  flex: 1; overflow-y: auto; padding: 24px 28px;
+  display: flex; flex-direction: column; gap: 0;
+}
+.editor-area::-webkit-scrollbar { width: 4px; }
+.editor-area::-webkit-scrollbar-track { background: var(--ink); }
+.editor-area::-webkit-scrollbar-thumb { background: var(--teal); }
+
+/* ── Section cards ─────────────────────────────────── */
+.section-card {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  margin-bottom: 12px;
+  background: rgba(11,34,39,0.5);
+  transition: border-color 0.15s;
+}
+.section-card:focus-within { border-color: var(--teal-soft); }
+
+.sc-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(6,22,25,0.4);
+}
+.sc-type-badge {
+  font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 2px; flex-shrink: 0;
+}
+.badge-prose    { background: rgba(74,154,170,0.15); color: var(--teal-bright); border: 1px solid rgba(74,154,170,0.3); }
+.badge-epigraph { background: rgba(233,74,124,0.1);  color: var(--rose-soft);   border: 1px solid rgba(233,74,124,0.25); }
+.badge-uplink   { background: rgba(45,91,102,0.2);   color: #6ecfde;            border: 1px solid rgba(74,154,170,0.3); }
+.badge-break    { background: rgba(212,168,67,0.1);  color: var(--amber);       border: 1px solid rgba(212,168,67,0.25); }
+
+.sc-heading-input {
+  flex: 1; background: transparent; border: none;
+  color: var(--ivory-2); font-family: var(--mono); font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+.sc-heading-input:focus { outline: none; }
+.sc-heading-input::placeholder { color: var(--muted); opacity: 0.5; }
+
+.sc-actions { display: flex; gap: 4px; margin-left: auto; }
+.sc-act {
+  padding: 2px 6px; border: none; background: transparent;
+  color: var(--muted); font-family: var(--mono); font-size: 0.65rem;
+  cursor: pointer; border-radius: 2px; transition: all 0.12s;
+}
+.sc-act:hover { color: var(--rose); background: rgba(233,74,124,0.08); }
+
+.sc-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+
+/* Scene break card */
+.scene-break-card {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; padding: 12px; color: var(--rose); opacity: 0.5;
+  font-size: 0.7rem; letter-spacing: 0.1em;
+}
+
+/* ── Paragraph rows ────────────────────────────────── */
+.para-row {
+  display: flex; align-items: flex-start; gap: 8px;
+  border: 1px solid transparent; border-radius: 2px;
+  transition: border-color 0.12s;
+}
+.para-row:focus-within { border-color: var(--line-strong); }
+
+.para-num {
+  font-size: 0.55rem; color: var(--muted); padding-top: 8px;
+  min-width: 20px; text-align: right; flex-shrink: 0; opacity: 0.5;
+}
+.para-textarea {
+  flex: 1; background: transparent; border: none; resize: none;
+  color: var(--ivory-2); font-family: var(--serif); font-size: 1rem;
+  line-height: 1.65; padding: 6px 0; min-height: 52px;
+  overflow: hidden;
+}
+.para-textarea:focus { outline: none; color: var(--ivory); }
+.para-textarea::placeholder { color: var(--muted); opacity: 0.4; font-style: italic; }
+
+.para-del {
+  padding: 6px 4px; border: none; background: transparent;
+  color: var(--muted); font-size: 0.7rem; cursor: pointer;
+  opacity: 0; transition: opacity 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+.para-row:hover .para-del { opacity: 1; }
+.para-del:hover { color: var(--rose); }
+
+.add-para-btn {
+  width: 100%; padding: 6px; border: 1px dashed var(--line);
+  background: transparent; color: var(--muted);
+  font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.2em;
+  text-transform: uppercase; cursor: pointer; border-radius: 2px;
+  transition: all 0.12s; margin-top: 2px;
+}
+.add-para-btn:hover { border-color: var(--teal-soft); color: var(--teal-bright); }
+
+/* ── Add section bar ───────────────────────────────── */
+.add-section-bar {
+  padding: 12px 28px;
+  border-top: 1px solid var(--line);
+  display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+  background: rgba(6,22,25,0.4);
+}
+.add-section-label { font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+
+/* ── Preview pane ──────────────────────────────────── */
+.preview-pane {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--ink);
+}
+.preview-scroll { flex: 1; overflow-y: auto; padding: 48px 56px 80px; }
+.preview-scroll::-webkit-scrollbar { width: 4px; }
+.preview-scroll::-webkit-scrollbar-track { background: var(--ink); }
+.preview-scroll::-webkit-scrollbar-thumb { background: var(--teal); }
+
+/* Preview typography — mirrors reader.html */
+.pv-eyebrow { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--rose); margin-bottom: 10px; }
+.pv-title   { font-family: var(--serif); font-size: clamp(1.8rem,3vw,2.6rem); font-weight: 300; color: var(--ivory); margin-bottom: 6px; line-height: 1.1; }
+.pv-subtitle{ font-family: var(--serif); font-style: italic; color: var(--muted); font-size: 1rem; margin-bottom: 48px; }
+
+.pv-epigraph { margin: 0 0 48px; padding: 24px 28px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.pv-epigraph p { font-family: var(--serif); font-style: italic; font-size: 1.05rem; line-height: 1.8; color: var(--ivory-2); margin-bottom: 0.8em; }
+.pv-epigraph p:last-child { margin-bottom: 0; }
+
+.pv-uplink { margin: 48px 0; padding: 18px 24px; border-left: 2px solid var(--teal-soft); background: rgba(45,91,102,0.12); }
+.pv-uplink-label { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.28em; text-transform: uppercase; color: #6ecfde; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.pv-uplink-label::before { content: '◉'; }
+.pv-uplink p { font-family: var(--mono); font-size: 0.78rem; line-height: 1.75; color: #b8d8de; letter-spacing: 0.02em; margin-bottom: 4px; }
+
+.pv-break { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 56px 0; opacity: 0.45; }
+.pv-break span { color: var(--rose); font-size: 0.7rem; }
+
+.pv-location { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--teal-soft); margin: 40px 0 20px; display: flex; align-items: center; gap: 10px; }
+.pv-location::before { content: ''; display: inline-block; width: 20px; height: 1px; background: var(--teal-soft); }
+.pv-section-head { font-family: var(--serif); font-weight: 300; color: var(--muted); font-size: 1.05rem; margin: 32px 0 20px; }
+
+.pv-para { font-family: var(--serif); font-size: 1.1rem; line-height: 1.85; color: var(--ivory-2); margin-bottom: 1.5em; }
+.pv-para.drop-cap::first-letter { font-size: 3.8em; float: left; line-height: 0.82; padding: 0.1em 0.08em 0 0; color: var(--rose); font-weight: 500; }
+
+/* ── JSON pane ─────────────────────────────────────── */
+.json-pane {
+  display: none; flex-direction: column; overflow: hidden;
+  border-left: 1px solid var(--line);
+}
+.json-pane.visible { display: flex; }
+.json-scroll { flex: 1; overflow-y: auto; padding: 20px; }
+.json-code {
+  font-family: var(--mono); font-size: 0.72rem; line-height: 1.65;
+  color: #b8d8de; white-space: pre-wrap; word-break: break-all;
+}
+
+/* ── Toast ─────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--ink-3); border: 1px solid var(--line-strong);
+  padding: 8px 18px; border-radius: 2px; font-size: 0.65rem;
+  letter-spacing: 0.1em; color: var(--ivory); z-index: 999;
+  transition: opacity 0.3s; pointer-events: none;
+}
+.toast.hidden { opacity: 0; }
+
+/* ── Markup legend ─────────────────────────────────── */
+.legend {
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--line);
+  display: flex; gap: 20px; flex-wrap: wrap; flex-shrink: 0;
+  background: rgba(6,22,25,0.3);
+}
+.lg-item { font-size: 0.58rem; letter-spacing: 0.1em; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+.lg-key { background: rgba(74,154,170,0.15); color: var(--teal-bright); padding: 1px 5px; border-radius: 2px; font-size: 0.6rem; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── TOP BAR ──────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="tb-left">
+      <div class="tb-logo"><span class="dot"></span>THE UNFOLDING</div>
+      <span class="tb-title">◉ Chapter Editor</span>
+      <div class="tb-meta">
+        <input class="tb-input" id="ch-title"    placeholder="Chapter title…" oninput="refreshPreview()"/>
+        <input class="tb-input" id="ch-subtitle" placeholder="Subtitle / timestamp…" style="width:200px" oninput="refreshPreview()"/>
+        <select class="tb-select" id="ch-number">
+          ${Array.from({length:24},(_,i)=>`<option value="${i+1}">Ch. ${i+1}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="tb-right">
+      <button class="tb-btn" onclick="loadJSON()">📂 Load JSON</button>
+      <button class="tb-btn amber" onclick="toggleJSON()">{ } JSON</button>
+      <button class="tb-btn primary" onclick="downloadJSON()">⬇ Download JSON</button>
+      <input type="file" id="file-input" accept=".json" style="display:none" onchange="handleFileLoad(event)"/>
+    </div>
+  </header>
+
+  <!-- ── COLUMNS ──────────────────────────────────────── -->
+  <div class="columns" id="columns">
+
+    <!-- Editor -->
+    <div class="editor-pane">
+      <div class="pane-head">
+        <span class="pane-label">◉ Editor</span>
+        <div class="markup-btns">
+          <button class="mk-btn" onclick="wrapSelection('*','*')" title="Italic (*text*)">𝑖 Italic</button>
+          <button class="mk-btn" onclick="wrapSelection('**','**')" title="Bold (**text**)"><b>B</b> Bold</button>
+          <button class="mk-btn" onclick="wrapSelection('~~','~~')" title="Small caps (~~text~~)">Sᴍ Caps</button>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="lg-item"><span class="lg-key">*text*</span> italic</div>
+        <div class="lg-item"><span class="lg-key">**text**</span> bold</div>
+        <div class="lg-item"><span class="lg-key">~~text~~</span> small caps</div>
+        <div class="lg-item"><span class="lg-key">Enter</span> line break within paragraph</div>
+        <div class="lg-item"><span class="lg-key">+ paragraph</span> new paragraph block</div>
+      </div>
+      <div class="editor-area" id="editor-area"></div>
+      <div class="add-section-bar">
+        <span class="add-section-label">Add section</span>
+        <button class="tb-btn" onclick="addSection('prose')">+ Prose</button>
+        <button class="tb-btn" onclick="addSection('epigraph')">+ Epigraph</button>
+        <button class="tb-btn" onclick="addSection('uplink')">+ Uplink</button>
+        <button class="tb-btn" onclick="addSection('scene-break')">+ Scene Break</button>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-pane" id="preview-pane">
+      <div class="pane-head">
+        <span class="pane-label">◉ Preview</span>
+      </div>
+      <div class="preview-scroll" id="preview-scroll"></div>
+    </div>
+
+    <!-- JSON -->
+    <div class="json-pane" id="json-pane">
+      <div class="pane-head">
+        <span class="pane-label">◉ JSON Output</span>
+        <button class="tb-btn" onclick="copyJSON()" style="font-size:0.55rem;padding:3px 10px">Copy</button>
+      </div>
+      <div class="json-scroll"><pre class="json-code" id="json-output"></pre></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+let sections = [];
+let lastFocusedTextarea = null;
+let _idCounter = 0;
+function newId() { return 's' + (++_idCounter); }
+
+// ── Markup parser ──────────────────────────────────────
+function parseMarkup(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/~~(.+?)~~/g, '<span style="font-variant:small-caps;letter-spacing:0.06em">$1</span>')
+    .replace(/\*(.+?)\*/g,   '<em>$1</em>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+// ── Section model ──────────────────────────────────────
+function makeSection(type) {
+  const id = newId();
+  if (type === 'scene-break') return { id, type };
+  if (type === 'prose')    return { id, type: 'prose',    heading: '', paragraphs: [''] };
+  if (type === 'epigraph') return { id, type: 'epigraph', paragraphs: [''] };
+  if (type === 'uplink')   return { id, type: 'uplink',   heading: 'UPLINK · ', paragraphs: [''] };
+  return { id, type, paragraphs: [''] };
+}
+
+function addSection(type) {
+  sections.push(makeSection(type));
+  renderEditor();
+  refreshPreview();
+  // Scroll editor to bottom
+  const ea = document.getElementById('editor-area');
+  ea.scrollTop = ea.scrollHeight;
+}
+
+function removeSection(id) {
+  sections = sections.filter(s => s.id !== id);
+  renderEditor();
+  refreshPreview();
+}
+
+function moveSectionUp(id) {
+  const i = sections.findIndex(s => s.id === id);
+  if (i > 0) { [sections[i-1], sections[i]] = [sections[i], sections[i-1]]; renderEditor(); refreshPreview(); }
+}
+
+function moveSectionDown(id) {
+  const i = sections.findIndex(s => s.id === id);
+  if (i < sections.length - 1) { [sections[i], sections[i+1]] = [sections[i+1], sections[i]]; renderEditor(); refreshPreview(); }
+}
+
+// ── Render editor ──────────────────────────────────────
+function renderEditor() {
+  const area = document.getElementById('editor-area');
+  area.innerHTML = '';
+  sections.forEach((sec, si) => renderSection(sec, si, area));
+}
+
+function renderSection(sec, si, container) {
+  const card = document.createElement('div');
+  card.className = 'section-card';
+  card.dataset.id = sec.id;
+
+  if (sec.type === 'scene-break') {
+    card.innerHTML = `
+      <div class="sc-head">
+        <span class="sc-type-badge badge-break">Scene Break</span>
+        <div class="sc-actions">
+          <button class="sc-act" onclick="moveSectionUp('${sec.id}')" title="Move up">↑</button>
+          <button class="sc-act" onclick="moveSectionDown('${sec.id}')" title="Move down">↓</button>
+          <button class="sc-act" onclick="removeSection('${sec.id}')" title="Remove">✕</button>
+        </div>
+      </div>
+      <div class="scene-break-card">✦ ✦ ✦</div>`;
+    container.appendChild(card);
+    return;
+  }
+
+  const badgeClass = { prose:'badge-prose', epigraph:'badge-epigraph', uplink:'badge-uplink' }[sec.type] || 'badge-prose';
+  const label = { prose:'Prose', epigraph:'Epigraph', uplink:'Uplink' }[sec.type] || sec.type;
+  const hasHeading = sec.type === 'prose' || sec.type === 'uplink';
+
+  card.innerHTML = `
+    <div class="sc-head">
+      <span class="sc-type-badge ${badgeClass}">${label}</span>
+      ${hasHeading ? `<input class="sc-heading-input" placeholder="${sec.type === 'uplink' ? 'UPLINK · heading…' : 'Section heading (optional)…'}"
+        value="${escAttr(sec.heading || '')}"
+        oninput="updateHeading('${sec.id}', this.value)"/>` : ''}
+      <div class="sc-actions">
+        <button class="sc-act" onclick="moveSectionUp('${sec.id}')" title="Move up">↑</button>
+        <button class="sc-act" onclick="moveSectionDown('${sec.id}')" title="Move down">↓</button>
+        <button class="sc-act" onclick="removeSection('${sec.id}')" title="Remove">✕</button>
+      </div>
+    </div>
+    <div class="sc-body" id="sc-body-${sec.id}"></div>`;
+
+  container.appendChild(card);
+  const body = card.querySelector(`#sc-body-${sec.id}`);
+  sec.paragraphs.forEach((p, pi) => addParaRow(body, sec, pi, p));
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-para-btn';
+  addBtn.textContent = '+ paragraph';
+  addBtn.onclick = () => { sec.paragraphs.push(''); renderEditor(); refreshPreview(); };
+  body.appendChild(addBtn);
+}
+
+function addParaRow(body, sec, pi, text) {
+  const row = document.createElement('div');
+  row.className = 'para-row';
+  row.innerHTML = `
+    <span class="para-num">${pi + 1}</span>
+    <textarea class="para-textarea" rows="2"
+      placeholder="Paragraph text… use *italic*, **bold**, ~~small caps~~"
+      oninput="updatePara('${sec.id}', ${pi}, this.value); autoResize(this)"
+      onfocus="lastFocusedTextarea = this"
+    >${escHtml(text)}</textarea>
+    <button class="para-del" onclick="deletePara('${sec.id}', ${pi})" title="Delete paragraph">✕</button>`;
+  body.appendChild(row);
+  // Auto-resize on render
+  const ta = row.querySelector('textarea');
+  requestAnimationFrame(() => autoResize(ta));
+}
+
+function autoResize(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+}
+
+function updateHeading(id, val) {
+  const sec = sections.find(s => s.id === id);
+  if (sec) { sec.heading = val; refreshPreview(); }
+}
+
+function updatePara(id, pi, val) {
+  const sec = sections.find(s => s.id === id);
+  if (sec) { sec.paragraphs[pi] = val; refreshPreview(); }
+}
+
+function deletePara(id, pi) {
+  const sec = sections.find(s => s.id === id);
+  if (sec && sec.paragraphs.length > 1) {
+    sec.paragraphs.splice(pi, 1);
+    renderEditor(); refreshPreview();
+  }
+}
+
+// ── Markup toolbar ─────────────────────────────────────
+function wrapSelection(before, after) {
+  const ta = lastFocusedTextarea;
+  if (!ta) return;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const sel = ta.value.slice(start, end);
+  const wrapped = before + sel + after;
+  ta.setRangeText(wrapped, start, end, 'select');
+  ta.dispatchEvent(new Event('input'));
+  ta.focus();
+}
+
+// ── Preview ────────────────────────────────────────────
+function refreshPreview() {
+  const chNum  = document.getElementById('ch-number').value;
+  const title  = document.getElementById('ch-title').value || 'Chapter Title';
+  const sub    = document.getElementById('ch-subtitle').value || 'Subtitle';
+  let html = `
+    <div class="pv-eyebrow">Chapter ${chNum}</div>
+    <div class="pv-title">${title}</div>
+    <div class="pv-subtitle">${sub}</div>`;
+
+  let firstProse = true;
+  sections.forEach(sec => {
+    if (sec.type === 'scene-break') {
+      html += `<div class="pv-break"><span>✦</span><span>✦</span><span>✦</span></div>`;
+    } else if (sec.type === 'epigraph') {
+      html += `<div class="pv-epigraph">${sec.paragraphs.map(p => `<p>${parseMarkup(p) || '&nbsp;'}</p>`).join('')}</div>`;
+    } else if (sec.type === 'uplink') {
+      html += `<div class="pv-uplink">
+        <div class="pv-uplink-label">${sec.heading || 'UPLINK'}</div>
+        ${sec.paragraphs.map(p => `<p>${parseMarkup(p) || '&nbsp;'}</p>`).join('')}
+      </div>`;
+    } else {
+      // prose
+      const isLocation = (sec.heading || '').includes('·') || /^[A-Z\s]{4,}$/.test(sec.heading || '');
+      if (sec.heading) {
+        html += isLocation
+          ? `<div class="pv-location">${sec.heading}</div>`
+          : `<div class="pv-section-head">${sec.heading}</div>`;
+      }
+      sec.paragraphs.forEach((p, pi) => {
+        const isFirst = firstProse && pi === 0;
+        if (isFirst) firstProse = false;
+        html += `<p class="pv-para${isFirst ? ' drop-cap' : ''}">${parseMarkup(p) || '&nbsp;'}</p>`;
+      });
+    }
+  });
+
+  document.getElementById('preview-scroll').innerHTML = html;
+  updateJSONOutput();
+}
+
+// ── JSON ───────────────────────────────────────────────
+function buildJSON() {
+  return {
+    title:    document.getElementById('ch-title').value,
+    subtitle: document.getElementById('ch-subtitle').value,
+    sections: sections.map(sec => {
+      if (sec.type === 'scene-break') return { type: 'scene-break' };
+      const out = { type: sec.type === 'prose' ? undefined : sec.type };
+      if (sec.type === 'prose' && !out.type) delete out.type;
+      if ((sec.type === 'prose' || sec.type === 'uplink') && sec.heading)
+        out.heading = sec.heading;
+      out.paragraphs = sec.paragraphs;
+      return out;
+    }).filter(Boolean)
+  };
+}
+
+function updateJSONOutput() {
+  document.getElementById('json-output').textContent = JSON.stringify(buildJSON(), null, 2);
+}
+
+function downloadJSON() {
+  const n = document.getElementById('ch-number').value;
+  const blob = new Blob([JSON.stringify(buildJSON(), null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `chapter-${n}.json`;
+  a.click();
+  toast(`Downloaded chapter-${n}.json`);
+}
+
+function copyJSON() {
+  navigator.clipboard.writeText(JSON.stringify(buildJSON(), null, 2));
+  toast('JSON copied to clipboard');
+}
+
+function toggleJSON() {
+  const jp = document.getElementById('json-pane');
+  const cols = document.getElementById('columns');
+  const visible = jp.classList.toggle('visible');
+  cols.style.gridTemplateColumns = visible ? '1fr 1fr 1fr' : '1fr 1fr';
+}
+
+// ── Load JSON ──────────────────────────────────────────
+function loadJSON() {
+  document.getElementById('file-input').click();
+}
+
+function handleFileLoad(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      document.getElementById('ch-title').value    = data.title    || '';
+      document.getElementById('ch-subtitle').value = data.subtitle || '';
+      // Detect chapter number from filename
+      const match = file.name.match(/chapter-(\d+)/i);
+      if (match) document.getElementById('ch-number').value = match[1];
+
+      sections = (data.sections || []).map(sec => {
+        const id = newId();
+        if (sec.type === 'scene-break') return { id, type: 'scene-break' };
+        return {
+          id,
+          type: sec.type || 'prose',
+          heading: sec.heading || '',
+          paragraphs: sec.paragraphs || ['']
+        };
+      });
+      renderEditor();
+      refreshPreview();
+      toast(`Loaded: ${file.name}`);
+    } catch(err) {
+      toast('Error loading JSON: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ── Utilities ──────────────────────────────────────────
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escAttr(str) {
+  return (str || '').replace(/"/g,'&quot;');
+}
+
+function toast(msg, ms = 2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.add('hidden'), ms);
+}
+
+// ── Init ───────────────────────────────────────────────
+// Start with a blank prose section
+addSection('prose');
+</script>
+</body>
+</html>

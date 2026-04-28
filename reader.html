@@ -618,7 +618,7 @@ function renderChapter(ch) {
       const parasHtml = sec.paragraphs.map(text => {
         const pid   = `ch${currentChapter}-p${paraIndex}`;
         const count = commentCounts[pid] || 0;
-        const linked = autoLink(text);
+        const linked = autoLink(parseMarkup(text));
         paraIndex++;
         return `
           <p class="para${count > 0 ? ' has-comments' : ''}"
@@ -650,7 +650,7 @@ function renderChapter(ch) {
       const parasHtml = sec.paragraphs.map(text => {
         const pid   = `ch${currentChapter}-p${paraIndex}`;
         const count = commentCounts[pid] || 0;
-        const linked = autoLink(text);
+        const linked = autoLink(parseMarkup(text));
         paraIndex++;
         return `
           <p class="para epigraph-para${count > 0 ? ' has-comments' : ''}"
@@ -681,7 +681,7 @@ function renderChapter(ch) {
       const pid   = `ch${currentChapter}-p${paraIndex}`;
       const count = commentCounts[pid] || 0;
       const isFirst = paraIndex === 0;
-      const linked  = autoLink(text);
+      const linked  = autoLink(parseMarkup(text));
       paraIndex++;
       html += `
         <p class="para${isFirst ? ' drop-cap' : ''}${count > 0 ? ' has-comments' : ''}"
@@ -700,6 +700,16 @@ function renderChapter(ch) {
 
   el.innerHTML = html;
   applyFontSize();
+}
+
+// ── Markup parser (*italic*, **bold**, ~~small caps~~, \n breaks) ──
+function parseMarkup(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/~~(.+?)~~/g, '<span style="font-variant:small-caps;letter-spacing:0.06em">$1</span>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
 }
 
 // ── Auto wiki linking ────────────────────────────────────
