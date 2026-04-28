@@ -933,7 +933,8 @@ function base64ToBlob(base64, mimeType) {
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return new Blob([bytes], { type: mimeType });
 }
-</script>
+
+// ── Main app ─────────────────────────────────────────────
 const SUPA_URL = 'https://sscpikfblqtmcefegrpv.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzY3Bpa2ZibHF0bWNlZmVncnB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNzUzMzgsImV4cCI6MjA5Mjk1MTMzOH0.I9qzVnzmiYxwZ6RPLV7KWva8P9L0Q1MHFqgmlmr3g0g';
 const { createClient } = supabase;
@@ -1043,13 +1044,18 @@ async function initAuth() {
   });
 }
 
+function getAvatarUrl(meta) {
+  return meta?.avatar_url || meta?.picture || '';
+}
+
 function renderAuthArea() {
   const el = document.getElementById('auth-area');
   if (currentUser) {
     const meta = currentUser.user_metadata;
-    const name = meta?.custom_claims?.global_name || meta?.full_name || meta?.name || 'Reader';
+    const name   = meta?.custom_claims?.global_name || meta?.full_name || meta?.name || 'Reader';
+    const avatar = getAvatarUrl(meta);
     el.innerHTML = `
-      <img class="auth-avatar" src="${meta.avatar_url || ''}" alt="${name}"/>
+      ${avatar ? `<img class="auth-avatar" src="${avatar}" alt="${name}"/>` : ''}
       <span class="auth-name">${name}</span>
       <button class="auth-btn" onclick="signOut()">Sign out</button>`;
   } else {
@@ -1340,7 +1346,7 @@ async function submitComment() {
     paragraph_id: currentParaId,
     user_id:      currentUser.id,
     display_name: displayName,
-    avatar_url:   meta.avatar_url || '',
+    avatar_url:   getAvatarUrl(meta),
     body
   });
 
