@@ -566,9 +566,27 @@ async function buildWikiIndex() {
 
 // ── Auth ─────────────────────────────────────────────────
 async function initAuth() {
+  // First try to get session from URL hash (OAuth callback)
+  const { data: { session: hashSession } } = await db.auth.getSession();
+
+  // If no session yet, try exchanging the hash params manually
+  if (!hashSession && window.location.hash.includes('access_token')) {
+    const params = new URLSearchParams(window.location.hash.replace(/^#+/, ''));
+    const access_token  = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
+    if (access_token && refresh_token) {
+      await db.auth.setSession({ access_token, refresh_token });
+    }
+  }
+
   const { data: { session } } = await db.auth.getSession();
   currentUser = session?.user ?? null;
   renderAuthArea();
+
+  // Clean the URL without reloading
+  if (window.location.hash.includes('access_token')) {
+    history.replaceState(null, '', window.location.pathname);
+  }
 
   db.auth.onAuthStateChange(async (_event, session) => {
     currentUser = session?.user ?? null;
@@ -587,7 +605,6 @@ async function initAuth() {
           body: JSON.stringify({ provider_token: session.provider_token }),
         });
       } catch(e) {
-        // Silent fail — joining server is best-effort
         console.warn('Discord join failed:', e);
       }
     }
@@ -612,7 +629,7 @@ async function signIn() {
   await db.auth.signInWithOAuth({
     provider: 'discord',
     options: {
-      redirectTo: window.location.href,
+      redirectTo: window.location.origin + window.location.pathname,
       scopes: 'identify email guilds.join'
     }
   });
