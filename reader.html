@@ -140,7 +140,45 @@
 }
 .wiki-link:hover { border-bottom-color: var(--rose); color: var(--rose-soft); }
 
-/* ── Drop cap ──────────────────────────────────────────── */
+.ch-section-head {
+  font-family: var(--serif); font-weight: 300; color: var(--muted);
+  font-size: 1.1rem; margin-bottom: 28px;
+}
+
+/* ── Uplink interlude ──────────────────────────────────── */
+.uplink-block {
+  margin: 56px -10px;
+  padding: 24px 28px;
+  border-left: 2px solid var(--teal);
+  background: rgba(45,91,102,0.07);
+  border-radius: 0 3px 3px 0;
+}
+.uplink-label {
+  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--teal-soft); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.uplink-label::before {
+  content: '◉'; color: var(--teal-soft); font-size: 0.7rem;
+}
+.uplink-para {
+  font-family: var(--mono); font-size: 0.8rem; line-height: 1.8;
+  color: var(--muted); margin-bottom: 6px; letter-spacing: 0.03em;
+}
+.uplink-para:last-child { margin-bottom: 0; }
+
+/* ── Epigraph ──────────────────────────────────────────── */
+.epigraph-block {
+  margin: 0 0 56px;
+  padding: 28px 32px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.epigraph-para {
+  font-family: var(--serif); font-style: italic;
+  font-size: 1.05rem; line-height: 1.8; color: var(--muted);
+  margin: 0;
+}
 .para.drop-cap::first-letter {
   font-family: var(--serif);
   font-size: 4.2em; float: left; line-height: 0.82;
@@ -418,92 +456,38 @@ let currentUser      = null;
 let wikiIndex        = {};   // name/alias → entry
 let commentCounts    = {};   // paragraphId → count
 
-// ── Chapters data ────────────────────────────────────────
-const CHAPTERS = {
-  1: {
-    title:    "The Fold Closes",
-    subtitle: "Click 1, Freya Local Time",
-    sections: [
-      {
-        paragraphs: [
-          "The last thing the Zaytsev Fold did before it died was make a sound. Not the roar Oliver had expected — no tearing, no explosion, nothing that matched the weight of what was happening. It was a soft, definitive click, like a jar being sealed from the outside. Then the aperture was gone. And with it, everything that had come before.",
-          "He watched it close from the observation deck of the Freya — still docked, still technically a ship, though everyone had stopped pretending it would ever leave. The Fold had been a bruise of light for as long as Oliver could remember: a purple-pink shimmer at the edge of the Yreus system, two million kilometres from Mairee's orbit. Now there was only dark.",
-          "He was sixteen. He had never been to Sol. He did not grieve the Fold the way the adults did — with that particular silence that fell over the Hearth dome when the announcement came through, the kind of silence that was actually a held breath, a whole colony inhaling at once and not letting go. What Oliver felt was different. He felt the shape of it. The geometry of the thing that had just closed.",
-          "Somewhere behind him, the Hearth dome was filling with people. He could hear the distant echo of Commander Vilde's voice beginning to carry — clear, measured, the voice of someone who had practised delivering impossible news. Oliver did not turn around. He pressed his forehead against the cold viewport glass and watched the place where the Fold had been.",
-        ]
-      },
-      {
-        heading: "I.",
-        paragraphs: [
-          "The Freya had been a colony ship once — the flagship of the Fleet, a vessel designed to carry three thousand people across the void and deliver them, intact, to a new world. Now it was a settlement. The lower decks had been unsealed eighteen months ago, the hull breached in three places to allow for expansion, corridors repurposed as streets, the cargo bays converted into workshops and hydroponic rows.",
-          "Oliver lived in cabin seven of what had been Crew Deck B. His mother had moved out eight months ago — or rather, had stopped coming back — and the cabin now held mostly his things: component boards, stripped actuator housings, two broken environment suits he was slowly cannibalising for parts, and a stack of mission logs he had not yet returned to the archive. He slept on the floor when the bunk felt too large.",
-          "The morning after the Fold closed, he was back at his workbench by 0400. He had not slept. There was a Grid terminal he had been rebuilding for the past three weeks — a Mark IV relay unit, older than he was, pulled from a conduit that had flooded during the last wet season — and he worked at it with the focused, slightly manic attention that his supervisor Ian Perera called 'Oliver's way of being frightened.' Ian was probably right. Oliver did not argue.",
-          "By 0600 the terminal was responding to handshake requests. By 0630 it was pulling signal. By 0700 Oliver had confirmed what everyone on the colony was waking up to: the Yreus Array was dark. No signal from Sol. No handshake from the relay network. The Fold had not just closed — it had taken the communication infrastructure with it, cleanly, as if the whole apparatus had been designed to fail together.",
-          "He sat with that information for a long time. Then he made himself a cup of something that was called coffee on the official ration manifest and probably wasn't, and went to find Ian.",
-        ]
-      }
-    ]
-  },
-  2: {
-    title:    "The Directorate",
-    subtitle: "Click 4, Freya Local Time",
-    sections: [
-      {
-        paragraphs: [
-          "The Emergency Suppression Protocol was invoked on the morning of Click 4. Oliver heard about it from Sena Valk, who heard it from a corridor announcement that she had intercepted on a modified comms unit she kept in her jacket pocket. Sena collected information the way other people collected tools — compulsively, and with the sense that someday the right piece would save her life.",
-          "Director Corbin had been Head of Logistics since the transit. He was a compact, bald man who wore immaculate black uniforms and had a habit of pulling his gloves tighter, one finger at a time, before he spoke. Oliver had seen him at colony briefings maybe a dozen times. He had never once seen him smile. He had seen him, on two separate occasions, reduce grown adults to silence with a single sentence.",
-          "The announcement was brief. The Fold's closure constituted an existential threat to colony stability. Commander Vilde's charter-based governance structure was being superseded by the Directorate pending a full resource audit. All personnel were to report to their assigned stations. Curfew would be enforced at 2200 local time. Violations would be processed under emergency statute.",
-          "Oliver listened to Sena read it back from her device and tried to parse what it meant. Vilde had been their anchor. She had delivered the eulogies for the people who hadn't survived the transit. She had sat in the Hearth dome for three nights after the Fold closed, meeting with anyone who wanted to talk. Oliver had not gone, but he had known she was there, and that had been something.",
-          "Now she was being superseded. The word sat in his chest like a stone.",
-        ]
-      },
-      {
-        heading: "II.",
-        paragraphs: [
-          "Ian Perera found him in the workshop at noon. Ian was forty-one, a structural engineer by training and a fixer by temperament — the kind of person who arrived at a problem and immediately started looking for the load-bearing element. He had been Oliver's supervisor for fourteen months, which meant he had known Oliver for approximately the same length of time he had known Mairee, and he treated both with the same wary, careful respect.",
-          "He set two ration packs on the workbench without comment. Oliver did not stop working. Ian sat down on an upturned crate and ate his ration pack with the methodical patience of a man who had learned not to rush anything that did not need rushing.",
-          "After a while Ian said, 'You heard about Vilde.'",
-          "'Yes,' Oliver said.",
-          "'What do you think?'",
-          "Oliver set down the circuit board he was holding. He thought about the shape of the Fold closing. He thought about the colony's three thousand people waking up to an announcement about curfew. He thought about Director Corbin's gloves.",
-          "'I think,' he said carefully, 'that I'm going to need to understand the Grid better than I do right now.'",
-          "Ian looked at him for a long moment. Then he nodded once, picked up Oliver's untouched ration pack, and set it closer to his hand.",
-          "'Then we'd better start,' Ian said.",
-        ]
-      }
-    ]
-  },
-  3: {
-    title:    "Below the Canopy",
-    subtitle: "Click 9, The Delta",
-    sections: [
-      {
-        paragraphs: [
-          "The Delta began where the Freya's perimeter fencing ended and the burr-vine took over. The vine had reached the third fence post by the time Oliver first came here with the survey team — a dense, barbed carpet that crept across everything with the patient confidence of something that had been here long before the colonists arrived and fully intended to be here long after.",
-          "He had been assigned to the team as a technical observer, which meant he carried the sensor unit and kept his mouth shut and tried not to touch anything that had not been identified. The survey team leader was a woman named Dr. Cassel who wore a modified environment suit that had been repaired so many times it was difficult to identify the original material, and who spoke about the Delta with the particular intensity of someone who had stopped being afraid of it.",
-          "The canopy closed over them within fifty metres of the perimeter. It was not dark exactly — the light came through in greenish shafts, diffused and strange, the colour of shallow water — but it was a different order of visibility than the open plateau. Sounds changed. The constant low hum of the Freya's reactor, which Oliver had lived with his entire life, was replaced by something that was not silence but was close to it: the deep, layered quiet of a system that was doing a great deal of work very slowly.",
-          "Dr. Cassel stopped at a cluster of tendril roots and crouched beside them. Oliver crouched too. The roots lay across the soil surface in a fine pale net, the individual strands barely thicker than thread. He had read the survey notes. He knew, technically, what they were. But reading about the Myco-Rhizomic System and being three centimetres away from the part of it you could see were two different things.",
-          "'Don't touch,' Dr. Cassel said, not unkindly.",
-          "Oliver didn't. But he held his sensor unit over the root network and watched the readings climb.",
-        ]
-      },
-      {
-        heading: "III.",
-        paragraphs: [
-          "The dartswarm found them on the way back. Oliver had been warned about dartswarms in the pre-excursion briefing, in the same careful tone that the briefing covered everything: clinically, with the implication that the information was useful but insufficient. What the briefing had not conveyed was the sound.",
-          "It was a high, faint keening — almost musical, almost not — that arrived maybe thirty seconds before the swarm itself. Dr. Cassel heard it first. She stopped walking and held up one hand, and the entire team stopped with the immediate obedience of people who had learned that Dr. Cassel's instincts were worth obeying.",
-          "The swarm came through the canopy in a silver ribbon that caught the filtered light and turned it into something briefly, painfully beautiful. Oliver watched it move. It was coherent — that was the thing that his briefing notes hadn't prepared him for, the way the thousands of individual filaments moved as a single body, bending and folding through the air with a kind of slow, considered grace.",
-          "They stood still. The swarm passed maybe four metres above their heads. The keening faded. The canopy re-settled. Oliver let out the breath he had not known he was holding.",
-          "Dr. Cassel lowered her hand. She looked at Oliver.",
-          "'Welcome to the Delta,' she said.",
-          "Oliver looked up at the canopy, still shifting faintly from the swarm's passage. He thought about the tendril roots and their readings. He thought about the gramophone plants he had not yet heard but had been told about — the ones that collected sound and played it back, days later, in wrong contexts.",
-          "He thought: this place is already listening.",
-          "He wrote that down when he got back. He did not put it in the official survey report.",
-        ]
-      }
-    ]
+// ── Chapters — loaded from data/chapters/chapter-N.json ──
+const CHAPTER_COUNT = 1; // increment as you add files
+
+async function loadChapter(n) {
+  currentChapter = n;
+  currentParaId  = null;
+  renderChapterPills();
+  closeSidebar();
+
+  const el = document.getElementById('chapter-content');
+  el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:50vh;font-family:var(--serif);font-style:italic;color:var(--muted)">Loading…</div>`;
+
+  let ch;
+  try {
+    const res = await fetch(`data/chapters/chapter-${n}.json`);
+    ch = await res.json();
+  } catch(e) {
+    el.innerHTML = `<div style="text-align:center;padding:80px;font-family:var(--serif);font-style:italic;color:var(--muted)">Chapter not found.</div>`;
+    return;
   }
-};
+
+  await loadCommentCounts(n);
+  renderChapter(ch);
+}
+
+function renderChapterPills() {
+  const el = document.getElementById('chapter-pills');
+  el.innerHTML = Array.from({ length: CHAPTER_COUNT }, (_, i) => i + 1).map(n => `
+    <button class="cp-btn ${n === currentChapter ? 'active' : ''}" onclick="loadChapter(${n})">
+      Ch. ${n}
+    </button>`).join('');
+}
 
 // ── Wiki index builder ───────────────────────────────────
 const DATA_FILES = [
@@ -559,27 +543,8 @@ async function signOut() {
   await db.auth.signOut();
 }
 
-// ── Chapter rendering ────────────────────────────────────
-function renderChapterPills() {
-  const el = document.getElementById('chapter-pills');
-  el.innerHTML = Object.keys(CHAPTERS).map(n => `
-    <button class="cp-btn ${n == currentChapter ? 'active' : ''}" onclick="loadChapter(${n})">
-      Ch. ${n}
-    </button>`).join('');
-}
-
-async function loadChapter(n) {
-  currentChapter = n;
-  currentParaId  = null;
-  renderChapterPills();
-  closeSidebar();
-  await loadCommentCounts(n);
-  renderChapter();
-}
-
-function renderChapter() {
-  const ch  = CHAPTERS[currentChapter];
-  const el  = document.getElementById('chapter-content');
+function renderChapter(ch) {
+  const el = document.getElementById('chapter-content');
 
   let paraIndex = 0;
   let html = `
@@ -587,12 +552,32 @@ function renderChapter() {
     <h1 class="ch-title">${ch.title}</h1>
     <p class="ch-subtitle">${ch.subtitle}</p>`;
 
-  ch.sections.forEach((sec, si) => {
-    if (sec.heading) html += `<div class="ch-divider"></div><h3 style="font-family:var(--serif);font-weight:300;color:var(--muted);font-size:1.1rem;margin-bottom:28px">${sec.heading}</h3>`;
+  ch.sections.forEach((sec) => {
+
+    // ── Uplink interlude ──
+    if (sec.type === 'uplink') {
+      html += `<div class="uplink-block">
+        <div class="uplink-label">${sec.heading || 'UPLINK'}</div>
+        ${sec.paragraphs.map(p => `<p class="uplink-para">${p}</p>`).join('')}
+      </div>`;
+      return;
+    }
+
+    // ── Epigraph ──
+    if (sec.type === 'epigraph') {
+      html += `<div class="epigraph-block">
+        ${sec.paragraphs.map(p => `<p class="epigraph-para">${p}</p>`).join('')}
+      </div>`;
+      return;
+    }
+
+    // ── Normal section ──
+    if (sec.heading) html += `<div class="ch-divider"></div><h3 class="ch-section-head">${sec.heading}</h3>`;
+
     sec.paragraphs.forEach((text, pi) => {
       const pid   = `ch${currentChapter}-p${paraIndex}`;
       const count = commentCounts[pid] || 0;
-      const isFirst = si === 0 && pi === 0;
+      const isFirst = paraIndex === 0;
       const linked  = autoLink(text);
       paraIndex++;
       html += `
