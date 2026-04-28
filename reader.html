@@ -947,7 +947,7 @@ async function narrationGoTo(index) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${SUPA_KEY}`,
         },
-        body: JSON.stringify({ text, isEpigraph: isEpigraphPara(pid) })
+        body: JSON.stringify({ text })
       });
       data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -1151,7 +1151,7 @@ async function prefetchNext(index) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${SUPA_KEY}`,
       },
-      body: JSON.stringify({ text, isEpigraph: isEpigraphPara(narrationParaIds[index + 1]) })
+      body: JSON.stringify({ text })
     });
     const data = await res.json();
     if (!data.error) narrationCache[pid] = data;
@@ -1217,6 +1217,7 @@ const CHAPTER_COUNT = 3; // increment as you add files
 async function loadChapter(n) {
   currentChapter = n;
   currentParaId  = null;
+  narrationCache = {}; // clear audio cache on chapter change
   renderChapterPills();
   closeSidebar();
 
