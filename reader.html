@@ -2023,7 +2023,7 @@ function openPodcastPanel() {
   const panel  = document.getElementById('podcast-panel');
   const iframe = document.getElementById('podcast-iframe');
   if (iframe.src === 'about:blank' || !iframe.src.includes(`chapter=${currentChapter}`)) {
-    iframe.src = `podcast.html?chapter=${currentChapter}`;
+    iframe.src = `podcast-player.html?chapter=${currentChapter}`;
   }
   panel.classList.add('open');
   if (narrationActive && narrationAudio && !narrationAudio.paused) {

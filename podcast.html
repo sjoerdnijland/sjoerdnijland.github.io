@@ -31,7 +31,7 @@ html, body {
   background: var(--ink);
   color: var(--ivory);
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 15px;
   min-height: 100vh;
   line-height: 1.5;
 }
@@ -49,7 +49,7 @@ body::before {
 /* ── Header ── */
 .pod-header { text-align: center; margin-bottom: 56px; }
 .pod-show-label {
-  font-size: 0.6rem; letter-spacing: 0.4em; text-transform: uppercase;
+  font-size: 0.78rem; letter-spacing: 0.4em; text-transform: uppercase;
   color: var(--teal-b); margin-bottom: 12px;
   display: flex; align-items: center; justify-content: center; gap: 12px;
 }
@@ -63,7 +63,7 @@ body::before {
 }
 .pod-subtitle {
   font-family: var(--serif); font-style: italic;
-  font-size: 1.05rem; color: var(--muted);
+  font-size: 1.15rem; color: var(--muted);
 }
 
 /* ── Hosts ── */
@@ -84,10 +84,10 @@ body::before {
 .host.vera .host-avatar { border-color: var(--vera); background: rgba(233,74,124,0.1); color: var(--vera); }
 .host.milo .host-avatar { border-color: var(--milo); background: rgba(74,154,170,0.1); color: var(--milo); }
 .host.speaking .host-avatar { box-shadow: 0 0 20px currentColor; }
-.host-name { font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; }
+.host-name { font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase; }
 .host.vera .host-name { color: var(--vera); }
 .host.milo .host-name { color: var(--milo); }
-.host-desc { font-family: var(--serif); font-style: italic; font-size: 0.8rem; color: var(--muted); }
+.host-desc { font-family: var(--serif); font-style: italic; font-size: 0.9rem; color: var(--muted); }
 .hosts-divider { font-size: 1.2rem; color: var(--muted); opacity: 0.3; }
 
 /* ── Chapter selector ── */
@@ -95,12 +95,12 @@ body::before {
   margin-bottom: 40px;
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
 }
-.cs-label { font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
+.cs-label { font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
 .ch-pills { display: flex; gap: 8px; flex-wrap: wrap; }
 .ch-pill {
   padding: 6px 16px; border: 1px solid var(--line-s);
   background: transparent; color: var(--muted);
-  font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.15em;
+  font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.15em;
   text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.15s;
 }
 .ch-pill:hover { border-color: var(--rose); color: var(--rose); }
@@ -119,13 +119,13 @@ body::before {
 }
 .generate-btn:hover { background: var(--rose); color: var(--ink); box-shadow: 0 0 30px rgba(233,74,124,0.3); }
 .generate-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
-.gen-icon { font-size: 1rem; }
+.gen-icon { font-size: 1.1rem; }
 
 /* ── Status ── */
 .status-bar {
   padding: 12px 20px; margin-bottom: 32px;
   border: 1px solid var(--line); background: rgba(12,16,32,0.6);
-  font-size: 0.68rem; letter-spacing: 0.12em; color: var(--teal-b);
+  font-size: 0.82rem; letter-spacing: 0.12em; color: var(--teal-b);
   display: none; align-items: center; gap: 10px;
 }
 .status-bar.visible { display: flex; }
@@ -144,8 +144,8 @@ body::before {
 .np-host-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .np-host-dot.vera { background: var(--vera); box-shadow: 0 0 8px var(--vera); }
 .np-host-dot.milo { background: var(--milo); box-shadow: 0 0 8px var(--milo); }
-.np-text { font-family: var(--serif); font-size: 1.1rem; color: var(--ivory); font-style: italic; flex: 1; line-height: 1.5; }
-.np-host { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.np-text { font-family: var(--serif); font-size: 1.25rem; color: var(--ivory); font-style: italic; flex: 1; line-height: 1.5; }
+.np-host { font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
 
 /* Progress */
 .progress-wrap { margin-bottom: 24px; }
@@ -154,7 +154,7 @@ body::before {
   position: relative; margin-bottom: 8px;
 }
 .progress-fill { height: 100%; background: linear-gradient(to right, var(--teal), var(--rose)); width: 0%; transition: width 0.1s linear; }
-.progress-times { display: flex; justify-content: space-between; font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; }
+.progress-times { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); letter-spacing: 0.1em; }
 
 /* Controls */
 .controls {
@@ -164,11 +164,11 @@ body::before {
 .ctrl-btn {
   padding: 10px 20px; border: 1px solid var(--line-s);
   background: transparent; color: var(--muted);
-  font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.15em;
+  font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.15em;
   text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.15s;
 }
 .ctrl-btn:hover { border-color: var(--ivory); color: var(--ivory); }
-.ctrl-btn.play { background: var(--rose); border-color: var(--rose); color: var(--ink); font-size: 0.8rem; padding: 10px 28px; }
+.ctrl-btn.play { background: var(--rose); border-color: var(--rose); color: var(--ink); font-size: 0.9rem; padding: 10px 28px; }
 .ctrl-btn.play:hover { background: #c72f63; }
 
 /* ── Script transcript ── */
@@ -187,13 +187,13 @@ body::before {
 .transcript-line.vera.active { border-left: 2px solid var(--vera); }
 .transcript-line.milo.active { border-left: 2px solid var(--milo); }
 .tl-host {
-  font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+  font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase;
   min-width: 48px; padding-top: 3px; flex-shrink: 0;
 }
 .transcript-line.vera .tl-host { color: var(--vera); }
 .transcript-line.milo .tl-host { color: var(--milo); }
 .tl-text {
-  font-family: var(--serif); font-size: 1.05rem; color: var(--ivory-2); line-height: 1.65;
+  font-family: var(--serif); font-size: 1.15rem; color: var(--ivory-2); line-height: 1.65;
 }
 
 /* ── Loading skeleton ── */
@@ -208,7 +208,7 @@ body::before {
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
   background: var(--ink-2); border: 1px solid var(--line-s);
-  padding: 10px 20px; border-radius: 2px; font-size: 0.68rem; letter-spacing: 0.1em;
+  padding: 10px 20px; border-radius: 2px; font-size: 0.82rem; letter-spacing: 0.1em;
   color: var(--ivory); z-index: 999; transition: opacity 0.3s; pointer-events: none;
 }
 .toast.hidden { opacity: 0; }

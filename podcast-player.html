@@ -19,7 +19,7 @@
   --serif:  'Cormorant Garamond', Georgia, serif;
   --mono:   'JetBrains Mono', monospace;
 }
-html, body { background: var(--ink); color: var(--ivory); font-family: var(--mono); font-size: 13px; min-height: 100vh; }
+html, body { background: var(--ink); color: var(--ivory); font-family: var(--mono); font-size: 15px; min-height: 100vh; }
 body::before {
   content:''; position:fixed; inset:0; z-index:9999; pointer-events:none;
   opacity:0.05; mix-blend-mode:overlay;
@@ -30,18 +30,18 @@ body::before {
 
 /* Header */
 .pod-header { text-align: center; margin-bottom: 40px; }
-.pod-eyebrow { font-size: 0.6rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--teal-b); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+.pod-eyebrow { font-size: 0.78rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--teal-b); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 12px; }
 .pod-eyebrow::before, .pod-eyebrow::after { content:''; display:block; width:32px; height:1px; background:var(--teal); }
 .pod-title { font-family: var(--serif); font-size: clamp(1.8rem, 3.5vw, 2.8rem); font-weight: 300; color: var(--ivory); margin-bottom: 6px; }
 .pod-subtitle { font-family: var(--serif); font-style: italic; font-size: 0.95rem; color: var(--muted); }
 
 /* Chapter pills */
 .ch-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
-.ch-label { font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+.ch-label { font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
 .ch-pill {
   padding: 5px 14px; border: 1px solid var(--line-s);
   background: transparent; color: var(--muted);
-  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.15em;
+  font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.15em;
   text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.15s;
 }
 .ch-pill:hover { border-color: var(--rose); color: var(--rose); }
@@ -51,17 +51,17 @@ body::before {
 /* Hosts */
 .hosts-bar { display: flex; align-items: center; justify-content: center; gap: 40px; margin-bottom: 28px; padding: 16px; border: 1px solid var(--line); background: rgba(12,16,32,0.5); }
 .host { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.host-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 1.1rem; border: 1px solid; transition: box-shadow 0.3s; }
+.host-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-size: 1.2rem; border: 1px solid; transition: box-shadow 0.3s; }
 .host.vera .host-avatar { border-color: var(--vera); background: rgba(233,74,124,0.1); color: var(--vera); }
 .host.milo .host-avatar { border-color: var(--milo); background: rgba(74,154,170,0.1); color: var(--milo); }
 .host.speaking .host-avatar { box-shadow: 0 0 18px currentColor; }
 .host-name { font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; }
 .host.vera .host-name { color: var(--vera); }
 .host.milo .host-name { color: var(--milo); }
-.hosts-div { font-size: 1rem; color: var(--muted); opacity: 0.3; }
+.hosts-div { font-size: 1.1rem; color: var(--muted); opacity: 0.3; }
 
 /* Status */
-.status { padding: 10px 16px; border: 1px solid var(--line); background: rgba(12,16,32,0.6); font-size: 0.65rem; letter-spacing: 0.12em; color: var(--teal-b); display: none; align-items: center; gap: 8px; margin-bottom: 24px; }
+.status { padding: 10px 16px; border: 1px solid var(--line); background: rgba(12,16,32,0.6); font-size: 0.8rem; letter-spacing: 0.12em; color: var(--teal-b); display: none; align-items: center; gap: 8px; margin-bottom: 24px; }
 .status.visible { display: flex; }
 .status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal-b); animation: blink 1s step-end infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.1} }
@@ -72,7 +72,7 @@ body::before {
 .np-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .np-dot.vera { background: var(--vera); box-shadow: 0 0 6px var(--vera); }
 .np-dot.milo { background: var(--milo); box-shadow: 0 0 6px var(--milo); }
-.np-text { font-family: var(--serif); font-size: 1rem; color: var(--ivory); font-style: italic; flex: 1; line-height: 1.5; }
+.np-text { font-family: var(--serif); font-size: 1.25rem; color: var(--ivory); font-style: italic; flex: 1; line-height: 1.5; }
 .np-host { font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
 
 /* Progress */
@@ -83,7 +83,7 @@ body::before {
 
 /* Controls */
 .controls { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 28px; }
-.ctrl { padding: 8px 18px; border: 1px solid var(--line-s); background: transparent; color: var(--muted); font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.15s; }
+.ctrl { padding: 8px 18px; border: 1px solid var(--line-s); background: transparent; color: var(--muted); font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.15s; }
 .ctrl:hover { border-color: var(--ivory); color: var(--ivory); }
 .ctrl.play { background: var(--rose); border-color: var(--rose); color: var(--ink); }
 .ctrl.play:hover { background: #c72f63; }
@@ -98,10 +98,10 @@ body::before {
 .tl-host { font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; min-width: 44px; padding-top: 3px; flex-shrink: 0; }
 .tline.vera .tl-host { color: var(--vera); }
 .tline.milo .tl-host { color: var(--milo); }
-.tl-text { font-family: var(--serif); font-size: 1rem; color: var(--ivory-2); line-height: 1.65; }
+.tl-text { font-family: var(--serif); font-size: 1.15rem; color: var(--ivory-2); line-height: 1.65; }
 
 /* Empty state */
-.empty { text-align: center; padding: 48px 0; font-family: var(--serif); font-style: italic; color: var(--muted); font-size: 1rem; }
+.empty { text-align: center; padding: 48px 0; font-family: var(--serif); font-style: italic; color: var(--muted); font-size: 1.1rem; }
 
 .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink-2); border:1px solid var(--line-s); padding:8px 18px; border-radius:2px; font-size:0.65rem; letter-spacing:0.1em; color:var(--ivory); z-index:999; transition:opacity 0.3s; pointer-events:none; }
 .toast.hidden { opacity:0; }
