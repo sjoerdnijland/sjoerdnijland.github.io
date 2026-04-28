@@ -797,6 +797,8 @@ function isEpigraphPara(pid) {
   const el = document.getElementById(pid);
   return el ? !!el.closest('.epigraph-block') : false;
 }
+
+function getNarrableParagraphs() {
   // All .para elements in current chapter, in order
   return Array.from(document.querySelectorAll('#chapter-content .para'))
     .map(el => el.dataset.paraId)
