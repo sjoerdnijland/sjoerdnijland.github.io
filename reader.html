@@ -471,7 +471,74 @@ body.wiki-hints-on .para.active .wiki-link {
 }
 .lp-btn:hover { border-color: var(--rose); color: var(--rose); }
 
-/* ── Narrate hero button ───────────────────────────────── */
+/* ── Podcast panel ─────────────────────────────────────── */
+.podcast-fab {
+  position: fixed; bottom: 28px; right: 28px; z-index: 250;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  background: rgba(6,22,25,0.95); border: 1px solid var(--teal-soft);
+  color: var(--teal-bright); font-family: var(--mono); font-size: 0.68rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px;
+  box-shadow: 0 0 20px rgba(74,154,170,0.15);
+  backdrop-filter: blur(8px);
+  transition: all 0.2s;
+  opacity: 0; pointer-events: none;
+}
+.podcast-fab.visible { opacity: 1; pointer-events: auto; }
+.podcast-fab:hover { background: var(--teal); color: var(--ink); box-shadow: 0 0 28px rgba(74,154,170,0.35); }
+
+.podcast-panel {
+  position: fixed; right: 0; top: 0; bottom: 0; z-index: 400;
+  width: min(680px, 100vw);
+  background: var(--ink);
+  border-left: 1px solid var(--line-strong);
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  display: flex; flex-direction: column;
+}
+.podcast-panel.open { transform: none; }
+.podcast-panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(6,22,25,0.97); flex-shrink: 0;
+}
+.pp-title {
+  font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--teal-bright);
+  display: flex; align-items: center; gap: 8px;
+}
+.pp-close {
+  background: transparent; border: none; color: var(--muted);
+  font-size: 1.1rem; cursor: pointer; transition: color 0.15s;
+}
+.pp-close:hover { color: var(--ivory); }
+.podcast-iframe {
+  flex: 1; border: none; background: var(--ink);
+}
+
+/* Chapter end card */
+.chapter-end-card {
+  margin: 64px 0 0;
+  padding: 36px 32px;
+  border: 1px solid var(--line);
+  background: rgba(11,34,39,0.4);
+  text-align: center;
+  display: none;
+}
+.chapter-end-card.visible { display: block; }
+.cec-label { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+.cec-title { font-family: var(--serif); font-size: 1.6rem; font-weight: 300; color: var(--ivory); margin-bottom: 8px; }
+.cec-sub { font-family: var(--serif); font-style: italic; color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; }
+.cec-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 24px; border: 1px solid var(--teal-soft);
+  background: rgba(74,154,170,0.08); color: var(--teal-bright);
+  font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.18em;
+  text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.2s;
+}
+.cec-btn:hover { background: var(--teal); color: var(--ink); }
 .narrate-hero-btn {
   display: flex; align-items: center; gap: 8px;
   padding: 7px 18px;
@@ -734,6 +801,20 @@ body.wiki-hints-on .para.active .wiki-link {
 <!-- ── TOAST ────────────────────────────────────────────── -->
 <div class="toast hidden" id="toast"></div>
 
+<!-- ── PODCAST FAB ───────────────────────────────────────── -->
+<button class="podcast-fab" id="podcast-fab" onclick="openPodcastPanel()">
+  🎙 Decoded
+</button>
+
+<!-- ── PODCAST PANEL ─────────────────────────────────────── -->
+<div class="podcast-panel" id="podcast-panel">
+  <div class="podcast-panel-head">
+    <div class="pp-title">🎙 The Unfolding · Decoded</div>
+    <button class="pp-close" onclick="closePodcastPanel()">✕</button>
+  </div>
+  <iframe class="podcast-iframe" id="podcast-iframe" src="about:blank"></iframe>
+</div>
+
 <!-- ── NARRATION OVERLAY ─────────────────────────────────── -->
 <div class="narration-overlay" id="narration-overlay">
   <div class="narration-counter" id="narration-counter"></div>
@@ -931,7 +1012,13 @@ async function narrationGoTo(index) {
   narrationLocked = true;
 
   narrationIndex = index;
-  if (index >= narrationParaIds.length) { narrationLocked = false; stopNarration(); return; }
+  if (index >= narrationParaIds.length) {
+    narrationLocked = false;
+    stopNarration();
+    // Chapter finished naturally — invite to podcast
+    setTimeout(() => showNarrationEndPrompt(), 800);
+    return;
+  }
 
   const pid = narrationParaIds[index];
   const total = narrationParaIds.length;
@@ -1617,6 +1704,19 @@ function renderChapter(ch) {
 
   el.innerHTML = html;
   applyFontSize();
+
+  // Chapter-end card with podcast invite
+  const endCard = document.createElement('div');
+  endCard.className = 'chapter-end-card visible';
+  endCard.innerHTML = `
+    <div class="cec-label">Chapter ${currentChapter} complete</div>
+    <div class="cec-title">${ch.title}</div>
+    <div class="cec-sub">Vera and Milo are ready to discuss it.</div>
+    <button class="cec-btn" onclick="openPodcastPanel()">🎙 Listen to the AI podcast review</button>`;
+  el.appendChild(endCard);
+
+  // Show the FAB
+  document.getElementById('podcast-fab').classList.add('visible');
 }
 
 // ── Markup parser (*italic*, **bold**, ~~small caps~~, \n breaks) ──
@@ -1894,6 +1994,7 @@ document.addEventListener('keydown', (e) => {
     closeWikiPopup();
     closeLookup();
     closeSidebar();
+    closePodcastPanel();
   }
 });
 
@@ -1916,7 +2017,39 @@ function toggleWikiHints() {
   applyWikiHints();
 }
 
-// ── Font size ────────────────────────────────────────────
+// ── Podcast panel ────────────────────────────────────────
+function openPodcastPanel() {
+  const panel  = document.getElementById('podcast-panel');
+  const iframe = document.getElementById('podcast-iframe');
+  if (iframe.src === 'about:blank' || !iframe.src.includes(`chapter=${currentChapter}`)) {
+    iframe.src = `podcast.html?chapter=${currentChapter}`;
+  }
+  panel.classList.add('open');
+  if (narrationActive && narrationAudio && !narrationAudio.paused) {
+    narrationTogglePlay();
+  }
+}
+
+function closePodcastPanel() {
+  document.getElementById('podcast-panel').classList.remove('open');
+}
+
+function showNarrationEndPrompt() {
+  // Show a toast-style prompt from the bottom
+  const el = document.getElementById('toast');
+  el.innerHTML = `Chapter complete. <button onclick="openPodcastPanel()" style="background:transparent;border:none;color:var(--teal-bright);font-family:var(--mono);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;margin-left:4px">🎙 Listen to the AI review →</button>`;
+  el.classList.remove('hidden');
+  el.style.pointerEvents = 'auto';
+  // Auto-hide after 8 seconds
+  clearTimeout(el._podcastTimer);
+  el._podcastTimer = setTimeout(() => {
+    el.classList.add('hidden');
+    el.style.pointerEvents = '';
+    el.innerHTML = '';
+  }, 8000);
+}
+
+// Close panel on Escape (add to existing keydown handler)
 const FONT_SIZES = [0.95, 1.05, 1.18, 1.32, 1.48]; // rem steps
 let fontSizeIdx = parseInt(localStorage.getItem('readerFontSize') ?? '2', 10);
 

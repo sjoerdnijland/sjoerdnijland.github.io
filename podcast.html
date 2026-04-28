@@ -334,6 +334,11 @@ let rafId           = null;
 
 // ── Init ─────────────────────────────────────────────────
 function init() {
+  // Auto-select chapter from URL param if present
+  const params = new URLSearchParams(window.location.search);
+  const urlChapter = parseInt(params.get('chapter') || '1', 10);
+  if (CHAPTERS[urlChapter]) selectedChapter = urlChapter;
+
   const pills = document.getElementById('ch-pills');
   pills.innerHTML = Object.keys(CHAPTERS).map(n => `
     <button class="ch-pill ${n == selectedChapter ? 'active' : ''}"
@@ -396,8 +401,9 @@ async function generatePodcast() {
         paragraphs,
       })
     });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
     const data = await res.json();
-    if (data.error) throw new Error(data.error);
+    if (data.error) throw new Error(data.error + (data.detail ? ' — ' + data.detail : ''));
     lines = data.lines;
   } catch(e) {
     toast('Script generation failed: ' + e.message);
