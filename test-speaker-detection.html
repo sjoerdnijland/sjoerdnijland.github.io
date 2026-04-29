@@ -4,142 +4,247 @@
 <meta charset="utf-8"/>
 <title>Speaker Detection Test</title>
 <style>
-  body { font-family: monospace; background: #0a1a1f; color: #c8d8dc; padding: 32px; font-size: 14px; }
-  h1 { color: #4a9aaa; margin-bottom: 24px; }
-  .test { margin-bottom: 12px; padding: 10px 14px; border-radius: 3px; }
-  .match    { background: rgba(74,154,170,0.15); border-left: 3px solid #4a9aaa; }
-  .no-match { background: rgba(200,190,168,0.06); border-left: 3px solid #3a4a50; }
+  body { font-family: monospace; background: #0a1a1f; color: #c8d8dc; padding: 32px; font-size: 14px; line-height: 1.6; }
+  h1 { color: #4a9aaa; margin-bottom: 6px; }
+  .sub { color: #5a7a82; font-size: 0.85em; margin-bottom: 28px; }
+  h2 { color: #d4a843; font-size: 0.8em; letter-spacing: 0.25em; text-transform: uppercase; margin: 28px 0 10px; }
+  textarea { width: 100%; height: 80px; background: #0c1e24; color: #c8d8dc; border: 1px solid #2d5b66; padding: 10px; font-family: monospace; font-size: 13px; margin-bottom: 8px; border-radius: 2px; }
+  .btn { padding: 8px 20px; background: #e94a7c; border: none; color: #060810; font-family: monospace; font-size: 13px; cursor: pointer; border-radius: 2px; margin-right: 8px; }
+  .btn:hover { opacity: 0.85; }
+  .test { margin-bottom: 10px; padding: 10px 14px; border-radius: 3px; }
+  .match    { background: rgba(74,154,170,0.12); border-left: 3px solid #4a9aaa; }
+  .no-voice { background: rgba(212,168,67,0.08); border-left: 3px solid #d4a843; }
+  .no-match { background: rgba(200,190,168,0.04); border-left: 3px solid #2a3a40; }
   .speaker  { color: #e94a7c; font-weight: bold; }
-  .voice    { color: #4a9aaa; }
-  .text     { color: #888; font-size: 0.85em; margin-top: 4px; }
-  textarea  { width: 100%; height: 80px; background: #0c1e24; color: #c8d8dc; border: 1px solid #2d5b66; padding: 10px; font-family: monospace; font-size: 13px; margin-bottom: 8px; }
-  button    { padding: 8px 20px; background: #e94a7c; border: none; color: #060810; font-family: monospace; font-size: 13px; cursor: pointer; border-radius: 2px; margin-bottom: 24px; }
-  #results  { margin-top: 24px; }
-  .section-title { color: #d4a843; font-size: 0.85em; letter-spacing: 0.2em; text-transform: uppercase; margin: 20px 0 8px; }
+  .voice-id { color: #4a9aaa; font-size: 0.85em; }
+  .label    { color: #d4a843; font-size: 0.85em; }
+  .dim      { color: #5a7a82; font-size: 0.82em; margin-top: 4px; }
+  .voice-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+  .play-btn { padding: 4px 12px; font-size: 0.75em; font-family: monospace; background: transparent; border: 1px solid #2d5b66; color: #4a9aaa; cursor: pointer; border-radius: 2px; transition: all 0.15s; }
+  .play-btn:hover { background: rgba(74,154,170,0.15); }
+  .play-btn.playing { border-color: #e94a7c; color: #e94a7c; }
+  .play-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .voice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; margin-bottom: 24px; }
+  .voice-card { background: #0c1e24; border: 1px solid #1a3a42; padding: 10px 14px; border-radius: 3px; }
+  .vc-name { color: #c8d8dc; font-weight: bold; font-size: 0.9em; }
+  .vc-role { color: #e94a7c; font-size: 0.78em; }
+  .vc-id   { color: #3a5a62; font-size: 0.68em; margin-top: 2px; }
+  .vc-btns { margin-top: 8px; }
 </style>
 </head>
 <body>
-<h1>◉ Speaker Detection Test</h1>
+<h1>◉ Speaker Detection & Voice Test</h1>
+<p class="sub">Tests detection logic · previews character voices via ElevenLabs</p>
 
-<div class="section-title">Test a custom paragraph</div>
-<textarea id="custom-input" placeholder='Paste a paragraph here, e.g. "Come on, Gary, lad, wake up," Muro said.'></textarea>
-<button onclick="testCustom()">Test detection</button>
-<div id="custom-result"></div>
+<h2>Test a custom paragraph</h2>
+<textarea id="custom-input" placeholder='"Come on, Gary, lad, wake up," Muro said.'></textarea>
+<button class="btn" onclick="testCustom()">▶ Test</button>
+<div id="custom-result" style="margin-top:8px"></div>
 
-<div class="section-title">Built-in test cases</div>
+<h2>Built-in test cases</h2>
 <div id="results"></div>
 
+<h2>Voice directory</h2>
+<div class="voice-grid" id="voice-grid"></div>
+
 <script>
-// ── Paste your characters data here or load from JSON ──
-let wikiIndex = {};
+const SUPA_URL = 'https://sscpikfblqtmcefegrpv.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzY3Bpa2ZibHF0bWNlZmVncnB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNzUzMzgsImV4cCI6MjA5Mjk1MTMzOH0.I9qzVnzmiYxwZ6RPLV7KWva8P9L0Q1MHFqgmlmr3g0g';
+const TTS_URL  = `${SUPA_URL}/functions/v1/podcast-tts`;
+
+let wikiIndex  = {};
+let currentAudio = null;
 
 const TEST_CASES = [
+  // ✓ Should detect speaker
   `"Come on, Gary, lad, wake up," Muro said, shaking the terminal.`,
   `Muro scratched his temple. "Nothing, Commander. Total blackout."`,
   `"Nothing," said Muro, floating back.`,
-  `He said nothing. Muro turned away.`,
   `Corbin leaned forward. "That's not your call to make."`,
   `"I need more time," Westhoff replied, his voice tight.`,
   `Vilde crossed her arms. "Then make it your call."`,
-  `The stone is listening. It always has been.`,
-  `"CIX: Weaver online," the terminal announced.`,
-  `"I still feel you." The words came from the speaker above.`,
-  `Oliver looked at the wiring. It wasn't supposed to spark.`,
   `"Are you sure about this?" asked Bellamy.`,
+  `"CIX: Weaver online." Gary's voice was too cheerful.`,
+  `"I still feel you," Gary said softly.`,
+  // ✗ Should NOT detect (no speech, or speaker unclear)
+  `He said nothing. Muro turned away.`,
+  `"I still feel you." The words came from the speaker above.`,
+  `The stone is listening. It always has been.`,
+  `Oliver looked at the wiring. It wasn't supposed to spark.`,
 ];
 
-const saidVerbs = 'said|asked|replied|whispered|called|snapped|muttered|shouted|added|answered|continued|growled|breathed|laughed|hissed|barked|pleaded|ordered|announced|shrugged|nodded|sighed|coughed|warned';
+const SAID_VERBS = 'said|asked|replied|whispered|called|snapped|muttered|shouted|added|answered|continued|growled|breathed|laughed|hissed|barked|pleaded|ordered|announced|warned|began|finished|interrupted|noted|insisted|admitted|confirmed|agreed|disagreed|protested';
 
-function clean(w) {
-  return w.toLowerCase().replace(/[^a-z0-9''\-]/g, '');
+const ACTION_WORDS = 'scratched|leaned|crossed|turned|looked|nodded|shook|stepped|stood|sat|walked|ran|opened|closed|grabbed|pulled|pushed|reached|glanced|stared|smiled|frowned|sighed|paused|hesitated|squinted|raised|lowered|stretched|spun|moved|shifted|cleared';
+
+function hasQuotes(text) {
+  return /[""\u201c\u201d']/.test(text);
 }
 
 function detectSpeaker(text) {
-  if (!text) return null;
+  // Must have quoted speech to consider voice switching
+  if (!text || !hasQuotes(text)) return null;
+
+  const q    = `[""\u201c\u201d']`;
+  const name = `([A-Z][a-z\u00e0-\u00ff]+(?:[\\s-][A-Z][a-z]+)?)`;
+  const verb = `(?:${SAID_VERBS})`;
+  const act  = `(?:${ACTION_WORDS})`;
 
   const patterns = [
     // "dialogue," Name verb
-    new RegExp(`[""'"].*?[""'"][,.]\\s+([A-Z][a-záéíóúàèìòùñ]+(?:[-\\s][A-Z][a-z]+)?)\\s+(?:${saidVerbs})`, 'i'),
-    // Name verb at start
-    new RegExp(`^([A-Z][a-záéíóúàèìòùñ]+(?:[-\\s][A-Z][a-z]+)?)\\s+(?:${saidVerbs})\\b`, 'i'),
-    // "dialogue" + Name verb (end of sentence pattern)
-    new RegExp(`[""'"]\\s*([A-Z][a-záéíóúàèìòùñ]+(?:[-\\s][A-Z][a-z]+)?)\\s+(?:${saidVerbs})`, 'i'),
-    // asked/said Name (inverted)
-    new RegExp(`(?:${saidVerbs})\\s+([A-Z][a-záéíóúàèìòùñ]+(?:[-\\s][A-Z][a-z]+)?)`, 'i'),
+    new RegExp(`${q}[^${q}]+${q}[,.]\\s*${name}\\s+${verb}`, 'i'),
+    // Name verb "dialogue"
+    new RegExp(`^${name}\\s+${verb}[,:]?\\s*${q}`, 'i'),
+    // Name action... "dialogue"  e.g. Muro scratched his temple. "Nothing..."
+    new RegExp(`^${name}\\s+${act}[^.]*\\.\\s*${q}`, 'i'),
+    // "dialogue" verb Name  e.g. "Hello" said Muro
+    new RegExp(`${q}[^${q}]+${q}\\s*${verb}\\s+${name}`, 'i'),
+    // Name's voice/tone + quote  e.g. Gary's voice was...
+    new RegExp(`^${name}'s\\s+(?:voice|tone|words)`, 'i'),
   ];
 
   for (const pat of patterns) {
     const m = text.match(pat);
-    if (m) {
-      const name = m[1].trim();
-      const nameLower = name.toLowerCase();
-      // Check wiki index
-      const entry = wikiIndex[nameLower];
-      if (entry) return { name, entry, matched: true };
-      // Try last name
-      const lastName = nameLower.split(/\s+/).pop();
-      const entryByLast = wikiIndex[lastName];
-      if (entryByLast) return { name, entry: entryByLast, matched: true };
-      // Name found but no wiki entry
-      return { name, entry: null, matched: false };
-    }
+    if (!m) continue;
+    const raw   = m[1].trim();
+    const lower = raw.toLowerCase();
+    const entry = wikiIndex[lower];
+    if (entry) return { name: raw, entry };
+    const last    = lower.split(/\s+/).pop();
+    const byLast  = wikiIndex[last];
+    if (byLast) return { name: raw, entry: byLast };
+    return { name: raw, entry: null }; // name found, not in wiki
   }
   return null;
 }
 
-async function loadCharacters() {
+// ── Voice preview ─────────────────────────────────────────
+async function previewVoice(voiceId, sampleText, btn) {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  document.querySelectorAll('.play-btn.playing').forEach(b => {
+    b.classList.remove('playing');
+    b.textContent = '▶ preview';
+  });
+  if (!voiceId) return;
+
+  btn.disabled  = true;
+  btn.textContent = '… loading';
+
   try {
-    const res = await fetch('data/characters.json');
-    const chars = await res.json();
-    chars.forEach(c => {
-      if (c.name) wikiIndex[c.name.toLowerCase()] = c;
-      if (c.aliases) c.aliases.split(',').forEach(a => {
-        wikiIndex[a.trim().toLowerCase()] = c;
-      });
+    const res  = await fetch(TTS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
+      body: JSON.stringify({ text: sampleText || 'Testing. One, two, three.', voiceId })
     });
-    console.log('Wiki index loaded:', Object.keys(wikiIndex).length, 'entries');
-    runTests();
+    const data = await res.json();
+    if (!data.audio) throw new Error(data.error || 'No audio returned');
+
+    const bytes  = atob(data.audio);
+    const arr    = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+    const blob   = new Blob([arr], { type: 'audio/mpeg' });
+    currentAudio = new Audio(URL.createObjectURL(blob));
+    currentAudio.play();
+    btn.classList.add('playing');
+    btn.textContent  = '⏸ playing';
+    btn.disabled     = false;
+    currentAudio.addEventListener('ended', () => {
+      btn.classList.remove('playing');
+      btn.textContent = '▶ preview';
+      currentAudio    = null;
+    });
   } catch(e) {
-    console.error('Could not load characters.json:', e);
-    runTests(); // run with empty index
+    btn.textContent = '▶ preview';
+    btn.disabled    = false;
+    console.error(e);
+    alert('Error: ' + e.message);
   }
 }
 
+// ── Render result ──────────────────────────────────────────
 function renderResult(text, result, container) {
-  const div = document.createElement('div');
-  div.className = result ? (result.entry?.voice_id ? 'test match' : 'test no-match') : 'test no-match';
+  const hasVoice = !!result?.entry?.voice_id;
+  const div      = document.createElement('div');
+  div.className  = 'test ' + (hasVoice ? 'match' : result ? 'no-voice' : 'no-match');
 
+  let html = '';
   if (result) {
-    div.innerHTML = `
-      <span class="speaker">▶ ${result.name}</span>
-      ${result.entry?.voice_id
-        ? `<span class="voice"> → voice: ${result.entry.voice_id}</span>`
-        : `<span style="color:#d4a843"> → found but no voice_id in characters.json</span>`
-      }
-      <div class="text">${text}</div>`;
+    html += `<span class="speaker">▶ ${result.name}</span>`;
+    if (hasVoice) {
+      const sample = text.replace(/`/g, '').replace(/'/g, "\\'").slice(0, 120);
+      html += ` <span class="voice-id">${result.entry.voice_id}</span>`;
+      html += `<div class="voice-row">
+        <button class="play-btn" onclick="previewVoice('${result.entry.voice_id}','${sample}',this)">▶ preview</button>
+        <span style="color:#5a7a82;font-size:0.8em">${result.entry.name} — ${result.entry.role || ''}</span>
+      </div>`;
+    } else {
+      html += ` <span class="label">— found but no voice_id in characters.json</span>`;
+    }
   } else {
-    div.innerHTML = `
-      <span style="color:#5a6a7a">— no speaker detected</span>
-      <div class="text">${text}</div>`;
+    html = `<span style="color:#3a5a62">— no speaker detected</span>`;
   }
+  html += `<div class="dim">${escHtml(text)}</div>`;
+  div.innerHTML = html;
   container.appendChild(div);
 }
 
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 function runTests() {
-  const container = document.getElementById('results');
-  container.innerHTML = '';
-  TEST_CASES.forEach(text => renderResult(text, detectSpeaker(text), container));
+  const c = document.getElementById('results');
+  c.innerHTML = '';
+  TEST_CASES.forEach(t => renderResult(t, detectSpeaker(t), c));
 }
 
 function testCustom() {
   const text = document.getElementById('custom-input').value.trim();
   if (!text) return;
-  const container = document.getElementById('custom-result');
-  container.innerHTML = '';
-  renderResult(text, detectSpeaker(text), container);
+  const c = document.getElementById('custom-result');
+  c.innerHTML = '';
+  renderResult(text, detectSpeaker(text), c);
 }
 
-loadCharacters();
+// ── Voice directory ───────────────────────────────────────
+function renderVoiceGrid() {
+  const grid = document.getElementById('voice-grid');
+  const seen = new Set();
+  const chars = Object.values(wikiIndex).filter(c => c.voice_id && !seen.has(c.voice_id) && seen.add(c.voice_id));
+  chars.sort((a,b) => a.name.localeCompare(b.name));
+  chars.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'voice-card';
+    const sample = `${c.name}. ${c.desc ? c.desc.split('.')[0] + '.' : 'Testing, one, two, three.'}`.slice(0,100);
+    card.innerHTML = `
+      <div class="vc-name">${c.name}</div>
+      <div class="vc-role">${c.role || ''}</div>
+      <div class="vc-id">${c.voice_id}</div>
+      <div class="vc-btns">
+        <button class="play-btn" onclick="previewVoice('${c.voice_id}','${sample.replace(/'/g,"\\'")}',this)">▶ preview</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────
+async function init() {
+  try {
+    const chars = await fetch('data/characters.json').then(r => r.json());
+    chars.forEach(c => {
+      if (c.name)    wikiIndex[c.name.toLowerCase()] = c;
+      if (c.aliases) c.aliases.split(',').forEach(a => {
+        const key = a.trim().toLowerCase();
+        if (key) wikiIndex[key] = c;
+      });
+    });
+    console.log('Loaded', Object.keys(wikiIndex).length, 'entries');
+  } catch(e) {
+    console.warn('No characters.json — running without wiki');
+  }
+  runTests();
+  renderVoiceGrid();
+}
+
+init();
 </script>
 </body>
 </html>
