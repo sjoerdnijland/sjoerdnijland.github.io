@@ -103,6 +103,18 @@ body::before {
 
 .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink-2); border:1px solid var(--line-s); padding:8px 18px; border-radius:2px; font-size:0.65rem; letter-spacing:0.1em; color:var(--ivory); z-index:999; transition:opacity 0.3s; pointer-events:none; }
 .toast.hidden { opacity:0; }
+@media (max-width: 768px) {
+  .app { padding: 28px 16px 60px; }
+  .ep-title { font-size: clamp(1.4rem, 5vw, 2rem); }
+  .ep-meta { flex-direction: column; gap: 6px; }
+  .controls { gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .ctrl-btn { padding: 8px 14px; font-size: 0.7rem; }
+  .progress-wrap { touch-action: none; }
+  .chapter-pills { flex-wrap: wrap; gap: 4px; }
+  .ch-pill { padding: 4px 10px; font-size: 0.62rem; }
+  .transcript { font-size: 0.88rem; }
+  .turn { padding: 10px 12px; }
+}
 </style>
 </head>
 <body>
