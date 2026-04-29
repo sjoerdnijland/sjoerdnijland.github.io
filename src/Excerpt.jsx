@@ -8,7 +8,7 @@ function Excerpt() {
         <div className="section-head">
           <span className="mono-label">II / Prologue</span>
           <h2 className="section-title">Freya Homestead, <em>Mairee</em></h2>
-          <p className="section-sub">The blackout.</p>
+          <p className="section-sub">The first pages. A transmission. A command. A blackout.</p>
         </div>
 
         <div className="uplink-card">
@@ -22,8 +22,7 @@ function Excerpt() {
           <p className="uplink-text">
             And if you were going to look away, <em>don't</em>. If you turn your head now,
             you'll miss the moment it decides to notice you. My name doesn't matter. Where
-            we start does. <br/>
-            Not Earth. Not Paradise.
+            we start does. Not Earth. Not Paradise.
           </p>
           <p className="uplink-text uplink-tail">
             You're on the planet <strong>Mairee</strong>, the moment the hum of the station changed.
@@ -40,84 +39,75 @@ function Excerpt() {
           </p>
           <p>
             She brought her hand to her quivering lip, as if to hold back the words she
-            didn't yet dare to speak. She rested her open palm on the edge of the comms console, which normally felt warm.
-            Now it was as though she were touching a corpse.
-            She’d often reminded her staff that fear and courage walked the same corridor.
-            Now she reminded herself, hoping it would help her steady her hand.
+            didn't yet dare to speak. She rested her open palm on the edge of the comms
+            console, which normally felt warm. Now it was as though she were touching a
+            corpse.
           </p>
           <p>
-            “Muro, what do you hear?” she finally said. She crossed to the holoscreen.
-            It rendered the lieutenant, floating weightless in Orbital Three.
-            His thinning sandy hair was sweaty, clinging to his forehead.
+            "Muro, what do you hear?" she finally said. She crossed to the holoscreen. It
+            rendered the lieutenant, floating weightless in Orbital Three. His thinning
+            sandy hair was sweaty, clinging to his forehead.
           </p>
           <p>
-            Muro scratched his temple. “Nothing, Commander. Total blackout.”
-            In his nervousness, Muro’s brogue accent took over.
-            “It’s like the Fold got flushed. Gone.
-            But the Brisinger… <em>she’s still there. Sort of.</em>”
+            Muro scratched his temple. "Nothing, Commander. Total blackout." In his
+            nervousness, Muro's brogue accent took over. "It's like the Fold got flushed.
+            Gone. But the Brisinger… <em>she's still there. Sort of.</em>"
           </p>
-
+          <p className="pullquote">
+            <span className="pq-mark">"</span>
+            We are b-being… The c-crew—
+            <span className="pq-mark">"</span>
+          </p>
           <p>
-            “What is it?” Astrid cut in.
-            Muro twitched before he answered. “The carrier wave from the Bris. It’s corrupted, right enough. On an’ off since her crossover. It’s all garbled.”
-            Astrid leaned closer to the holoscreen. “What’s their last coherent message?”<br/>
-            <em>“It’s… well, listen.”</em>
-             A jagged waveform appeared in the air.
+            The sound cut off in a high-pitched whine like a dental drill biting straight
+            into nerve. In the bay, everyone stopped breathing as if collectively deciding
+            to save oxygen. An ensign froze above the keys. Across the room, a technician
+            lowered his slate. An officer stopped mid-step.
           </p>
           {expanded && (
-              <>
-                <p className="pullquote">
-                  <span className="pq-mark">"</span>
-                  We are b-being… The c-crew—
-                  <span className="pq-mark">"</span>
-                </p>
-                <p>
-                  The sound cut off in a high-pitched whine like a dental drill biting straight into nerve.
-                  In the bay, everyone stopped breathing as if collectively deciding to save oxygen.
-                  An ensign froze above the keys. Across the room, a technician lowered his slate. An officer stopped mid-step.
-                  Astrid gripped the console. She pushed down until the tremor in her hands ceased.
-                  She forced a breath deep into her lungs, holding it to slow her hammering heart.
-                  She turned to her staff, exhaling deeply. <em>“Breathe, dammit,”</em> she said.
-                  “We’ll figure this out. Keep listening.”
-                </p>
-                <p>
-                  And with that, the bay remembered to breathe again.
-                </p>
-                <p>
-                  Two beats passed. The composite door hissed open. Ulre Corbin, Head of Logistics, stepped inside the doorway, noticing the waste of a dead console still drawing power.
-                  His black uniform blended into the dim light. He pulled his gloves tighter, finger by finger.
-                  The sound of leather against leather was crisp and methodical, as if he were preparing to take the situation into a choke hold.
-                </p>
-                <p>
-                  "Orbital Command agrees," Ulre relayed. <em>"We initiate the ESP."</em>
-                </p>
-                <p>
-                  He was too quick to bring up the Emergency Suppression Protocol, Astrid thought, even though contact with Earth and the fleet beyond the Fold was indeed lost.
-                  “A carrier wave from Brisinger still persists,” Astrid declared. “They have the key to what happened. If we can restore comms—”
-                </p>
-                <p>
-                  "<em>Irrelevant</em>," Ulre scoffed, finally stepping inside. His polished boots creaked. <em>Crr-eak. Crr-eak.</em>
-                  "We have to move now, Commander. Thousands of lives. Limited resources. Every beat we wait…"
-                </p>
-                <p>
-                  He stood firm, letting the silence speak for him. “The protocol, Commander. Only your word is left. The situation calls for it.”
-                </p>
-                <p>
-                  Astrid’s fingernails left marks in her palm. “Get the rationing ready, but keep the stores open. Wait for my order.”
-                  She caught the defiance in his eyes. She wanted to reach the man behind the uniform.
-                  “Ulre,” she said, meeting his cold stare. “You mistake my contemplation for inaction. My judgment accounts for the trust among the settlers, which keeps three thousand souls together across the void.”
-                </p>
-                <p>
-                  Astrid turned her eyes to her staff, then back at Corbin. The tension in his frame hadn’t loosened by a millimeter.
-                  His gaze didn’t drop in deference. Instead, it slid past her, fixing on the dead consoles. He was calculating.
-                  Astrid knew the confrontation wasn’t over. He was bypassing her entirely. But continuing this argument in front of the crew would only drain her authority.
-                  So she whispered to him, “This debate is over. Are we clear?”
-                </p>
-                <p>
-                  “Clear,” Ulre bit out. He turned and left, the squeal of his pivoting boots lingering in her ears.
-                  She gave a short nod to her comms chief. <em>“Call an assembly. Homestead Dome.”</em>
-                </p>
-              </>
+            <>
+              <p>
+                Astrid gripped the console. She pushed down until the tremor in her hands
+                ceased. She forced a breath deep into her lungs, holding it to slow her
+                hammering heart. She turned to her staff, exhaling deeply. "<em>Breathe,
+                dammit,</em>" she said. "We'll figure this out. Keep listening."
+              </p>
+              <p>
+                And with that, the bay remembered to breathe again.
+              </p>
+              <p>
+                The composite door hissed open. Ulre Corbin, Head of Logistics, stepped
+                inside. His black uniform blended into the dim light. He pulled his gloves
+                tighter, finger by finger. The sound of leather against leather was crisp
+                and methodical, as if he were preparing to take the situation into a choke
+                hold.
+              </p>
+              <p>
+                "Orbital Command agrees," Ulre relayed. "We initiate the ESP."
+              </p>
+              <p>
+                He was too quick to bring up the Emergency Suppression Protocol, Astrid
+                thought, even though contact with Earth and the fleet beyond the Fold was
+                indeed lost. "A carrier wave from Brisinger still persists," Astrid declared.
+                "They have the key to what happened. If we can restore comms—"
+              </p>
+              <p>
+                "<em>Irrelevant</em>," Ulre scoffed, finally stepping inside. His polished
+                boots creaked. <em>Crr-eak. Crr-eak.</em> "We have to move now, Commander.
+                Thousands of lives. Limited resources. Every beat we wait…"
+              </p>
+              <p>
+                He stood firm, letting the silence speak for him.
+              </p>
+              <p>
+                Astrid's fingernails left marks in her palm. She turned to her staff, then
+                back at Corbin. The tension in his frame hadn't loosened by a millimeter.
+                She whispered to him: "<em>This debate is over. Are we clear?</em>"
+              </p>
+              <p>
+                "Clear," Ulre bit out.
+              </p>
+            </>
           )}
         </article>
 
@@ -125,7 +115,10 @@ function Excerpt() {
           <button className="btn btn-ghost" onClick={() => setExpanded(!expanded)}>
             {expanded ? '— Collapse —' : 'Read More ↓'}
           </button>
-          <a href="#buy" className="btn btn-primary">Continue in the Book →</a>
+          {expanded
+            ? <a href="reader.html" className="btn btn-primary">Continue reading in the Reader →</a>
+            : <a href="reader.html" className="btn btn-ghost">Open the Reader →</a>
+          }
         </div>
       </div>
 
@@ -143,7 +136,7 @@ function Excerpt() {
         }
         .uplink-card .mono-label { margin-bottom: 16px; display: block; }
         .uplink-text {
-          font-size: 1.25rem;
+          font-size: 1.15rem;
           line-height: 1.65;
           color: var(--ivory-2);
           margin: 0 0 1em;
