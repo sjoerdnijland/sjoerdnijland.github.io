@@ -91,7 +91,7 @@ function detectSpeaker(text) {
     new RegExp(QA + '[^""\'\u201c\u201d,]+,["\"\u201d]\\s*' + NAME + '\\s+' + VERB, 'i'),
     new RegExp('^' + NAME + '\\s+' + VERB + '[,:]?\\s*' + QA, 'i'),
     new RegExp('^' + NAME + '\\s+' + ACT  + '[^.]*\\.\\s*' + QA, 'i'),
-    new RegExp(NAME + '\'s\\s+(?:voice|tone|words)', 'i'),
+    new RegExp(NAME + "'s\\s+(?:voice|tone|words)", 'i'),
     new RegExp(QA + '[^""\'\u201c\u201d]+' + QA + '\\s+' + VERB + '\\s+' + NAME, 'i'),
   ];
   for (const pat of patterns) {
@@ -110,6 +110,10 @@ function detectSpeaker(text) {
 }
 
 // ── Voice preview ─────────────────────────────────────────
+function handlePreview(btn) {
+  previewVoice(btn.dataset.voice, btn.dataset.sample, btn);
+}
+
 async function previewVoice(voiceId, sampleText, btn) {
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   document.querySelectorAll('.play-btn.playing').forEach(b => {
@@ -165,7 +169,7 @@ function renderResult(text, result, container) {
       const sample = text.replace(/`/g, '').replace(/'/g, "\\'").slice(0, 120);
       html += ` <span class="voice-id">${result.entry.voice_id}</span>`;
       html += `<div class="voice-row">
-        <button class="play-btn" onclick="previewVoice('${result.entry.voice_id}','${sample}',this)">▶ preview</button>
+        <button class="play-btn" data-voice="${result.entry.voice_id}" data-sample="${sample}" onclick="handlePreview(this)">▶ preview</button>
         <span style="color:#5a7a82;font-size:0.8em">${result.entry.name} — ${result.entry.role || ''}</span>
       </div>`;
     } else {
@@ -210,7 +214,7 @@ function renderVoiceGrid() {
       <div class="vc-role">${c.role || ''}</div>
       <div class="vc-id">${c.voice_id}</div>
       <div class="vc-btns">
-        <button class="play-btn" onclick="previewVoice('${c.voice_id}','${sample.replace(/'/g,"\\'")}',this)">▶ preview</button>
+        <button class="play-btn" data-voice="${c.voice_id}" data-sample="${sample.replace(/"/g,'&quot;')}" onclick="handlePreview(this)">▶ preview</button>
       </div>`;
     grid.appendChild(card);
   });
