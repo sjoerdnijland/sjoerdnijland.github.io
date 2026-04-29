@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v19';
+const READER_VERSION = 'v20';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -192,10 +192,17 @@ function getNarrableParagraphs() {
 const SILENT_MP3 = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjMyLjEwNAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhgCenp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6e////////////////////////////////////////////////////////////////AAAAAExhdmM1OC41NAAAAAAAAAAAAAAAACQAAAAAAAAAAw4g3QAAAAAAAAAAAAAAAAAA//tQxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
 let audioUnlocked = false;
 
+let primedAudio = null; // iOS-unlocked Audio element, reused for first para
+
 function unlockAudio() {
   if (audioUnlocked) return;
   const a = new Audio(SILENT_MP3);
-  a.play().then(() => { audioUnlocked = true; }).catch(() => {});
+  a.play().then(() => {
+    audioUnlocked = true;
+  }).catch(() => {});
+  // Keep a reference — we'll reuse this element for the first real paragraph
+  // so iOS doesn't revoke playback permission across await boundaries
+  primedAudio = a;
 }
 
 async function startNarration() {
@@ -347,10 +354,14 @@ async function narrationGoTo(index) {
   // Declare textEl here so it's in scope for everything below
   const textEl = document.getElementById('narration-text');
 
-  // Pause on scene changes — including the very first scene
+  // Pause on scene changes — atmospheric beat.
+  // Shorter if audio is already cached (no real wait needed).
   if (scene !== prevScene) {
-    textEl.innerHTML = `<span class="narration-loading" style="opacity:0.2">✦</span>`;
-    await new Promise(r => setTimeout(r, index === 0 ? 1800 : 2500));
+    const nextCacheKey = READER_VERSION + '|' + pid + '|'; // prefix check
+    const isCached = Object.keys(narrationCache).some(k => k.startsWith(nextCacheKey));
+    const pauseMs = index === 0 ? 1200 : (isCached ? 800 : 1800);
+    textEl.innerHTML = `<span class="narration-loading" style="opacity:0.25">✦</span>`;
+    await new Promise(r => setTimeout(r, pauseMs));
     if (narrationIndex !== index) { narrationLocked = false; return; }
   }
 
@@ -424,7 +435,18 @@ async function narrationGoTo(index) {
 
   let data = narrationCache[cacheKey];
   if (!data) {
-    textEl.innerHTML = `<span class="narration-loading">the stone is listening…</span>`;
+    // Only flash loading text on first load or if fetch takes >400ms.
+    // Mid-session: keep previous text visible to avoid jarring flicker.
+    const isFirstLoad = index === 0;
+    let loadingShown = false;
+    const loadingTimer = isFirstLoad ? null : setTimeout(() => {
+      loadingShown = true;
+      textEl.innerHTML = `<span class="narration-loading" style="opacity:0.5">✦</span>`;
+    }, 400);
+    if (isFirstLoad) {
+      textEl.innerHTML = `<span class="narration-loading">the stone is listening…</span>`;
+      loadingShown = true;
+    }
     try {
       if (segments.length === 1) {
         // Single segment — normal fetch
@@ -461,10 +483,12 @@ async function narrationGoTo(index) {
       }
       cacheSet(cacheKey, data);
     } catch(e) {
+      if (loadingTimer) clearTimeout(loadingTimer);
       textEl.innerHTML = `<span class="narration-loading">Could not load audio — ${e.message}</span>`;
       narrationLocked = false;
       return;
     }
+    if (loadingTimer) clearTimeout(loadingTimer);
   }
 
   narrationAlignment = data.alignment;
@@ -611,7 +635,17 @@ async function narrationGoTo(index) {
   // Create audio from base64
   const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
   const audioUrl  = URL.createObjectURL(audioBlob);
-  narrationAudio  = new Audio(audioUrl);
+
+  // iOS fix: reuse the already-gesture-unlocked Audio element for first play.
+  // Creating a new Audio() after async awaits loses iOS playback permission.
+  if (primedAudio) {
+    narrationAudio = primedAudio;
+    primedAudio = null;
+    narrationAudio.src = audioUrl;
+    narrationAudio.load();
+  } else {
+    narrationAudio = new Audio(audioUrl);
+  }
   narrationPlaying = true;
 
   document.getElementById('nc-play-btn').textContent = '⏸ Pause';
