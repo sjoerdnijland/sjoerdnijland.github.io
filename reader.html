@@ -1253,11 +1253,31 @@ async function narrationGoTo(index) {
     return tagged;
   }
 
-  const taggedWords = tagWords(words, markupRanges);
-  narrationCurrentWords = taggedWords; // store for resume
+  const taggedWords0 = tagWords(words, markupRanges);
+
+  // Mark line breaks using rawText newline positions
+  function markLineBreaks(ws, raw) {
+    const plain = raw
+      .replace(/\*\*([^*]+?)\*\*/g, '$1')
+      .replace(/\*([^*]+?)\*/g, '$1')
+      .replace(/~~([^~]+?)~~/g, '$1');
+    const lines = plain.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length <= 1) return ws;
+    const lineWords = lines.map(l => l.split(/\s+/).map(w => clean(w)).filter(Boolean));
+    let wi = 0;
+    lineWords.forEach((lw, li) => {
+      if (li === 0) { wi += lw.length; return; }
+      if (wi < ws.length) ws[wi].lineBreak = true;
+      wi += lw.length;
+    });
+    return ws;
+  }
+
+  const taggedWords = markLineBreaks(taggedWords0, rawText);
+  narrationCurrentWords = taggedWords;
 
   textEl.innerHTML = taggedWords.map((w, i) =>
-    `<span class="nw ${w.fmt}" id="nw-${i}">${escHtml(w.text)}</span>${w.br ? '<br>' : (w.space ? ' ' : '')}`
+    `${w.lineBreak ? '<br>' : ''}<span class="nw ${w.fmt}" id="nw-${i}">${escHtml(w.text)}</span>${w.space ? ' ' : ''}`
   ).join('');
 
   // Create audio from base64
