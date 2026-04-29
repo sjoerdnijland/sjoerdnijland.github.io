@@ -798,8 +798,25 @@ body.wiki-hints-on .para.active .wiki-link {
 }
 .nch-btn:hover { background: rgba(74,154,170,0.1); }
 
-/* Loading state */
-.narration-loading {
+/* Code block narration style */
+.narration-overlay.code-mode .narration-text {
+  font-family: var(--mono);
+  font-size: clamp(1rem, 1.6vw, 1.3rem);
+  color: rgba(74,154,170,0.3);
+  letter-spacing: 0.08em;
+}
+.narration-overlay.code-mode .nw         { color: rgba(74,154,170,0.3); }
+.narration-overlay.code-mode .nw.spoken  { color: rgba(74,154,170,0.55); }
+.narration-overlay.code-mode .nw.current {
+  color: #6ecfde;
+  text-shadow: 0 0 24px rgba(74,154,170,0.6);
+}
+.narration-overlay.code-mode::after {
+  content: '◉ TRANSMISSION';
+  position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.35em;
+  color: var(--teal-soft); opacity: 0.6; text-transform: uppercase;
+}
   font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.2em;
   text-transform: uppercase; color: var(--muted); text-align: center;
   animation: nPulse 1.5s ease-in-out infinite;
@@ -1155,7 +1172,9 @@ async function narrationGoTo(index) {
   const total = narrationParaIds.length;
 
   // Counter — chapter · scene · paragraph progress
-  const scene = getSceneForPara(pid);
+  const scene  = getSceneForPara(pid);
+  const isCode = !!document.getElementById(pid)?.closest('.code-block');
+  document.getElementById('narration-overlay').classList.toggle('code-mode', isCode);
   const chapterNames = { 1:'Assembly', 2:'The Startend', 3:'Doubt and Certainty' };
   const chName = chapterNames[currentChapter] || `Chapter ${currentChapter}`;
   document.getElementById('narration-counter').innerHTML =
@@ -1271,14 +1290,23 @@ async function narrationGoTo(index) {
     return tokens;
   }
 
-  const displayTokens     = buildDisplayTokens(rawText, words);
+  const displayTokens     = isCode
+    // For code blocks: show raw text as-is, just split into words for timing
+    ? words.map((w, i) => ({ type: 'word', text: w.text, fmt: '', start: w.start, end: w.end, idx: i }))
+    : buildDisplayTokens(rawText, words);
   narrationCurrentWords   = displayTokens.filter(t => t.type === 'word');
 
-  textEl.innerHTML = displayTokens.map(t => {
-    if (t.type === 'br')    return '<br>';
-    if (t.type === 'space') return ' ';
-    return `<span class="nw ${t.fmt}" id="nw-${t.idx}">${escHtml(t.text)}</span>`;
-  }).join('');
+  // For code blocks: show the full raw transmission text above the word highlights
+  if (isCode) {
+    textEl.innerHTML = `<div style="font-family:var(--mono);font-size:0.9rem;letter-spacing:0.12em;color:rgba(74,154,170,0.5);margin-bottom:28px;text-align:center">${escHtml(rawText)}</div>`
+      + displayTokens.map(t => `<span class="nw" id="nw-${t.idx}">${escHtml(t.text)}</span> `).join('');
+  } else {
+    textEl.innerHTML = displayTokens.map(t => {
+      if (t.type === 'br')    return '<br>';
+      if (t.type === 'space') return ' ';
+      return `<span class="nw ${t.fmt}" id="nw-${t.idx}">${escHtml(t.text)}</span>`;
+    }).join('');
+  }
 
   // Create audio from base64
   const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
@@ -2109,11 +2137,23 @@ function closeWikiPopup(e) {
 function getParaText(pid) {
   const el = document.getElementById(pid);
   if (!el) return '';
-  // Clone and remove toolbar before reading text
   const clone = el.cloneNode(true);
   const toolbar = clone.querySelector('.para-toolbar');
   if (toolbar) toolbar.remove();
-  return clone.innerText.trim();
+  let text = clone.innerText.trim();
+  // Strip transmission wrapper chars for TTS — < YREUS | ERROR /> → YREUS ERROR
+  if (el.closest('.code-block')) {
+    text = text
+      .replace(/^<\s*/g, '')       // leading <
+      .replace(/\s*\/>$/g, '')     // trailing />
+      .replace(/^\/\*\s*/g, '')    // leading /*
+      .replace(/\s*\*\/$/g, '')    // trailing */
+      .replace(/\|/g, ',')         // | → pause comma
+      .replace(/·/g, ',')          // · → pause comma
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  return text;
 }
 function lookupSelection(pid) {
   const selection = window.getSelection()?.toString().trim();
