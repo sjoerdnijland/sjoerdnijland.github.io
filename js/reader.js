@@ -1316,6 +1316,8 @@ function stitchSegments(results) {
     alignment: stitchedAlignment,
   };
 }
+
+function detectSpeakerVoice(text) {
   if (!text) return null;
 
   const SAID = 'said|asked|replied|whispered|called|snapped|muttered|shouted|added|answered|continued|growled|breathed|laughed|hissed|barked|pleaded|ordered|announced|warned|began|finished|interrupted|noted|insisted|admitted|confirmed|agreed|protested|scoffed|relayed|stated|explained|pressed|urged|offered|suggested|demanded|declared|echoed|conceded|countered|managed|spat|drawled|murmured|responded|cut in|bit out';
