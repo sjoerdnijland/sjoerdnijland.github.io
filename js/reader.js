@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v20';
+const READER_VERSION = 'v21';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -18,7 +18,7 @@ let narrationCurrentWords = [];
 let narrationLastMaleSpeaker   = null;
 let narrationLastFemaleSpeaker = null;
 let narrationLastSpeaker       = null; // last named speaker regardless of gender
-let multiVoiceEnabled          = localStorage.getItem('multiVoice') === 'on';
+let multiVoiceEnabled          = localStorage.getItem('multiVoice') !== 'off'; // default ON
 
 function toggleMultiVoice() {
   multiVoiceEnabled = !multiVoiceEnabled;
@@ -507,35 +507,95 @@ async function narrationGoTo(index) {
     return w.toLowerCase().replace(/[^a-z0-9''\-]/g, '');
   }
 
-  // Build display directly from rawText — preserves \n and markup formatting
-  // Uses alignment words only for timing, keyed by sequence position
+  // Build display tokens from the plain TTS text (same word split as ElevenLabs
+  // alignment) so word indices ALWAYS match timing data — no drift after italic.
+  // Format (bold/italic/smcaps) is determined by building a character-offset map
+  // from rawText markup spans, then checking where each plain word falls.
   function buildDisplayTokens(raw, timingWords) {
     const tokens = [];
-    // Split rawText into segments: markup spans, newlines, plain text
-    const parts = raw.split(/(\*\*[^*]+?\*\*|\*[^*]+?\*|~~[^~]+?~~|\n)/);
+
+    // 1. Build a position→fmt map from rawText markup spans.
+    //    We walk rawText and record the plain-text char range each span covers.
+    let plainOffset = 0; // position in the stripped plain text
+    const fmtRanges = []; // [{start, end, fmt}] in plain-text coords
+    const markupRe = /(\*\*[^*]+?\*\*|\*[^*]+?\*|~~[^~]+?~~|
+)/g;
+    let lastIndex = 0;
+    let match;
+    while ((match = markupRe.exec(raw)) !== null) {
+      // plain text before this span
+      const before = raw.slice(lastIndex, match.index);
+      plainOffset += before.replace(/\n/g, '').length; // \n → 0 plain chars
+      const span = match[0];
+      if (span === '\n') {
+        // newline: record a break at this position
+        fmtRanges.push({ start: plainOffset, end: plainOffset, fmt: 'br' });
+      } else {
+        let inner = span, fmt = '';
+        if (span.startsWith('**'))      { inner = span.slice(2,-2); fmt = 'nw-bold'; }
+        else if (span.startsWith('*'))  { inner = span.slice(1,-1); fmt = 'nw-italic'; }
+        else if (span.startsWith('~~')) { inner = span.slice(2,-2); fmt = 'nw-smcaps'; }
+        fmtRanges.push({ start: plainOffset, end: plainOffset + inner.length, fmt });
+        plainOffset += inner.length;
+      }
+      lastIndex = match.index + span.length;
+    }
+    // after last span
+    // (no need — we only need the ranges we already recorded)
+
+    // 2. Insert <br> tokens at newline positions in the plain text.
+    //    Collect positions where a \n falls in plain coords.
+    const brPositions = new Set(fmtRanges.filter(r => r.fmt === 'br').map(r => r.start));
+
+    // 3. Walk plain text word-by-word (same split as TTS alignment)
+    //    and annotate each with its format.
+    function getFmt(charStart, charEnd) {
+      for (const r of fmtRanges) {
+        if (r.fmt === 'br') continue;
+        if (charStart >= r.start && charEnd <= r.end) return r.fmt;
+        // partial overlap → prefer italic over nothing
+        if (charStart < r.end && charEnd > r.start) return r.fmt;
+      }
+      return '';
+    }
+
+    // Walk character by character to build word tokens (preserves br positions)
+    let word = '', wordStart = -1;
+    let charPos = 0;
+    const plain = raw
+      .replace(/\*\*([^*]+?)\*\*/g, '$1')
+      .replace(/\*([^*]+?)\*/g, '$1')
+      .replace(/~~([^~]+?)~~/g, '$1');
     let wordIdx = 0;
 
-    parts.forEach(part => {
-      if (!part) return;
-      if (part === '\n') { tokens.push({ type: 'br' }); return; }
+    const pushWord = () => {
+      if (!word) return;
+      const timing = timingWords[wordIdx] || { start: 0, end: 0 };
+      tokens.push({ type: 'word', text: word, fmt: getFmt(wordStart, wordStart + word.length),
+                    start: timing.start, end: timing.end, idx: wordIdx });
+      wordIdx++;
+      word = ''; wordStart = -1;
+    };
 
-      let fmt = '';
-      let content = part;
-      if (/^\*\*[^*]+?\*\*$/.test(part))  { fmt = 'nw-bold';   content = part.slice(2,-2); }
-      else if (/^\*[^*]+?\*$/.test(part)) { fmt = 'nw-italic'; content = part.slice(1,-1); }
-      else if (/^~~[^~]+?~~$/.test(part)) { fmt = 'nw-smcaps'; content = part.slice(2,-2); }
-
-      const rawWords = content.split(/(\s+)/);
-      rawWords.forEach(rw => {
-        if (/^\s+$/.test(rw)) {
-          tokens.push({ type: 'space' });
-        } else if (rw) {
-          const timing = timingWords[wordIdx] || { start: 0, end: 0 };
-          tokens.push({ type: 'word', text: rw, fmt, start: timing.start, end: timing.end, idx: wordIdx });
-          wordIdx++;
-        }
-      });
-    });
+    for (let i = 0; i < plain.length; i++) {
+      const ch = plain[i];
+      // Insert <br> before the word starting at this position
+      if (brPositions.has(charPos) && !word) {
+        tokens.push({ type: 'br' });
+      }
+      if (ch === ' ' || ch === '\t') {
+        pushWord();
+        tokens.push({ type: 'space' });
+      } else if (ch === '\n') {
+        pushWord();
+        tokens.push({ type: 'br' });
+      } else {
+        if (wordStart === -1) wordStart = charPos;
+        word += ch;
+      }
+      charPos++;
+    }
+    pushWord();
     return tokens;
   }
 
