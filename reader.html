@@ -1243,10 +1243,15 @@ async function narrationGoTo(index) {
     ranges.forEach(({ words: mw, cls }) => {
       if (!mw.length) return;
       for (let i = 0; i <= tagged.length - mw.length; i++) {
-        const match = mw.every((mword, j) => clean(tagged[i + j].text) === mword);
+        const match = mw.every((mword, j) => {
+          const a = clean(tagged[i + j].text);
+          const b = mword;
+          if (i < 5) console.log('[tagWords]', JSON.stringify(a), '===', JSON.stringify(b), a === b);
+          return a === b;
+        });
         if (match) {
           for (let j = 0; j < mw.length; j++) {
-            if (!tagged[i + j].fmt) tagged[i + j].fmt = cls; // don't override bold with italic
+            if (!tagged[i + j].fmt) tagged[i + j].fmt = cls;
           }
         }
       }
