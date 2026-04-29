@@ -145,6 +145,7 @@ html, body {
 }
 .badge-prose    { background: rgba(74,154,170,0.15); color: var(--teal-bright); border: 1px solid rgba(74,154,170,0.3); }
 .badge-epigraph { background: rgba(233,74,124,0.1);  color: var(--rose-soft);   border: 1px solid rgba(233,74,124,0.25); }
+.badge-code     { background: rgba(74,154,170,0.1);   color: var(--teal-bright); border: 1px solid rgba(74,154,170,0.25); }
 .badge-uplink   { background: rgba(45,91,102,0.2);   color: #6ecfde;            border: 1px solid rgba(74,154,170,0.3); }
 .badge-break    { background: rgba(212,168,67,0.1);  color: var(--amber);       border: 1px solid rgba(212,168,67,0.25); }
 
@@ -239,6 +240,8 @@ html, body {
 .pv-epigraph { margin: 0 0 48px; padding: 24px 28px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .pv-epigraph p { font-family: var(--serif); font-style: italic; font-size: 1.05rem; line-height: 1.8; color: var(--ivory-2); margin-bottom: 0.8em; }
 .pv-epigraph p:last-child { margin-bottom: 0; }
+.pv-code { margin: 24px 0; padding: 16px 20px; background: rgba(6,22,25,0.7); border: 1px solid rgba(74,154,170,0.25); border-left: 3px solid var(--teal-bright); }
+.pv-code p { font-family: var(--mono); font-size: 0.85rem; line-height: 1.7; letter-spacing: 0.06em; color: var(--teal-bright); margin-bottom: 4px; }
 
 .pv-uplink { margin: 48px 0; padding: 18px 24px; border-left: 2px solid var(--teal-soft); background: rgba(45,91,102,0.12); }
 .pv-uplink-label { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.28em; text-transform: uppercase; color: #6ecfde; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
@@ -324,6 +327,7 @@ html, body {
           <button class="mk-btn" onclick="wrapSelection('*','*')" title="Italic (*text*)">𝑖 Italic</button>
           <button class="mk-btn" onclick="wrapSelection('**','**')" title="Bold (**text**)"><b>B</b> Bold</button>
           <button class="mk-btn" onclick="wrapSelection('~~','~~')" title="Small caps (~~text~~)">Sᴍ Caps</button>
+          <button class="mk-btn" id="split-btn" onclick="splitAtSelection()" title="Split scene at cursor/selection" style="border-color:rgba(212,168,67,0.4);color:var(--amber)">✦ Split scene</button>
         </div>
       </div>
       <div class="legend">
@@ -332,6 +336,7 @@ html, body {
         <div class="lg-item"><span class="lg-key">~~text~~</span> small caps</div>
         <div class="lg-item"><span class="lg-key">Enter</span> line break within paragraph</div>
         <div class="lg-item"><span class="lg-key">+ paragraph</span> new paragraph block</div>
+        <div class="lg-item"><span class="lg-key">✦ Split scene</span> insert scene break at cursor</div>
       </div>
       <div class="editor-area" id="editor-area"></div>
       <div class="add-section-bar">
@@ -340,6 +345,7 @@ html, body {
         <button class="tb-btn" onclick="addSection('epigraph')">+ Epigraph</button>
         <button class="tb-btn" onclick="addSection('uplink')">+ Uplink</button>
         <button class="tb-btn" onclick="addSection('scene-break')">+ Scene Break</button>
+        <button class="tb-btn" onclick="addSection('code')" style="border-color:rgba(74,154,170,0.4);color:var(--teal-bright)">+ Code</button>
       </div>
     </div>
 
@@ -390,6 +396,7 @@ function makeSection(type) {
   if (type === 'prose')    return { id, type: 'prose',    heading: '', paragraphs: [''] };
   if (type === 'epigraph') return { id, type: 'epigraph', paragraphs: [''] };
   if (type === 'uplink')   return { id, type: 'uplink',   heading: 'UPLINK · ', paragraphs: [''] };
+  if (type === 'code')     return { id, type: 'code',     paragraphs: [''] };
   return { id, type, paragraphs: [''] };
 }
 
@@ -445,7 +452,7 @@ function renderSection(sec, si, container) {
     return;
   }
 
-  const badgeClass = { prose:'badge-prose', epigraph:'badge-epigraph', uplink:'badge-uplink' }[sec.type] || 'badge-prose';
+  const badgeClass = { prose:'badge-prose', epigraph:'badge-epigraph', uplink:'badge-uplink', code:'badge-code' }[sec.type] || 'badge-prose';
   const label = { prose:'Prose', epigraph:'Epigraph', uplink:'Uplink' }[sec.type] || sec.type;
   const hasHeading = sec.type === 'prose' || sec.type === 'uplink';
 
@@ -513,7 +520,72 @@ function deletePara(id, pi) {
   }
 }
 
-// ── Markup toolbar ─────────────────────────────────────
+// ── Split scene at selection ───────────────────────────
+function splitAtSelection() {
+  const ta = lastFocusedTextarea;
+  if (!ta) { toast('Click inside a paragraph first'); return; }
+
+  // Find which section and paragraph this textarea belongs to
+  const row     = ta.closest('.para-row');
+  const card    = ta.closest('.section-card');
+  if (!row || !card) { toast('Could not locate paragraph'); return; }
+
+  const secId   = card.dataset.id;
+  const sec     = sections.find(s => s.id === secId);
+  if (!sec || !sec.paragraphs) { toast('Scene breaks and uplinks cannot be split'); return; }
+
+  // Which paragraph index within this section?
+  const rows    = Array.from(card.querySelectorAll('.para-row'));
+  const paraIdx = rows.indexOf(row);
+  if (paraIdx < 0) { toast('Could not locate paragraph index'); return; }
+
+  // Split point — use selection start (or cursor position)
+  const splitAt = ta.selectionStart;
+  const full    = ta.value;
+  const before  = full.slice(0, splitAt).trimEnd();
+  const after   = full.slice(splitAt).trimStart();
+
+  if (!before && !after) { toast('Nothing to split'); return; }
+
+  // Find where this section sits in the sections array
+  const secIdx  = sections.findIndex(s => s.id === secId);
+
+  // Build the replacement sections:
+  // 1. Current section with paragraphs up to and including before-part of split para
+  // 2. A scene-break
+  // 3. A new prose section with after-part + remaining paragraphs
+
+  const parasBefore = [
+    ...sec.paragraphs.slice(0, paraIdx),
+    ...(before ? [before] : [])
+  ];
+  const parasAfter  = [
+    ...(after ? [after] : []),
+    ...sec.paragraphs.slice(paraIdx + 1)
+  ];
+
+  const secBefore = {
+    ...sec,
+    id: sec.id,
+    paragraphs: parasBefore.length ? parasBefore : ['']
+  };
+
+  const sceneBreak = { id: newId(), type: 'scene-break' };
+
+  const secAfter = {
+    id:         newId(),
+    type:       sec.type,
+    heading:    '',   // new section starts fresh — heading can be added manually
+    paragraphs: parasAfter.length ? parasAfter : ['']
+  };
+
+  // Replace the one section with three
+  sections.splice(secIdx, 1, secBefore, sceneBreak, secAfter);
+
+  renderEditor();
+  refreshPreview();
+  toast('✦ Scene break inserted');
+}
 function wrapSelection(before, after) {
   const ta = lastFocusedTextarea;
   if (!ta) return;
@@ -541,6 +613,8 @@ function refreshPreview() {
       html += `<div class="pv-break"><span>✦</span><span>✦</span><span>✦</span></div>`;
     } else if (sec.type === 'epigraph') {
       html += `<div class="pv-epigraph">${sec.paragraphs.map(p => `<p>${parseMarkup(p) || '&nbsp;'}</p>`).join('')}</div>`;
+    } else if (sec.type === 'code') {
+      html += `<div class="pv-code">${sec.paragraphs.map(p => `<p>${escHtml(p) || '&nbsp;'}</p>`).join('')}</div>`;
     } else if (sec.type === 'uplink') {
       html += `<div class="pv-uplink">
         <div class="pv-uplink-label">${sec.heading || 'UPLINK'}</div>

@@ -318,6 +318,38 @@ body.wiki-hints-on .para.active .wiki-link {
 }
 .epigraph-block .para:last-child { margin-bottom: 0; }
 .epigraph-block .para:hover { background: rgba(233,74,124,0.04); }
+
+/* ── Code / transmission block ────────────────────────── */
+.code-block {
+  margin: 40px 0;
+  padding: 20px 28px;
+  background: rgba(6,22,25,0.7);
+  border: 1px solid rgba(74,154,170,0.25);
+  border-left: 3px solid var(--teal-bright);
+  position: relative;
+}
+.code-block::before {
+  content: '◉ TRANSMISSION';
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  color: var(--teal-soft);
+  margin-bottom: 12px;
+  opacity: 0.7;
+}
+.code-block .para {
+  font-family: var(--mono) !important;
+  font-size: 0.88rem !important;
+  line-height: 1.7 !important;
+  letter-spacing: 0.06em;
+  color: var(--teal-bright) !important;
+  margin-bottom: 4px !important;
+  padding: 3px 8px !important;
+  margin-left: 0 !important;
+}
+.code-block .para:hover  { background: rgba(74,154,170,0.06) !important; }
+.code-block .para.active { background: rgba(74,154,170,0.12) !important; border-left-color: var(--teal-bright) !important; }
 .para.drop-cap::first-letter {
   font-family: var(--serif);
   font-size: 4.2em; float: left; line-height: 0.82;
@@ -1772,7 +1804,30 @@ function renderChapter(ch) {
       return;
     }
 
-    // ── Normal section ──
+    // ── Code / transmission block ──
+    if (sec.type === 'code') {
+      const parasHtml = sec.paragraphs.map(text => {
+        const pid   = `ch${currentChapter}-p${paraIndex}`;
+        const count = commentCounts[pid] || 0;
+        paraIndex++;
+        return `
+          <p class="para"
+             id="${pid}"
+             data-para-id="${pid}"
+             data-comment-count="${count}"
+             data-scene="${sceneIndex}"
+             data-raw="${escAttr(text)}"
+             onclick="selectPara('${pid}', this)">
+            <span class="para-toolbar">
+              <button class="pt-btn" onclick="event.stopPropagation();openThread('${pid}')">💬 Thread${count > 0 ? ` (${count})` : ''}</button>
+              <button class="pt-btn pt-narrate" onclick="event.stopPropagation();startNarrationFrom('${pid}')">▶ Narrate</button>
+            </span>
+            ${escHtml(text)}
+          </p>`;
+      }).join('');
+      html += `<div class="code-block">${parasHtml}</div>`;
+      return;
+    }
     // If coming from an uplink, that already incremented sceneIndex on entry.
     // The prose after it is a new scene — but epigraph already incremented on exit,
     // so only increment when transitioning FROM an uplink.
