@@ -1267,9 +1267,18 @@ async function narrationGoTo(index) {
     setTimeout(() => narrationGoTo(index + 1), 1200);
   });
 
+  // Fix words with end:0 (last word ElevenLabs quirk) — use audio duration as end time
+  narrationCurrentWords.forEach((w, i) => {
+    if (!w.end || w.end === 0) {
+      // Will be patched once audio metadata loads
+      w.end = 9999;
+    }
+  });
+
   function syncWords() {
     if (!narrationAudio || narrationAudio.paused) return;
-    const t = narrationAudio.currentTime;
+    const t   = narrationAudio.currentTime;
+    const dur = narrationAudio.duration || 9999;
 
     // Update progress bar
     const pct = narrationAudio.duration ? (t / narrationAudio.duration) * 100 : 0;
@@ -1279,7 +1288,8 @@ async function narrationGoTo(index) {
     narrationCurrentWords.forEach(w => {
       const el = document.getElementById('nw-' + w.idx);
       if (!el) return;
-      if (t >= w.end) {
+      const end = (w.end === 9999) ? dur : w.end;
+      if (t >= end) {
         el.className = `nw ${w.fmt || ''} spoken`;
       } else if (t >= w.start) {
         el.className = `nw ${w.fmt || ''} current`;
