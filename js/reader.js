@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v13';
+const READER_VERSION = 'v14';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -488,7 +488,6 @@ async function narrationGoTo(index) {
     : buildDisplayTokens(rawText, words);
   narrationCurrentWords   = displayTokens.filter(t => t.type === 'word');
   const isStitched = segments.length > 1;
-  if (isStitched) console.log('[words]', narrationCurrentWords.map((w,i)=>`[${i}]${w.text}`).join(' '));
 
   // Precompute which word indices (in narrationCurrentWords) belong to character segments
   // Key insight: normalise BOTH sides identically — strip all quote chars via norm()
@@ -500,33 +499,47 @@ async function narrationGoTo(index) {
 
     let searchFrom = 0;
     for (const seg of segments) {
-      const segWords = seg.text.split(/\s+/).filter(Boolean).map(norm).filter(Boolean);
+      // segWords: non-empty only, for matching
+      const segWordsAll  = seg.text.split(/\s+/).filter(Boolean).map(norm);
+      const segWords     = segWordsAll.filter(Boolean);
       if (!segWords.length) continue;
 
+      // Find matchStart
       let matchStart = -1;
       outer: for (let i = searchFrom; i < normDisplay.length; i++) {
         if (normDisplay[i] === segWords[0]) {
-          for (let j = 1; j < Math.min(4, segWords.length); j++) {
-            if ((normDisplay[i + j] || '') !== segWords[j]) continue outer;
+          let si = 1;
+          for (let di = i + 1; di < normDisplay.length && si < Math.min(4, segWords.length); di++) {
+            if (normDisplay[di] === '') continue; // skip empty display words
+            if (normDisplay[di] !== segWords[si]) continue outer;
+            si++;
           }
           matchStart = i;
           break;
         }
       }
 
-      const count    = segWords.length;
-      const matchEnd = (matchStart === -1 ? searchFrom : matchStart) + count - 1;
-      console.log(`[range] voice:${seg.voiceId||'narr'} match:${matchStart} end:${matchEnd} first:"${segWords[0]}" last:"${segWords[segWords.length-1]}" normDisplay[${matchStart}]:"${normDisplay[matchStart]}"`);
-      if (seg.voiceId && matchStart !== -1) {
-        charWordRanges.push({
-          start: matchStart,
-          end: Math.min(matchEnd, narrationCurrentWords.length - 1),
-          voice: seg.voiceId
-        });
+      // Calculate matchEnd by walking display from matchStart,
+      // consuming display words until we've matched all non-empty seg words
+      let matchEnd;
+      if (matchStart === -1) {
+        matchEnd = searchFrom + segWordsAll.length - 1;
+      } else {
+        let di = matchStart, consumed = 0;
+        const target = segWords.length;
+        while (di < normDisplay.length && consumed < target) {
+          if (normDisplay[di] !== '') consumed++;
+          di++;
+        }
+        // di is now one past the last consumed — step back
+        matchEnd = Math.min(di - 1, narrationCurrentWords.length - 1);
       }
-      searchFrom = (matchStart === -1 ? searchFrom : matchStart) + count;
+
+      if (seg.voiceId && matchStart !== -1) {
+        charWordRanges.push({ start: matchStart, end: matchEnd, voice: seg.voiceId });
+      }
+      searchFrom = matchEnd + 1;
     }
-    console.log('[charWordRanges]', JSON.stringify(charWordRanges), 'total display words:', normDisplay.length);
   }
 
   function getCharVoiceForWord(idx) {
