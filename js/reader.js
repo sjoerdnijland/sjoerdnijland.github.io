@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v18';
+const READER_VERSION = 'v19';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -110,8 +110,12 @@ async function startAmbient(chapter, scene) {
   }
 
   ambientResolving = true;
-  const src = await resolveAmbientTrack(chapter || currentChapter, scene || 1);
-  ambientResolving = false;
+  let src;
+  try {
+    src = await resolveAmbientTrack(chapter || currentChapter, scene || 1);
+  } finally {
+    ambientResolving = false;
+  }
 
   // If a newer request came in while we were resolving, honour that instead
   if (ambientPending) {
@@ -378,8 +382,7 @@ async function narrationGoTo(index) {
       const entry = wikiById[speakerTag];
       if (entry?.voice_id) speakerVoiceId = entry.voice_id;
     }
-    // Inner voice for italic inner dialogue
-    let innerVoiceId = null;
+    // Inner voice for italic inner dialogue (assigns to outer let, no shadow)
     if (innerTag) {
       const entry = wikiById[innerTag];
       if (entry?.voice_id) innerVoiceId = entry.voice_id;
@@ -621,6 +624,7 @@ async function narrationGoTo(index) {
   narrationAudio.play().catch(e => console.warn('Audio play failed:', e));
   narrationAudio.addEventListener('ended', () => {
     cancelAnimationFrame(narrationRAF);
+    URL.revokeObjectURL(audioUrl); // free blob memory
     // Mark all words as spoken cleanly on audio end (fixes last-word blip)
     narrationCurrentWords.forEach(w => {
       const el = document.getElementById('nw-' + w.idx);
