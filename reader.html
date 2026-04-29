@@ -1136,7 +1136,7 @@ let narrationCurrentWords = [];
 let narrationLastMaleSpeaker   = null;
 let narrationLastFemaleSpeaker = null;
 let narrationLastSpeaker       = null; // last named speaker regardless of gender
-let multiVoiceEnabled          = false; // default: single narrator (Charlotte)
+let multiVoiceEnabled          = localStorage.getItem('multiVoice') === 'on';
 
 function toggleMultiVoice() {
   multiVoiceEnabled = !multiVoiceEnabled;
@@ -1395,6 +1395,7 @@ async function narrationGoTo(index) {
   let speakerVoiceId = null;
   if (multiVoiceEnabled) {
     speakerVoiceId = detectSpeakerVoice(rawText);
+    console.log('[voice] multiVoice ON | rawText:', rawText.slice(0,60), '| detected:', speakerVoiceId);
 
     if (!speakerVoiceId && /["\u201c\u201d]/.test(rawText)) {
       const SAID_RE = /\b(?:said|asked|replied|whispered|continued|added|stated|called|announced|noted|insisted|scoffed|relayed|declared|muttered)\b/i;
@@ -1705,11 +1706,11 @@ async function submitNarrationComment(pid) {
 
 async function prefetchNext(index) {
   if (index >= narrationParaIds.length) return;
-  const pid     = narrationParaIds[index];
-  const text    = getParaText(pid);
-  const rawText = getRawText(pid) || text;
+  const pid          = narrationParaIds[index];
+  const text         = getParaText(pid);
+  const rawText      = getRawText(pid) || text;
   if (!text) return;
-  const speakerVoiceId = detectSpeakerVoice(rawText);
+  const speakerVoiceId = multiVoiceEnabled ? detectSpeakerVoice(rawText) : null;
   const cacheKey = pid + '|' + (speakerVoiceId || 'default') + '|' + text.slice(0, 40);
   if (narrationCache[cacheKey]) return;
   try {
