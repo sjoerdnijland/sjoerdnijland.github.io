@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v6';
+const READER_VERSION = 'v23';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -18,14 +18,14 @@ let narrationCurrentWords = [];
 let narrationLastMaleSpeaker   = null;
 let narrationLastFemaleSpeaker = null;
 let narrationLastSpeaker       = null; // last named speaker regardless of gender
-let multiVoiceEnabled          = localStorage.getItem('multiVoice') === 'on';
+let multiVoiceEnabled          = localStorage.getItem('multiVoice') !== 'off'; // default ON
 
 function toggleMultiVoice() {
   multiVoiceEnabled = !multiVoiceEnabled;
   localStorage.setItem('multiVoice', multiVoiceEnabled ? 'on' : 'off');
   applyMultiVoiceBtn();
   // Clear cache and re-fetch current paragraph with new voice setting
-  narrationCache = {};
+  cacheClear();
   narrationLastSpeaker = null;
   narrationLastMaleSpeaker = null;
   narrationLastFemaleSpeaker = null;
@@ -67,12 +67,12 @@ function applyAmbientBtn() {
 function toggleAmbient() {
   ambientEnabled = !ambientEnabled;
   localStorage.setItem('ambientMusic', ambientEnabled ? 'on' : 'off');
-  applyAmbientBtn(); applyMultiVoiceBtn();
+  applyAmbientBtn();
   if (ambientEnabled && narrationActive) {
     const pid = narrationParaIds[narrationIndex];
     startAmbient(currentChapter, getSceneForPara(pid));
   } else {
-    stopAmbient();
+    stopAmbientNow();
   }
 }
 
@@ -91,7 +91,7 @@ async function resolveAmbientTrack(chapter, scene) {
   for (const src of candidates) {
     try {
       const res = await fetch(src, { method: 'HEAD' });
-      if (res.ok) { console.log('[ambient] resolved:', src); return src; }
+      if (res.ok) { return src; }
     } catch(_) {}
   }
   return null;
@@ -110,8 +110,12 @@ async function startAmbient(chapter, scene) {
   }
 
   ambientResolving = true;
-  const src = await resolveAmbientTrack(chapter || currentChapter, scene || 1);
-  ambientResolving = false;
+  let src;
+  try {
+    src = await resolveAmbientTrack(chapter || currentChapter, scene || 1);
+  } finally {
+    ambientResolving = false;
+  }
 
   // If a newer request came in while we were resolving, honour that instead
   if (ambientPending) {
@@ -162,6 +166,16 @@ function stopAmbient() {
   }, 80);
 }
 
+// Hard stop: kills ambient immediately, cancels any pending resolve
+function stopAmbientNow() {
+  ambientPending = null; // cancel any queued track
+  if (!ambientAudio) return;
+  const audio = ambientAudio;
+  ambientAudio = null;
+  audio.pause();
+  audio.src = '';
+}
+
 function isEpigraphPara(pid) {
   const el = document.getElementById(pid);
   return el ? !!el.closest('.epigraph-block') : false;
@@ -174,7 +188,25 @@ function getNarrableParagraphs() {
     .filter(Boolean);
 }
 
+// Silent MP3 to unlock audio on iOS Safari — must be played within a user gesture
+const SILENT_MP3 = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjMyLjEwNAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhgCenp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6e////////////////////////////////////////////////////////////////AAAAAExhdmM1OC41NAAAAAAAAAAAAAAAACQAAAAAAAAAAw4g3QAAAAAAAAAAAAAAAAAA//tQxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
+let audioUnlocked = false;
+
+let primedAudio = null; // iOS-unlocked Audio element, reused for first para
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+  const a = new Audio(SILENT_MP3);
+  a.play().then(() => {
+    audioUnlocked = true;
+  }).catch(() => {});
+  // Keep a reference — we'll reuse this element for the first real paragraph
+  // so iOS doesn't revoke playback permission across await boundaries
+  primedAudio = a;
+}
+
 async function startNarration() {
+  unlockAudio(); // must be called within user gesture, before any await
   narrationParaIds = getNarrableParagraphs();
   if (!narrationParaIds.length) return;
 
@@ -200,23 +232,44 @@ function stopNarration() {
   document.getElementById('narration-progress').style.display = 'none';
   document.getElementById('narration-controls').style.display = 'none';
   document.getElementById('narration-thread').classList.remove('open');
+  document.getElementById('narration-overlay').classList.remove('thread-open');
   narrationThreadOpen = false;
   document.body.style.overflow = '';
-  stopAmbient();
+  stopAmbientNow();
   document.getElementById('narration-comment-hint').classList.remove('visible');
 }
 
-function buildSegments(plainText, charVoiceId) {
-  if (!charVoiceId || !multiVoiceEnabled) return [{ text: plainText, voiceId: null }];
-  const parts = plainText.split(/([""\u201c\u201d][^""\u201c\u201d]*[""\u201c\u201d])/);
+function buildSegments(plainText, charVoiceId, innerVoiceId) {
+  if (!multiVoiceEnabled || (!charVoiceId && !innerVoiceId)) {
+    return [{ text: plainText, voiceId: null }];
+  }
+
+  // Split on quoted dialogue AND italic inner-dialogue spans
+  // Quote: "..." or \u201c...\u201d
+  // Inner: *complete sentence* — detected by having a verb or ?/!
+  const parts = plainText.split(/([""\u201c\u201d][^""\u201c\u201d]*[""\u201c\u201d]|\*[^*]+\*)/);
   const segs = [];
+
+  const INNER_RE = /\b(is|are|was|were|have|has|had|do|does|did|will|would|could|should|must|need|want|know|think|see|feel|hear|get|go|come|make|take|put|give|look|seem|appear)\b|[?!]/i;
+
   parts.forEach(p => {
     if (!p) return;
-    const isQuote = /^[""\u201c\u201d]/.test(p) && /[""\u201c\u201d]$/.test(p);
-    const clean   = p.trim();
+    const clean = p.trim();
     if (!clean) return;
-    segs.push({ text: clean, voiceId: isQuote ? charVoiceId : null });
+    const isQuote = /^[""\u201c\u201d]/.test(clean) && /[""\u201c\u201d]$/.test(clean);
+    const isItalic = /^\*[^*]+\*$/.test(clean);
+    const isInnerDialogue = isItalic && innerVoiceId && INNER_RE.test(clean);
+
+    let voice = null;
+    if (isQuote && charVoiceId) voice = charVoiceId;
+    else if (isInnerDialogue) voice = innerVoiceId;
+
+    // Strip italic markers for TTS
+    const ttsText = isItalic ? clean.replace(/^\*|\*$/g, '') : clean;
+    segs.push({ text: ttsText, voiceId: voice });
   });
+
+  // Merge consecutive same-voice segments
   const merged = [];
   for (const seg of segs) {
     const last = merged[merged.length - 1];
@@ -224,6 +277,30 @@ function buildSegments(plainText, charVoiceId) {
     else merged.push({ ...seg });
   }
   return merged.filter(s => s.text.trim());
+}
+
+// ── Narration audio cache — LRU, max 30 entries ──────────
+// Prevents unbounded memory growth during long sessions
+const CACHE_MAX = 30;
+const narrationCacheKeys = []; // tracks insertion order for LRU eviction
+
+function cacheSet(key, value) {
+  if (narrationCache[key]) {
+    // Refresh position
+    const idx = narrationCacheKeys.indexOf(key);
+    if (idx > -1) narrationCacheKeys.splice(idx, 1);
+  } else if (narrationCacheKeys.length >= CACHE_MAX) {
+    // Evict oldest
+    const evict = narrationCacheKeys.shift();
+    delete narrationCache[evict];
+  }
+  narrationCacheKeys.push(key);
+  narrationCache[key] = value;
+}
+
+function cacheClear() {
+  narrationCache = {};
+  narrationCacheKeys.length = 0;
 }
 
 async function narrationGoTo(index) {
@@ -277,10 +354,14 @@ async function narrationGoTo(index) {
   // Declare textEl here so it's in scope for everything below
   const textEl = document.getElementById('narration-text');
 
-  // Pause on scene changes — including the very first scene
+  // Pause on scene changes — atmospheric beat.
+  // Shorter if audio is already cached (no real wait needed).
   if (scene !== prevScene) {
-    textEl.innerHTML = `<span class="narration-loading" style="opacity:0.2">✦</span>`;
-    await new Promise(r => setTimeout(r, index === 0 ? 1800 : 2500));
+    const nextCacheKey = READER_VERSION + '|' + pid + '|'; // prefix check
+    const isCached = Object.keys(narrationCache).some(k => k.startsWith(nextCacheKey));
+    const pauseMs = index === 0 ? 1200 : (isCached ? 800 : 1800);
+    textEl.innerHTML = `<span class="narration-loading" style="opacity:0.25">✦</span>`;
+    await new Promise(r => setTimeout(r, pauseMs));
     if (narrationIndex !== index) { narrationLocked = false; return; }
   }
 
@@ -291,9 +372,22 @@ async function narrationGoTo(index) {
   hint.classList.toggle('visible', count > 0);
 
   // Get plain text for TTS, raw markup text for italic/bold display
-  const text    = getParaText(pid);
-  const rawText = getRawText(pid) || text;
+  let text    = getParaText(pid);
+  let rawText = getRawText(pid) || text;
   if (!text) { narrationLocked = false; await narrationGoTo(index + 1); return; }
+
+  // Strip ALL-CAPS SPEAKER: prefix (e.g. "PROFESSOR FARLEY: ", "CIX WEAVER: ")
+  // from both TTS text and display rawText so the character's voice reads only
+  // their speech — the charLabel already shows the speaker name visually.
+  const TRANSCRIPT_PREFIX_RE = /^[A-Z][A-Z0-9 ]+:\s+/;
+  const prefixMatch = text.match(TRANSCRIPT_PREFIX_RE);
+  if (prefixMatch) {
+    const prefixLen = prefixMatch[0].length;
+    text    = text.slice(prefixLen);
+    // Strip from rawText too (rawText may have markup but same prefix is plain)
+    const rawPrefixMatch = rawText.match(TRANSCRIPT_PREFIX_RE);
+    if (rawPrefixMatch) rawText = rawText.slice(rawPrefixMatch[0].length);
+  }
 
   // Stop previous audio
   if (narrationAudio) { narrationAudio.pause(); narrationAudio = null; }
@@ -302,17 +396,23 @@ async function narrationGoTo(index) {
 
   // Detect speaker voice — only when multi-voice mode is on
   let speakerVoiceId = null;
+  let innerVoiceId   = null;
   if (multiVoiceEnabled) {
     // 1. Explicit speaker tag from JSON (most reliable)
     const paraEl = document.getElementById(pid);
     const speakerTag = paraEl?.dataset.speaker;
+    const innerTag   = paraEl?.dataset.innerVoice;
     if (speakerTag) {
       const entry = wikiById[speakerTag];
       if (entry?.voice_id) speakerVoiceId = entry.voice_id;
     }
+    // Inner voice for italic inner dialogue (assigns to outer let, no shadow)
+    if (innerTag) {
+      const entry = wikiById[innerTag];
+      if (entry?.voice_id) innerVoiceId = entry.voice_id;
+    }
     // 2. Pattern detection fallback
     if (!speakerVoiceId) speakerVoiceId = detectSpeakerVoice(rawText);
-    console.log('[voice]', speakerTag ? `tag:${speakerTag}` : 'detected:', speakerVoiceId || 'narrator');
 
     if (!speakerVoiceId && /["\u201c\u201d]/.test(rawText)) {
       const SAID_RE = /\b(?:said|asked|replied|whispered|continued|added|stated|called|announced|noted|insisted|scoffed|relayed|declared|muttered)\b/i;
@@ -342,12 +442,24 @@ async function narrationGoTo(index) {
   } // end multiVoiceEnabled
 
   // ── Segment-based fetch: narrator for prose, character for quoted dialogue ──
-  const segments = buildSegments(text, speakerVoiceId);
-  const cacheKey = READER_VERSION + '|' + pid + '|' + segments.map(s => (s.voiceId||'n')+':'+s.text.slice(0,20)).join('|');
+  const segments   = buildSegments(text, speakerVoiceId, innerVoiceId);
+  const isStitched = segments.length > 1;
+  const cacheKey   = READER_VERSION + '|' + pid + '|' + segments.map(s => (s.voiceId||'n')+':'+s.text.slice(0,20)).join('|');
 
   let data = narrationCache[cacheKey];
   if (!data) {
-    textEl.innerHTML = `<span class="narration-loading">the stone is listening…</span>`;
+    // Only flash loading text on first load or if fetch takes >400ms.
+    // Mid-session: keep previous text visible to avoid jarring flicker.
+    const isFirstLoad = index === 0;
+    let loadingShown = false;
+    const loadingTimer = isFirstLoad ? null : setTimeout(() => {
+      loadingShown = true;
+      textEl.innerHTML = `<span class="narration-loading" style="opacity:0.5">✦</span>`;
+    }, 400);
+    if (isFirstLoad) {
+      textEl.innerHTML = `<span class="narration-loading">the stone is listening…</span>`;
+      loadingShown = true;
+    }
     try {
       if (segments.length === 1) {
         // Single segment — normal fetch
@@ -366,58 +478,136 @@ async function narrationGoTo(index) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
             body: JSON.stringify({ text: seg.text, ...(seg.voiceId ? { voiceId: seg.voiceId } : {}) })
-          }).then(r => r.json())
+          }).then(r => r.json()).catch(e => ({ error: e.message }))
         ));
-        // Stitch audio and alignment
-        data = stitchSegments(results);
+        // If any segment failed, fall back to narrator-only for whole paragraph
+        const anyFailed = results.some(r => r.error);
+        if (anyFailed) {
+          const res = await fetch(NARRATE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
+            body: JSON.stringify({ text })
+          });
+          data = await res.json();
+        } else {
+          data = stitchSegments(results);
+        }
         if (data.error) throw new Error(data.error);
       }
-      narrationCache[cacheKey] = data;
+      cacheSet(cacheKey, data);
     } catch(e) {
+      if (loadingTimer) clearTimeout(loadingTimer);
       textEl.innerHTML = `<span class="narration-loading">Could not load audio — ${e.message}</span>`;
       narrationLocked = false;
       return;
     }
+    if (loadingTimer) clearTimeout(loadingTimer);
   }
 
   narrationAlignment = data.alignment;
 
-  // Build word spans from alignment
-  const words = buildWordTimings(text, data.alignment);
+  // For stitched paragraphs, build word timings using per-segment alignment
+  // Narrator segments use their own accurate timestamps
+  // Character segments don't need timing (they use position-based range highlighting)
+  let words;
+  if (isStitched && data.segmentMeta?.length) {
+    words = buildWordTimingsFromSegments(text, segments, data.segmentMeta);
+  } else {
+    words = buildWordTimings(text, data.alignment);
+  }
 
   function clean(w) {
     return w.toLowerCase().replace(/[^a-z0-9''\-]/g, '');
   }
 
-  // Build display directly from rawText — preserves \n and markup formatting
-  // Uses alignment words only for timing, keyed by sequence position
+  // Build display tokens from the plain TTS text (same word split as ElevenLabs
+  // alignment) so word indices ALWAYS match timing data — no drift after italic.
+  // Format (bold/italic/smcaps) is determined by building a character-offset map
+  // from rawText markup spans, then checking where each plain word falls.
   function buildDisplayTokens(raw, timingWords) {
     const tokens = [];
-    // Split rawText into segments: markup spans, newlines, plain text
-    const parts = raw.split(/(\*\*[^*]+?\*\*|\*[^*]+?\*|~~[^~]+?~~|\n)/);
+
+    // 1. Build a position→fmt map from rawText markup spans.
+    //    We walk rawText and record the plain-text char range each span covers.
+    let plainOffset = 0; // position in the stripped plain text
+    const fmtRanges = []; // [{start, end, fmt}] in plain-text coords
+    const markupRe = /(\*\*[^*]+?\*\*|\*[^*]+?\*|~~[^~]+?~~|\n)/g;
+    let lastIndex = 0;
+    let match;
+    while ((match = markupRe.exec(raw)) !== null) {
+      // plain text before this span
+      const before = raw.slice(lastIndex, match.index);
+      plainOffset += before.replace(/\n/g, '').length; // \n → 0 plain chars
+      const span = match[0];
+      if (span === '\n') {
+        // newline: record a break at this position
+        fmtRanges.push({ start: plainOffset, end: plainOffset, fmt: 'br' });
+      } else {
+        let inner = span, fmt = '';
+        if (span.startsWith('**'))      { inner = span.slice(2,-2); fmt = 'nw-bold'; }
+        else if (span.startsWith('*'))  { inner = span.slice(1,-1); fmt = 'nw-italic'; }
+        else if (span.startsWith('~~')) { inner = span.slice(2,-2); fmt = 'nw-smcaps'; }
+        fmtRanges.push({ start: plainOffset, end: plainOffset + inner.length, fmt });
+        plainOffset += inner.length;
+      }
+      lastIndex = match.index + span.length;
+    }
+    // after last span
+    // (no need — we only need the ranges we already recorded)
+
+    // 2. Insert <br> tokens at newline positions in the plain text.
+    //    Collect positions where a \n falls in plain coords.
+    const brPositions = new Set(fmtRanges.filter(r => r.fmt === 'br').map(r => r.start));
+
+    // 3. Walk plain text word-by-word (same split as TTS alignment)
+    //    and annotate each with its format.
+    function getFmt(charStart, charEnd) {
+      for (const r of fmtRanges) {
+        if (r.fmt === 'br') continue;
+        if (charStart >= r.start && charEnd <= r.end) return r.fmt;
+        // partial overlap → prefer italic over nothing
+        if (charStart < r.end && charEnd > r.start) return r.fmt;
+      }
+      return '';
+    }
+
+    // Walk character by character to build word tokens (preserves br positions)
+    let word = '', wordStart = -1;
+    let charPos = 0;
+    const plain = raw
+      .replace(/\*\*([^*]+?)\*\*/g, '$1')
+      .replace(/\*([^*]+?)\*/g, '$1')
+      .replace(/~~([^~]+?)~~/g, '$1');
     let wordIdx = 0;
 
-    parts.forEach(part => {
-      if (!part) return;
-      if (part === '\n') { tokens.push({ type: 'br' }); return; }
+    const pushWord = () => {
+      if (!word) return;
+      const timing = timingWords[wordIdx] || { start: 0, end: 0 };
+      tokens.push({ type: 'word', text: word, fmt: getFmt(wordStart, wordStart + word.length),
+                    start: timing.start, end: timing.end, idx: wordIdx });
+      wordIdx++;
+      word = ''; wordStart = -1;
+    };
 
-      let fmt = '';
-      let content = part;
-      if (/^\*\*[^*]+?\*\*$/.test(part))  { fmt = 'nw-bold';   content = part.slice(2,-2); }
-      else if (/^\*[^*]+?\*$/.test(part)) { fmt = 'nw-italic'; content = part.slice(1,-1); }
-      else if (/^~~[^~]+?~~$/.test(part)) { fmt = 'nw-smcaps'; content = part.slice(2,-2); }
-
-      const rawWords = content.split(/(\s+)/);
-      rawWords.forEach(rw => {
-        if (/^\s+$/.test(rw)) {
-          tokens.push({ type: 'space' });
-        } else if (rw) {
-          const timing = timingWords[wordIdx] || { start: 0, end: 0 };
-          tokens.push({ type: 'word', text: rw, fmt, start: timing.start, end: timing.end, idx: wordIdx });
-          wordIdx++;
-        }
-      });
-    });
+    for (let i = 0; i < plain.length; i++) {
+      const ch = plain[i];
+      // Insert <br> before the word starting at this position
+      if (brPositions.has(charPos) && !word) {
+        tokens.push({ type: 'br' });
+      }
+      if (ch === ' ' || ch === '\t') {
+        pushWord();
+        tokens.push({ type: 'space' });
+      } else if (ch === '\n') {
+        pushWord();
+        tokens.push({ type: 'br' });
+      } else {
+        if (wordStart === -1) wordStart = charPos;
+        word += ch;
+      }
+      charPos++;
+    }
+    pushWord();
     return tokens;
   }
 
@@ -426,7 +616,81 @@ async function narrationGoTo(index) {
     ? words.map((w, i) => ({ type: 'word', text: w.text, fmt: '', start: w.start, end: w.end, idx: i }))
     : buildDisplayTokens(rawText, words);
   narrationCurrentWords   = displayTokens.filter(t => t.type === 'word');
-  const isStitched = segments.length > 1;
+
+  // Precompute which word indices (in narrationCurrentWords) belong to character segments
+  // Key insight: normalise BOTH sides identically — strip all quote chars via norm()
+  // This means "The (display) and "The (segment) both → "the", so matching is always correct
+  const charWordRanges = [];
+  if (isStitched && narrationCurrentWords.length) {
+    const norm = w => w.replace(/["""'\u201c\u201d]/g, '').replace(/[^a-z0-9\u00e0-\u00ff]/gi, '').toLowerCase();
+    const normDisplay = narrationCurrentWords.map(w => norm(w.text));
+
+    let searchFrom = 0;
+    for (const seg of segments) {
+      // segWords: non-empty only, for matching
+      const segWordsAll  = seg.text.split(/\s+/).filter(Boolean).map(norm);
+      const segWords     = segWordsAll.filter(Boolean);
+      if (!segWords.length) continue;
+
+      // Find matchStart
+      let matchStart = -1;
+      outer: for (let i = searchFrom; i < normDisplay.length; i++) {
+        if (normDisplay[i] === segWords[0]) {
+          let si = 1;
+          for (let di = i + 1; di < normDisplay.length && si < Math.min(4, segWords.length); di++) {
+            if (normDisplay[di] === '') continue; // skip empty display words
+            if (normDisplay[di] !== segWords[si]) continue outer;
+            si++;
+          }
+          matchStart = i;
+          break;
+        }
+      }
+
+      // Calculate matchEnd by walking display from matchStart,
+      // consuming display words until we've matched all non-empty seg words
+      let matchEnd;
+      if (matchStart === -1) {
+        matchEnd = searchFrom + segWordsAll.length - 1;
+      } else {
+        let di = matchStart, consumed = 0;
+        const target = segWords.length;
+        while (di < normDisplay.length && consumed < target) {
+          if (normDisplay[di] !== '') consumed++;
+          di++;
+        }
+        // di is now one past the last consumed — step back
+        matchEnd = Math.min(di - 1, narrationCurrentWords.length - 1);
+      }
+
+      if (seg.voiceId && matchStart !== -1) {
+        charWordRanges.push({ start: matchStart, end: matchEnd, voice: seg.voiceId });
+      }
+      searchFrom = matchEnd + 1;
+    }
+  }
+
+  function getCharVoiceForWord(idx) {
+    for (const r of charWordRanges) {
+      if (idx >= r.start && idx <= r.end) return r.voice;
+    }
+    return null;
+  }
+
+  // Character label element — shows who's speaking during character voice
+  let charLabel = document.getElementById('narration-char-label');
+  if (!charLabel) {
+    charLabel = document.createElement('div');
+    charLabel.id = 'narration-char-label';
+    charLabel.style.cssText = `
+      position:absolute; top: 16px; right: 20px;
+      font-family:var(--mono); font-size:0.6rem; letter-spacing:0.22em;
+      text-transform:uppercase; color:var(--rose); opacity:0;
+      transition:opacity 0.3s; pointer-events:none;
+    `;
+    document.getElementById('narration-overlay').appendChild(charLabel);
+  }
+  charLabel.style.opacity = '0';
 
   // For code blocks: show TRANSMISSION label above word highlights
   if (isCode) {
@@ -443,7 +707,17 @@ async function narrationGoTo(index) {
   // Create audio from base64
   const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
   const audioUrl  = URL.createObjectURL(audioBlob);
-  narrationAudio  = new Audio(audioUrl);
+
+  // iOS fix: reuse the already-gesture-unlocked Audio element for first play.
+  // Creating a new Audio() after async awaits loses iOS playback permission.
+  if (primedAudio) {
+    narrationAudio = primedAudio;
+    primedAudio = null;
+    narrationAudio.src = audioUrl;
+    narrationAudio.load();
+  } else {
+    narrationAudio = new Audio(audioUrl);
+  }
   narrationPlaying = true;
 
   document.getElementById('nc-play-btn').textContent = '⏸ Pause';
@@ -453,9 +727,15 @@ async function narrationGoTo(index) {
 
   // Start playback + karaoke sync
   narrationLocked = false; // unlock — audio is playing, navigation is safe again
-  narrationAudio.play();
+  narrationAudio.play().catch(e => console.warn('Audio play failed:', e));
   narrationAudio.addEventListener('ended', () => {
     cancelAnimationFrame(narrationRAF);
+    URL.revokeObjectURL(audioUrl); // free blob memory
+    // Mark all words as spoken cleanly on audio end (fixes last-word blip)
+    narrationCurrentWords.forEach(w => {
+      const el = document.getElementById('nw-' + w.idx);
+      if (el) el.className = `nw ${w.fmt || ''} spoken`;
+    });
     setTimeout(() => narrationGoTo(index + 1), 1200);
   });
 
@@ -467,38 +747,67 @@ async function narrationGoTo(index) {
     const pct = dur ? (t / dur) * 100 : 0;
     document.getElementById('narration-progress-bar').style.width = pct + '%';
 
-    // Find current word — last word whose start <= t
+    // Find current word — with small lookahead to compensate for ElevenLabs timing offset
+    // Use 80ms lookahead so highlight fires slightly before the word is spoken
+    const LOOKAHEAD = 0.08;
     let currentIdx = -1;
     for (let i = 0; i < narrationCurrentWords.length; i++) {
-      if (narrationCurrentWords[i].start <= t) currentIdx = i;
+      if (narrationCurrentWords[i].start <= t + LOOKAHEAD) currentIdx = i;
       else break;
     }
 
-    if (isStitched) {
-      // Sentence-level highlighting for stitched multi-voice audio
-      // Find which sentence the current word belongs to, highlight all words in it
-      const sentenceEnds = new Set();
-      narrationCurrentWords.forEach((w, i) => {
-        if (/[.!?…""\u201d]$/.test(w.text.trim())) sentenceEnds.add(i);
-      });
-      // Find sentence boundaries around currentIdx
-      let sentStart = 0;
-      for (let i = 0; i < currentIdx; i++) {
-        if (sentenceEnds.has(i)) sentStart = i + 1;
+    if (isStitched && charWordRanges.length) {
+      // Mixed narrator/character paragraph:
+      // - Narrator words: word-level karaoke (precise timing from first segment)
+      // - Character words: entire segment lit as one block when first word reached
+      // Find which char range is currently active (first word of range has been passed)
+      const activeCharVoice = getCharVoiceForWord(currentIdx);
+
+      // Update character label
+      if (activeCharVoice) {
+        const entry = Object.values(wikiById).find(e => e.voice_id === activeCharVoice);
+        if (entry) {
+          charLabel.textContent = '◉ ' + entry.name.split(' ')[0];
+          charLabel.style.opacity = '1';
+        }
+      } else {
+        charLabel.style.opacity = '0';
       }
-      let sentEnd = narrationCurrentWords.length - 1;
-      for (let i = currentIdx; i < narrationCurrentWords.length; i++) {
-        if (sentenceEnds.has(i)) { sentEnd = i; break; }
-      }
+
       narrationCurrentWords.forEach((w, i) => {
         const el = document.getElementById('nw-' + w.idx);
         if (!el) return;
-        if (i < sentStart)      el.className = `nw ${w.fmt || ''} spoken`;
-        else if (i <= sentEnd)  el.className = `nw ${w.fmt || ''} current`;
-        else                    el.className = `nw ${w.fmt || ''}`;
+        const wordVoice = getCharVoiceForWord(i);
+
+        if (wordVoice) {
+          // Character word — find its range
+          const range = charWordRanges.find(r => i >= r.start && i <= r.end);
+          const rangeStartPassed = currentIdx >= range.start;
+          const rangeEndPassed   = currentIdx > range.end;
+          if (rangeEndPassed) {
+            el.className = `nw ${w.fmt || ''} spoken`;
+          } else if (rangeStartPassed) {
+            // Whole character segment lit at once
+            el.className = `nw ${w.fmt || ''} current char-voice`;
+          } else {
+            el.className = `nw ${w.fmt || ''}`;
+          }
+        } else {
+          // Narrator word — precise word-level karaoke
+          if (i < currentIdx) {
+            el.className = `nw ${w.fmt || ''} spoken`;
+          } else if (i === currentIdx) {
+            el.className = `nw ${w.fmt || ''} current`;
+            if (window.innerWidth > 768) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          } else {
+            el.className = `nw ${w.fmt || ''}`;
+          }
+        }
       });
+
     } else {
-      // Word-level highlighting for single-voice (narrator only)
+      // Pure narrator — word-level karaoke throughout
+      charLabel.style.opacity = '0';
       narrationCurrentWords.forEach((w, i) => {
         const el = document.getElementById('nw-' + w.idx);
         if (!el) return;
@@ -521,7 +830,7 @@ async function narrationGoTo(index) {
 function narrationTogglePlay() {
   if (!narrationAudio) return;
   if (narrationAudio.paused) {
-    narrationAudio.play();
+    narrationAudio.play().catch(e => console.warn('Audio resume failed:', e));
     narrationPlaying = true;
     document.getElementById('nc-play-btn').textContent = '⏸ Pause';
     // Resume karaoke sync using stored word timings
@@ -534,7 +843,7 @@ function narrationTogglePlay() {
 
       let currentIdx = -1;
       for (let i = 0; i < narrationCurrentWords.length; i++) {
-        if (narrationCurrentWords[i].start <= t) currentIdx = i;
+        if (narrationCurrentWords[i].start <= t + 0.08) currentIdx = i;
         else break;
       }
       narrationCurrentWords.forEach((w, i) => {
@@ -566,6 +875,7 @@ function narrationNext() {
 }
 
 async function startNarrationFrom(pid) {
+  unlockAudio(); // must be within user gesture
   narrationParaIds = getNarrableParagraphs();
   const idx = narrationParaIds.indexOf(pid);
   narrationIndex = idx >= 0 ? idx : 0;
@@ -584,9 +894,11 @@ let narrationThreadOpen = false;
 
 function narrationToggleThread() {
   narrationThreadOpen = !narrationThreadOpen;
-  const sidebar = document.getElementById('narration-thread');
-  const btn     = document.getElementById('nc-thread-btn');
+  const sidebar  = document.getElementById('narration-thread');
+  const overlay  = document.getElementById('narration-overlay');
+  const btn      = document.getElementById('nc-thread-btn');
   sidebar.classList.toggle('open', narrationThreadOpen);
+  overlay.classList.toggle('thread-open', narrationThreadOpen);
   if (btn) btn.style.color = narrationThreadOpen ? 'var(--teal-bright)' : '';
 
   if (narrationThreadOpen) {
@@ -661,16 +973,27 @@ async function submitNarrationComment(pid) {
   }
 }
 
+const prefetchInFlight = new Set();
+
 async function prefetchNext(index) {
   if (index >= narrationParaIds.length) return;
   const pid     = narrationParaIds[index];
-  const text    = getParaText(pid);
-  const rawText = getRawText(pid) || text;
+  let text    = getParaText(pid);
+  let rawText = getRawText(pid) || text;
   if (!text) return;
+  // Strip ALL-CAPS SPEAKER: prefix (same as narrationGoTo) for cache key match
+  const _prefixRe = /^[A-Z][A-Z0-9 ]+:\s+/;
+  const _pm = text.match(_prefixRe);
+  if (_pm) {
+    text = text.slice(_pm[0].length);
+    const _rpm = rawText.match(_prefixRe);
+    if (_rpm) rawText = rawText.slice(_rpm[0].length);
+  }
   const charVoice  = multiVoiceEnabled ? detectSpeakerVoice(rawText) : null;
-  const segments   = buildSegments(text, charVoice);
+  const segments   = buildSegments(text, charVoice, null);
   const cacheKey   = READER_VERSION + '|' + pid + '|' + segments.map(s => (s.voiceId||'n')+':'+s.text.slice(0,20)).join('|');
-  if (narrationCache[cacheKey]) return;
+  if (narrationCache[cacheKey] || prefetchInFlight.has(cacheKey)) return;
+  prefetchInFlight.add(cacheKey);
   try {
     let data;
     if (segments.length === 1) {
@@ -687,15 +1010,39 @@ async function prefetchNext(index) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
           body: JSON.stringify({ text: seg.text, ...(seg.voiceId ? { voiceId: seg.voiceId } : {}) })
-        }).then(r => r.json())
+        }).then(r => r.json()).catch(e => ({ error: e.message }))
       ));
-      data = stitchSegments(results);
+      data = results.some(r => r.error) ? null : stitchSegments(results);
     }
-    if (!data.error) narrationCache[cacheKey] = data;
+    if (data && !data.error) cacheSet(cacheKey, data);
   } catch(_) {}
+  finally { prefetchInFlight.delete(cacheKey); }
 }
 
 // ── Helpers ──────────────────────────────────────────────
+function buildWordTimingsFromSegments(fullText, segments, segmentMeta) {
+  // For each segment, build word timings using that segment's own alignment + timeOffset
+  // This gives narrator segments accurate timing regardless of stitching drift
+  const allWords = [];
+
+  segments.forEach((seg, si) => {
+    const meta = segmentMeta[si];
+    if (!meta) return;
+    const segWords = buildWordTimings(seg.text, meta.alignment);
+    // Offset each word's start time by this segment's timeOffset
+    segWords.forEach(w => {
+      allWords.push({
+        ...w,
+        start: w.start + meta.timeOffset,
+        end:   w.end   + meta.timeOffset,
+        segVoice: seg.voiceId || null,
+      });
+    });
+  });
+
+  return allWords;
+}
+
 function buildWordTimings(text, alignment) {
   const chars      = alignment.characters || [];
   const startTimes = alignment.character_start_times_seconds || [];
@@ -733,7 +1080,23 @@ function buildWordTimings(text, alignment) {
     }
   }
   if (word) words.push({ text: word, start: wordStart, end: wordEnd, space: false, br: pendingBreak });
-  return words;
+
+  // Merge tokens that start with an apostrophe into the preceding word.
+  // ElevenLabs occasionally splits contractions: ["let", "'s"] or ["don", "'t"].
+  // Merging keeps word count in sync with the display text.
+  const merged = [];
+  for (const w of words) {
+    if (/^['‘’ʼ]/.test(w.text) && merged.length > 0) {
+      const prev = merged[merged.length - 1];
+      prev.text += w.text;
+      prev.end   = w.end;
+      prev.space = w.space;
+      prev.br    = prev.br || w.br;
+    } else {
+      merged.push(w);
+    }
+  }
+  return merged;
 }
 
 function base64ToBlob(base64, mimeType) {
@@ -763,7 +1126,7 @@ const CHAPTER_COUNT = 3; // increment as you add files
 async function loadChapter(n) {
   currentChapter = n;
   currentParaId  = null;
-  narrationCache = {};
+  cacheClear();
   narrationLastMaleSpeaker   = null;
   narrationLastFemaleSpeaker = null;
   narrationLastSpeaker       = null;
@@ -788,10 +1151,19 @@ async function loadChapter(n) {
 
 function renderChapterPills() {
   const el = document.getElementById('chapter-pills');
-  el.innerHTML = Array.from({ length: CHAPTER_COUNT }, (_, i) => i + 1).map(n => `
-    <button class="cp-btn ${n === currentChapter ? 'active' : ''}" onclick="loadChapter(${n})">
-      Ch. ${n}
-    </button>`).join('');
+  if (CHAPTER_COUNT <= 8) {
+    // Pills for small chapter count
+    el.innerHTML = Array.from({ length: CHAPTER_COUNT }, (_, i) => i + 1).map(n => `
+      <button class="cp-btn ${n === currentChapter ? 'active' : ''}" onclick="loadChapter(${n})">
+        Ch. ${n}
+      </button>`).join('');
+  } else {
+    // Compact dropdown for many chapters
+    const opts = Array.from({ length: CHAPTER_COUNT }, (_, i) => i + 1)
+      .map(n => `<option value="${n}" ${n === currentChapter ? 'selected' : ''}>Chapter ${n}</option>`)
+      .join('');
+    el.innerHTML = `<select class="cp-select" onchange="loadChapter(+this.value)" title="Jump to chapter">${opts}</select>`;
+  }
 }
 
 // ── Wiki index builder ───────────────────────────────────
@@ -935,7 +1307,8 @@ function renderChapter(ch) {
 
       const parasHtml = sec.paragraphs.map(paraItem => {
         const text   = typeof paraItem === 'string' ? paraItem : paraItem.text;
-        const speakerTag = typeof paraItem === 'object' ? paraItem.speaker || null : null;
+        const speakerTag   = typeof paraItem === 'object' ? paraItem.speaker    || null : null;
+        const innerVoiceTag = typeof paraItem === 'object' ? paraItem.inner_voice || null : null;
         const pid   = `ch${currentChapter}-p${paraIndex}`;
         const count = commentCounts[pid] || 0;
         const linked = autoLink(parseMarkup(text));
@@ -948,10 +1321,10 @@ function renderChapter(ch) {
         const isLevel2 = isAssets && !isLevel1 && /^\*\*[A-Z][a-zA-Z\s'·]+\*\*$/.test(trimmed);
 
         if (isLevel1) {
-          return `<div class="uplink-section-divider uplink-s1" id="${pid}" data-para-id="${pid}" data-comment-count="${count}">${parseMarkup(text)}</div>`;
+          return `<div class="uplink-section-divider uplink-s1" id="${pid}" data-para-id="${pid}" data-raw="${escAttr(text)}" data-speaker="${speakerTag||''}" data-comment-count="${count}">${parseMarkup(text)}</div>`;
         }
         if (isLevel2) {
-          return `<div class="uplink-section-divider uplink-s2" id="${pid}" data-para-id="${pid}" data-comment-count="${count}">${parseMarkup(text)}</div>`;
+          return `<div class="uplink-section-divider uplink-s2" id="${pid}" data-para-id="${pid}" data-raw="${escAttr(text)}" data-speaker="${speakerTag||''}" data-comment-count="${count}">${parseMarkup(text)}</div>`;
         }
 
         return `
@@ -962,6 +1335,7 @@ function renderChapter(ch) {
              data-scene="${sceneIndex}"
              data-raw="${escAttr(text)}"
              data-speaker="${speakerTag || ''}" 
+             data-inner-voice="${innerVoiceTag || ''}" 
              onclick="selectPara('${pid}', this)">
             <span class="para-toolbar">
               <button class="pt-btn" onclick="event.stopPropagation();lookupSelection('${pid}')">🔍 Look up</button>
@@ -990,7 +1364,8 @@ function renderChapter(ch) {
     if (sec.type === 'epigraph') {
       const parasHtml = sec.paragraphs.map(paraItem => {
         const text   = typeof paraItem === 'string' ? paraItem : paraItem.text;
-        const speakerTag = typeof paraItem === 'object' ? paraItem.speaker || null : null;
+        const speakerTag   = typeof paraItem === 'object' ? paraItem.speaker    || null : null;
+        const innerVoiceTag = typeof paraItem === 'object' ? paraItem.inner_voice || null : null;
         const pid   = `ch${currentChapter}-p${paraIndex}`;
         const count = commentCounts[pid] || 0;
         const linked = autoLink(parseMarkup(text));
@@ -1003,6 +1378,7 @@ function renderChapter(ch) {
              data-scene="${sceneIndex}"
              data-raw="${escAttr(text)}"
              data-speaker="${speakerTag || ''}" 
+             data-inner-voice="${innerVoiceTag || ''}" 
              onclick="selectPara('${pid}', this)">
             <span class="para-toolbar">
               <button class="pt-btn" onclick="event.stopPropagation();lookupSelection('${pid}')">🔍 Look up</button>
@@ -1022,7 +1398,8 @@ function renderChapter(ch) {
     if (sec.type === 'code') {
       const parasHtml = sec.paragraphs.map(paraItem => {
         const text   = typeof paraItem === 'string' ? paraItem : paraItem.text;
-        const speakerTag = typeof paraItem === 'object' ? paraItem.speaker || null : null;
+        const speakerTag   = typeof paraItem === 'object' ? paraItem.speaker    || null : null;
+        const innerVoiceTag = typeof paraItem === 'object' ? paraItem.inner_voice || null : null;
         const pid   = `ch${currentChapter}-p${paraIndex}`;
         const count = commentCounts[pid] || 0;
         paraIndex++;
@@ -1034,6 +1411,7 @@ function renderChapter(ch) {
              data-scene="${sceneIndex}"
              data-raw="${escAttr(text)}"
              data-speaker="${speakerTag || ''}" 
+             data-inner-voice="${innerVoiceTag || ''}" 
              onclick="selectPara('${pid}', this)">
             <span class="para-toolbar">
               <button class="pt-btn" onclick="event.stopPropagation();openThread('${pid}')">💬 Thread${count > 0 ? ` (${count})` : ''}</button>
@@ -1061,7 +1439,8 @@ function renderChapter(ch) {
 
     sec.paragraphs.forEach((paraItem, pi) => {
       const text = typeof paraItem === 'string' ? paraItem : paraItem.text;
-      const speakerTag = typeof paraItem === 'object' ? (paraItem.speaker || '') : '';
+      const speakerTag   = typeof paraItem === 'object' ? (paraItem.speaker    || '') : '';
+      const innerVoiceTag = typeof paraItem === 'object' ? (paraItem.inner_voice || '') : '';
       const pid   = `ch${currentChapter}-p${paraIndex}`;
       const count = commentCounts[pid] || 0;
       const isFirst = paraIndex === 0;
@@ -1075,6 +1454,7 @@ function renderChapter(ch) {
            data-scene="${sceneIndex}"
            data-raw="${escAttr(text)}"
            data-speaker="${speakerTag || ''}" 
+           data-inner-voice="${innerVoiceTag || ''}" 
            onclick="selectPara('${pid}', this)">
           <span class="para-toolbar">
             <button class="pt-btn" onclick="event.stopPropagation();lookupSelection('${pid}')">🔍 Look up</button>
@@ -1092,11 +1472,15 @@ function renderChapter(ch) {
   // Chapter-end card with podcast invite
   const endCard = document.createElement('div');
   endCard.className = 'chapter-end-card visible';
+  const hasNext = currentChapter < CHAPTER_COUNT;
   endCard.innerHTML = `
     <div class="cec-label">Chapter ${currentChapter} complete</div>
     <div class="cec-title">${ch.title}</div>
     <div class="cec-sub">Vera and Milo are ready to discuss it.</div>
-    <button class="cec-btn" onclick="openPodcastPanel()">🎙 Listen to the AI podcast review</button>`;
+    <div class="cec-actions">
+      <button class="cec-btn secondary" onclick="openPodcastPanel()">🎙 Decoded — AI podcast review</button>
+      ${hasNext ? `<button class="cec-btn primary" onclick="loadChapter(${currentChapter + 1})">Continue to Chapter ${currentChapter + 1} →</button>` : ''}
+    </div>`;
   el.appendChild(endCard);
 
   // Show the FAB
@@ -1331,11 +1715,13 @@ function stitchSegments(results) {
 
   let allBytes = [];
   const stitchedAlignment = { characters: [], character_start_times_seconds: [], character_end_times_seconds: [] };
+  const segmentMeta = []; // per-segment: { timeOffset, byteStart, byteEnd, alignment }
   let timeOffset = 0;
+  let byteStart  = 0;
 
   for (const r of results) {
     if (!r.audio) continue;
-    const binary = atob(r.audio);
+    const binary    = atob(r.audio);
     const byteCount = binary.length;
     for (let i = 0; i < byteCount; i++) allBytes.push(binary.charCodeAt(i));
 
@@ -1343,11 +1729,11 @@ function stitchSegments(results) {
     const starts = r.alignment?.character_start_times_seconds || [];
     const ends   = r.alignment?.character_end_times_seconds   || [];
 
-    // Estimate segment duration from alignment end times
-    // Use max end time rather than last (more reliable)
-    let maxEnd = 0;
-    ends.forEach(e => { if (e > maxEnd) maxEnd = e; });
-    const segDuration = maxEnd > 0 ? maxEnd + 0.15 : (byteCount / 16000); // fallback: ~128kbps mp3
+    // Byte-based duration is more reliable than alignment maxEnd + padding
+    // 128kbps MP3 = 16000 bytes/sec
+    const segDuration = byteCount / 16000;
+
+    segmentMeta.push({ timeOffset, byteStart, byteEnd: byteStart + byteCount, alignment: r.alignment });
 
     chars.forEach((c, i) => {
       stitchedAlignment.characters.push(c);
@@ -1355,6 +1741,7 @@ function stitchSegments(results) {
       stitchedAlignment.character_end_times_seconds.push((ends[i]   || 0) + timeOffset);
     });
     timeOffset += segDuration;
+    byteStart  += byteCount;
   }
 
   let binary = '';
@@ -1363,7 +1750,7 @@ function stitchSegments(results) {
     binary += String.fromCharCode(...allBytes.slice(i, i + chunkSize));
   }
 
-  return { audio: btoa(binary), alignment: stitchedAlignment };
+  return { audio: btoa(binary), alignment: stitchedAlignment, segmentMeta };
 }
 
 function detectSpeakerVoice(text) {
@@ -1521,18 +1908,19 @@ function closePodcastPanel() {
 }
 
 function showNarrationEndPrompt() {
-  // Show a toast-style prompt from the bottom
   const el = document.getElementById('toast');
-  el.innerHTML = `Chapter complete. <button onclick="openPodcastPanel()" style="background:transparent;border:none;color:var(--teal-bright);font-family:var(--mono);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;margin-left:4px">🎙 Listen to the AI review →</button>`;
+  const hasNext = currentChapter < CHAPTER_COUNT;
+  el.innerHTML = `Chapter complete.`
+    + ` <button onclick="openPodcastPanel()" style="background:transparent;border:none;color:var(--teal-bright);font-family:var(--mono);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;margin-left:4px">🎙 Decoded →</button>`
+    + (hasNext ? ` <button onclick="loadChapter(${currentChapter + 1})" style="background:transparent;border:none;color:var(--rose);font-family:var(--mono);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;margin-left:8px">Ch. ${currentChapter + 1} →</button>` : '');
   el.classList.remove('hidden');
   el.style.pointerEvents = 'auto';
-  // Auto-hide after 8 seconds
   clearTimeout(el._podcastTimer);
   el._podcastTimer = setTimeout(() => {
     el.classList.add('hidden');
     el.style.pointerEvents = '';
     el.innerHTML = '';
-  }, 8000);
+  }, 10000);
 }
 
 // Close panel on Escape (add to existing keydown handler)
