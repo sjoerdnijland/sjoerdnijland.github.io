@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v17';
+const READER_VERSION = 'v18';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -67,12 +67,12 @@ function applyAmbientBtn() {
 function toggleAmbient() {
   ambientEnabled = !ambientEnabled;
   localStorage.setItem('ambientMusic', ambientEnabled ? 'on' : 'off');
-  applyAmbientBtn(); applyMultiVoiceBtn();
+  applyAmbientBtn();
   if (ambientEnabled && narrationActive) {
     const pid = narrationParaIds[narrationIndex];
     startAmbient(currentChapter, getSceneForPara(pid));
   } else {
-    stopAmbient();
+    stopAmbientNow();
   }
 }
 
@@ -162,6 +162,16 @@ function stopAmbient() {
   }, 80);
 }
 
+// Hard stop: kills ambient immediately, cancels any pending resolve
+function stopAmbientNow() {
+  ambientPending = null; // cancel any queued track
+  if (!ambientAudio) return;
+  const audio = ambientAudio;
+  ambientAudio = null;
+  audio.pause();
+  audio.src = '';
+}
+
 function isEpigraphPara(pid) {
   const el = document.getElementById(pid);
   return el ? !!el.closest('.epigraph-block') : false;
@@ -211,9 +221,10 @@ function stopNarration() {
   document.getElementById('narration-progress').style.display = 'none';
   document.getElementById('narration-controls').style.display = 'none';
   document.getElementById('narration-thread').classList.remove('open');
+  document.getElementById('narration-overlay').classList.remove('thread-open');
   narrationThreadOpen = false;
   document.body.style.overflow = '';
-  stopAmbient();
+  stopAmbientNow();
   document.getElementById('narration-comment-hint').classList.remove('visible');
 }
 
@@ -773,9 +784,11 @@ let narrationThreadOpen = false;
 
 function narrationToggleThread() {
   narrationThreadOpen = !narrationThreadOpen;
-  const sidebar = document.getElementById('narration-thread');
-  const btn     = document.getElementById('nc-thread-btn');
+  const sidebar  = document.getElementById('narration-thread');
+  const overlay  = document.getElementById('narration-overlay');
+  const btn      = document.getElementById('nc-thread-btn');
   sidebar.classList.toggle('open', narrationThreadOpen);
+  overlay.classList.toggle('thread-open', narrationThreadOpen);
   if (btn) btn.style.color = narrationThreadOpen ? 'var(--teal-bright)' : '';
 
   if (narrationThreadOpen) {
