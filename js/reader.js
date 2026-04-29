@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v12';
+const READER_VERSION = 'v13';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -488,6 +488,7 @@ async function narrationGoTo(index) {
     : buildDisplayTokens(rawText, words);
   narrationCurrentWords   = displayTokens.filter(t => t.type === 'word');
   const isStitched = segments.length > 1;
+  if (isStitched) console.log('[words]', narrationCurrentWords.map((w,i)=>`[${i}]${w.text}`).join(' '));
 
   // Precompute which word indices (in narrationCurrentWords) belong to character segments
   // Key insight: normalise BOTH sides identically — strip all quote chars via norm()
@@ -499,7 +500,6 @@ async function narrationGoTo(index) {
 
     let searchFrom = 0;
     for (const seg of segments) {
-      // Normalise segment words the same way as display — no pre-stripping
       const segWords = seg.text.split(/\s+/).filter(Boolean).map(norm).filter(Boolean);
       if (!segWords.length) continue;
 
@@ -516,6 +516,7 @@ async function narrationGoTo(index) {
 
       const count    = segWords.length;
       const matchEnd = (matchStart === -1 ? searchFrom : matchStart) + count - 1;
+      console.log(`[range] voice:${seg.voiceId||'narr'} match:${matchStart} end:${matchEnd} first:"${segWords[0]}" last:"${segWords[segWords.length-1]}" normDisplay[${matchStart}]:"${normDisplay[matchStart]}"`);
       if (seg.voiceId && matchStart !== -1) {
         charWordRanges.push({
           start: matchStart,
@@ -525,6 +526,7 @@ async function narrationGoTo(index) {
       }
       searchFrom = (matchStart === -1 ? searchFrom : matchStart) + count;
     }
+    console.log('[charWordRanges]', JSON.stringify(charWordRanges), 'total display words:', normDisplay.length);
   }
 
   function getCharVoiceForWord(idx) {
