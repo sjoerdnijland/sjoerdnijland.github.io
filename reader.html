@@ -941,7 +941,8 @@ let narrationPlaying   = false;
 let narrationAlignment = null;
 let narrationRAF       = null;
 let narrationCache     = {};
-let narrationLocked    = false; // prevents overlapping goTo calls
+let narrationLocked    = false;
+let narrationCurrentWords = []; // current paragraph word timings for resume sync
 
 // ── Ambient music ────────────────────────────────────────
 let ambientAudio   = null;
@@ -1238,6 +1239,7 @@ async function narrationGoTo(index) {
   }
 
   const taggedWords = tagWords(words, markupRanges);
+  narrationCurrentWords = taggedWords; // store for resume
 
   textEl.innerHTML = taggedWords.map((w, i) =>
     `<span class="nw ${w.fmt}" id="nw-${i}">${escHtml(w.text)}</span>${w.space ? ' ' : ''}`
@@ -1295,14 +1297,23 @@ function narrationTogglePlay() {
   if (narrationAudio.paused) {
     narrationAudio.play();
     narrationPlaying = true;
-    narrationRAF = requestAnimationFrame(function sync() {
+    document.getElementById('nc-play-btn').textContent = '⏸ Pause';
+    // Resume karaoke sync using stored word timings
+    function resumeSync() {
       if (!narrationAudio || narrationAudio.paused) return;
       const t = narrationAudio.currentTime;
-      const words = Array.from(document.querySelectorAll('.nw'));
-      // re-sync handled inside narrationGoTo's closure — just restart RAF
-      narrationRAF = requestAnimationFrame(sync);
-    });
-    document.getElementById('nc-play-btn').textContent = '⏸ Pause';
+      const pct = narrationAudio.duration ? (t / narrationAudio.duration) * 100 : 0;
+      document.getElementById('narration-progress-bar').style.width = pct + '%';
+      narrationCurrentWords.forEach((w, i) => {
+        const el = document.getElementById('nw-' + i);
+        if (!el) return;
+        if (t >= w.end)        el.className = `nw ${w.fmt || ''} spoken`;
+        else if (t >= w.start) el.className = `nw ${w.fmt || ''} current`;
+        else                   el.className = `nw ${w.fmt || ''}`;
+      });
+      narrationRAF = requestAnimationFrame(resumeSync);
+    }
+    narrationRAF = requestAnimationFrame(resumeSync);
   } else {
     narrationAudio.pause();
     narrationPlaying = false;
