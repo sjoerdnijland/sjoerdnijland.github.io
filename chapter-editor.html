@@ -551,9 +551,13 @@ function buildSpeakerOptions(current) {
 
 // Load character data for editor speaker picker
 let wikiDataForEditor = {};
-fetch('data/characters.json').then(r => r.json()).then(chars => {
-  chars.forEach(c => { if (c.id) wikiDataForEditor[c.id] = c; });
-}).catch(() => {});
+let wikiEditorReady   = false;
+const wikiEditorPromise = fetch('data/characters.json')
+  .then(r => r.json())
+  .then(chars => {
+    chars.forEach(c => { if (c.id) wikiDataForEditor[c.id] = c; });
+    wikiEditorReady = true;
+  }).catch(() => { wikiEditorReady = true; });
 
 function autoResize(ta) {
   ta.style.height = 'auto';
@@ -807,12 +811,18 @@ function handleFileLoad(e) {
           id,
           type: sec.type || 'prose',
           heading: sec.heading || '',
-          paragraphs: sec.paragraphs || ['']
+          // Preserve paragraph objects (with speaker/inner_voice) or plain strings
+          paragraphs: (sec.paragraphs || ['']).map(p =>
+            typeof p === 'string' ? p : { ...p }
+          )
         };
       });
-      renderEditor();
-      refreshPreview();
-      toast(`Loaded: ${file.name}`);
+      // Ensure characters are loaded before rendering dropdowns
+      wikiEditorPromise.then(() => {
+        renderEditor();
+        refreshPreview();
+        toast(`Loaded: ${file.name}`);
+      });
     } catch(err) {
       toast('Error loading JSON: ' + err.message);
     }
