@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v23';
+const READER_VERSION = 'v24';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -531,8 +531,7 @@ async function narrationGoTo(index) {
     //    We walk rawText and record the plain-text char range each span covers.
     let plainOffset = 0; // position in the stripped plain text
     const fmtRanges = []; // [{start, end, fmt}] in plain-text coords
-    const markupRe = /(\*\*[^*]+?\*\*|\*[^*]+?\*|~~[^~]+?~~|
-)/g;
+    const markupRe = /(\*\*[^*]+?\*\*|\*[^*]+?\*|~~[^~]+?~~|\n)/g;
     let lastIndex = 0;
     let match;
     while ((match = markupRe.exec(raw)) !== null) {
