@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v8';
+const READER_VERSION = 'v9';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -456,19 +456,54 @@ async function narrationGoTo(index) {
   narrationCurrentWords   = displayTokens.filter(t => t.type === 'word');
   const isStitched = segments.length > 1;
 
-  // Precompute which word indices belong to a character voice segment
-  // Done from text structure, not from timing — timing is unreliable after stitching
-  // charWordRanges: [{start, end, voice}] — word index ranges per character segment
+  // Precompute which word indices (in narrationCurrentWords) belong to character segments
+  // Strategy: strip all markup/quotes from both display words and segment text, then match
   const charWordRanges = [];
-  if (isStitched) {
-    // Walk through segments, count how many words each contains in the plain text
-    let wordCursor = 0;
+  if (isStitched && narrationCurrentWords.length) {
+    // Flatten all display words to plain text for matching
+    const displayWords = narrationCurrentWords.map(w =>
+      w.text.replace(/[^a-z0-9''\u00e0-\u00ff]/gi, '').toLowerCase()
+    );
+
+    let searchFrom = 0;
     for (const seg of segments) {
-      const segWordCount = seg.text.split(/\s+/).filter(Boolean).length;
-      if (seg.voiceId) {
-        charWordRanges.push({ start: wordCursor, end: wordCursor + segWordCount - 1, voice: seg.voiceId });
+      // Strip quotes, asterisks, markup from segment text to get matchable words
+      const segPlain = seg.text
+        .replace(/[""'\u201c\u201d*_~]/g, '')
+        .replace(/\s+/g, ' ').trim();
+      const segWords = segPlain.split(/\s+/).filter(Boolean)
+        .map(w => w.replace(/[^a-z0-9''\u00e0-\u00ff]/gi, '').toLowerCase())
+        .filter(Boolean);
+
+      if (!segWords.length) continue;
+
+      // Find where this segment's first word appears in displayWords (from searchFrom)
+      let matchStart = -1;
+      for (let i = searchFrom; i < displayWords.length; i++) {
+        if (displayWords[i] === segWords[0]) {
+          // Verify next few words also match
+          let ok = true;
+          for (let j = 1; j < Math.min(3, segWords.length); j++) {
+            if (displayWords[i + j] !== segWords[j]) { ok = false; break; }
+          }
+          if (ok) { matchStart = i; break; }
+        }
       }
-      wordCursor += segWordCount;
+
+      if (matchStart === -1) {
+        // Fallback: advance cursor by word count
+        if (seg.voiceId) {
+          charWordRanges.push({ start: searchFrom, end: searchFrom + segWords.length - 1, voice: seg.voiceId });
+        }
+        searchFrom += segWords.length;
+        continue;
+      }
+
+      const matchEnd = matchStart + segWords.length - 1;
+      if (seg.voiceId) {
+        charWordRanges.push({ start: matchStart, end: Math.min(matchEnd, narrationCurrentWords.length - 1), voice: seg.voiceId });
+      }
+      searchFrom = matchEnd + 1;
     }
   }
 
@@ -533,10 +568,12 @@ async function narrationGoTo(index) {
     const pct = dur ? (t / dur) * 100 : 0;
     document.getElementById('narration-progress-bar').style.width = pct + '%';
 
-    // Find current word — last word whose start <= t
+    // Find current word — with small lookahead to compensate for ElevenLabs timing offset
+    // Use 80ms lookahead so highlight fires slightly before the word is spoken
+    const LOOKAHEAD = 0.08;
     let currentIdx = -1;
     for (let i = 0; i < narrationCurrentWords.length; i++) {
-      if (narrationCurrentWords[i].start <= t) currentIdx = i;
+      if (narrationCurrentWords[i].start <= t + LOOKAHEAD) currentIdx = i;
       else break;
     }
 
@@ -627,7 +664,7 @@ function narrationTogglePlay() {
 
       let currentIdx = -1;
       for (let i = 0; i < narrationCurrentWords.length; i++) {
-        if (narrationCurrentWords[i].start <= t) currentIdx = i;
+        if (narrationCurrentWords[i].start <= t + 0.08) currentIdx = i;
         else break;
       }
       narrationCurrentWords.forEach((w, i) => {
