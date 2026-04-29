@@ -1464,9 +1464,15 @@ async function narrationGoTo(index) {
     setTimeout(() => narrationGoTo(index + 1), 1200);
   });
 
-  // Fix words with end:0 (last word ElevenLabs quirk) — use audio duration as end time
-  narrationCurrentWords.forEach(w => {
-    if (!w.end || w.end === 0) w.end = 9999;
+  // Fix word timings — use next word's start as current word's end
+  // ElevenLabs end times are unreliable; this gives clean sequential highlighting
+  narrationCurrentWords.forEach((w, i) => {
+    const next = narrationCurrentWords[i + 1];
+    if (next && next.start > 0) {
+      w.end = next.start;
+    } else if (!w.end || w.end === 0) {
+      w.end = 9999; // last word — patched via loadedmetadata
+    }
   });
 
   narrationAudio.addEventListener('loadedmetadata', () => {
@@ -1642,10 +1648,11 @@ async function submitNarrationComment(pid) {
 
 async function prefetchNext(index) {
   if (index >= narrationParaIds.length) return;
-  const pid = narrationParaIds[index];
-  if (narrationCache[pid]) return;
+  const pid  = narrationParaIds[index];
   const text = getParaText(pid);
   if (!text) return;
+  const cacheKey = pid + '|' + text.slice(0, 40);
+  if (narrationCache[cacheKey]) return; // already cached
   try {
     const res = await fetch(NARRATE_URL, {
       method: 'POST',
