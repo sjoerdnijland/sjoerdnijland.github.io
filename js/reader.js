@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v15';
+const READER_VERSION = 'v17';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -174,7 +174,18 @@ function getNarrableParagraphs() {
     .filter(Boolean);
 }
 
+// Silent MP3 to unlock audio on iOS Safari — must be played within a user gesture
+const SILENT_MP3 = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjMyLjEwNAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhgCenp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6e////////////////////////////////////////////////////////////////AAAAAExhdmM1OC41NAAAAAAAAAAAAAAAACQAAAAAAAAAAw4g3QAAAAAAAAAAAAAAAAAA//tQxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
+let audioUnlocked = false;
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+  const a = new Audio(SILENT_MP3);
+  a.play().then(() => { audioUnlocked = true; }).catch(() => {});
+}
+
 async function startNarration() {
+  unlockAudio(); // must be called within user gesture, before any await
   narrationParaIds = getNarrableParagraphs();
   if (!narrationParaIds.length) return;
 
@@ -596,7 +607,7 @@ async function narrationGoTo(index) {
 
   // Start playback + karaoke sync
   narrationLocked = false; // unlock — audio is playing, navigation is safe again
-  narrationAudio.play();
+  narrationAudio.play().catch(e => console.warn('Audio play failed:', e));
   narrationAudio.addEventListener('ended', () => {
     cancelAnimationFrame(narrationRAF);
     // Mark all words as spoken cleanly on audio end (fixes last-word blip)
@@ -698,7 +709,7 @@ async function narrationGoTo(index) {
 function narrationTogglePlay() {
   if (!narrationAudio) return;
   if (narrationAudio.paused) {
-    narrationAudio.play();
+    narrationAudio.play().catch(e => console.warn('Audio resume failed:', e));
     narrationPlaying = true;
     document.getElementById('nc-play-btn').textContent = '⏸ Pause';
     // Resume karaoke sync using stored word timings
@@ -743,6 +754,7 @@ function narrationNext() {
 }
 
 async function startNarrationFrom(pid) {
+  unlockAudio(); // must be within user gesture
   narrationParaIds = getNarrableParagraphs();
   const idx = narrationParaIds.indexOf(pid);
   narrationIndex = idx >= 0 ? idx : 0;
@@ -992,10 +1004,19 @@ async function loadChapter(n) {
 
 function renderChapterPills() {
   const el = document.getElementById('chapter-pills');
-  el.innerHTML = Array.from({ length: CHAPTER_COUNT }, (_, i) => i + 1).map(n => `
-    <button class="cp-btn ${n === currentChapter ? 'active' : ''}" onclick="loadChapter(${n})">
-      Ch. ${n}
-    </button>`).join('');
+  if (CHAPTER_COUNT <= 8) {
+    // Pills for small chapter count
+    el.innerHTML = Array.from({ length: CHAPTER_COUNT }, (_, i) => i + 1).map(n => `
+      <button class="cp-btn ${n === currentChapter ? 'active' : ''}" onclick="loadChapter(${n})">
+        Ch. ${n}
+      </button>`).join('');
+  } else {
+    // Compact dropdown for many chapters
+    const opts = Array.from({ length: CHAPTER_COUNT }, (_, i) => i + 1)
+      .map(n => `<option value="${n}" ${n === currentChapter ? 'selected' : ''}>Chapter ${n}</option>`)
+      .join('');
+    el.innerHTML = `<select class="cp-select" onchange="loadChapter(+this.value)" title="Jump to chapter">${opts}</select>`;
+  }
 }
 
 // ── Wiki index builder ───────────────────────────────────
@@ -1304,11 +1325,15 @@ function renderChapter(ch) {
   // Chapter-end card with podcast invite
   const endCard = document.createElement('div');
   endCard.className = 'chapter-end-card visible';
+  const hasNext = currentChapter < CHAPTER_COUNT;
   endCard.innerHTML = `
     <div class="cec-label">Chapter ${currentChapter} complete</div>
     <div class="cec-title">${ch.title}</div>
     <div class="cec-sub">Vera and Milo are ready to discuss it.</div>
-    <button class="cec-btn" onclick="openPodcastPanel()">🎙 Listen to the AI podcast review</button>`;
+    <div class="cec-actions">
+      <button class="cec-btn secondary" onclick="openPodcastPanel()">🎙 Decoded — AI podcast review</button>
+      ${hasNext ? `<button class="cec-btn primary" onclick="loadChapter(${currentChapter + 1})">Continue to Chapter ${currentChapter + 1} →</button>` : ''}
+    </div>`;
   el.appendChild(endCard);
 
   // Show the FAB
@@ -1736,18 +1761,19 @@ function closePodcastPanel() {
 }
 
 function showNarrationEndPrompt() {
-  // Show a toast-style prompt from the bottom
   const el = document.getElementById('toast');
-  el.innerHTML = `Chapter complete. <button onclick="openPodcastPanel()" style="background:transparent;border:none;color:var(--teal-bright);font-family:var(--mono);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;margin-left:4px">🎙 Listen to the AI review →</button>`;
+  const hasNext = currentChapter < CHAPTER_COUNT;
+  el.innerHTML = `Chapter complete.`
+    + ` <button onclick="openPodcastPanel()" style="background:transparent;border:none;color:var(--teal-bright);font-family:var(--mono);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;margin-left:4px">🎙 Decoded →</button>`
+    + (hasNext ? ` <button onclick="loadChapter(${currentChapter + 1})" style="background:transparent;border:none;color:var(--rose);font-family:var(--mono);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;margin-left:8px">Ch. ${currentChapter + 1} →</button>` : '');
   el.classList.remove('hidden');
   el.style.pointerEvents = 'auto';
-  // Auto-hide after 8 seconds
   clearTimeout(el._podcastTimer);
   el._podcastTimer = setTimeout(() => {
     el.classList.add('hidden');
     el.style.pointerEvents = '';
     el.innerHTML = '';
-  }, 8000);
+  }, 10000);
 }
 
 // Close panel on Escape (add to existing keydown handler)
