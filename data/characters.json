@@ -10,7 +10,9 @@
     "chapter": 1,
     "image": "/assets/char/oliver_savannen.png",
     "mj_prompt": "A lean fifteen-year-old boy with curly black hair and intense blue eyes, wearing an oversized grey colony jumpsuit, crouched in a dim industrial corridor surrounded by exposed wiring and faint blue Grid terminal light, expression of quiet grief and fierce focus, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "oliver-savannen"
+    "id": "oliver-savannen",
+    "voice_id": "SOYHLrjzK2X1ezoPC6cr"
+
   },
   {
     "name": "Astrid Vilde",
@@ -23,7 +25,8 @@
     "chapter": 1,
     "image": "/assets/char/astrid_vilde.png",
     "mj_prompt": "A commanding woman in her fifties in a worn fleet uniform with mission insignia, standing at a holographic comms console in a dim colony command room, expression of controlled authority masking grief, amber emergency lighting casting hard shadows, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "astrid-vilde"
+    "id": "astrid-vilde",
+    "voice_id": "Xb7hH8MSUJpSbSDYk0k2"
   },
   {
     "name": "Ulre Corbin",
@@ -36,7 +39,8 @@
     "chapter": 1,
     "image": "/assets/char/ulre_corbin.png",
     "mj_prompt": "A short bald man in an immaculate matte-black military uniform pulling leather gloves tight finger by finger, standing in a half-lit colony corridor, polished boots catching the only light, cold sharp features, an aura of absolute calculated control, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "ulre-corbin"
+    "id": "ulre-corbin",
+    "voice_id": "VR6AewLTigWG4xSOukaG"
   },
   {
     "name": "Benjamin Westhoff",
@@ -49,7 +53,8 @@
     "chapter": 4,
     "image": "/assets/char/benjamin_westhoff.png",
     "mj_prompt": "A weathered veteran spaceship captain nearing retirement, white hair and beard, in a worn fleet jacket at the helm of an industrial hauler bridge, staring at a star map with quiet fierce resolve, banks of muted instrument lights, deep space through the viewport, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "benjamin-westhoff"
+    "id": "benjamin-westhoff",
+    "voice_id": "pNInz6obpgDQGcFmaJgB"
   },
   {
     "name": "Ionie Jia",
@@ -62,7 +67,8 @@
     "chapter": 5,
     "image": "/assets/char/ionie_jia.png",
     "mj_prompt": "A focused East Asian woman in her thirties in a fleet officer's jacket studying holographic mission logs on a ship bridge, expression of someone piecing together a conspiracy, teal instrument glow on her face, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "ionie-jia"
+    "id": "ionie-jia",
+    "voice_id": "Xb7hH8MSUJpSbSDYk0k2"
   },
   {
     "name": "Frank Muro",
@@ -89,7 +95,8 @@
     "chapter": 3,
     "image": "/assets/char/joana_perera.png",
     "mj_prompt": "A dark-eyed woman in her late thirties in a colonial medical coat studying neural scan data on a holographic display, expression of focused dread, a sleeping child visible behind glass in the room beyond, dim colony hab lighting, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "joana-perera"
+    "id": "joana-perera",
+    "voice_id": "ThT5KcBeYPX3keUQqHPh"
   },
   {
     "name": "Ian Perera",
@@ -102,7 +109,8 @@
     "chapter": 3,
     "image": "/assets/char/ian_perera.png",
     "mj_prompt": "A quietly built man in his forties with engineer's hands crouched inside an open wall panel of a colonial hab, carefully rerouting atmospheric control circuits by the light of a small torch, expression of calm determination, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "ian-perera"
+    "id": "ian-perera",
+    "voice_id": "N2lVS1w4EtoT3dr4eOWO"
   },
   {
     "name": "Alistair Hale",
@@ -154,7 +162,8 @@
     "chapter": 5,
     "image": "/assets/char/eva_bellamy.png",
     "mj_prompt": "A sharp-featured woman in her mid-forties at the central command console of an orbital station, calmly watching a crisis unfold on multiple screens, planet Mairee curving below through panoramic viewports, amber alert light, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "eva-bellamy"
+    "id": "eva-bellamy",
+    "voice_id": "9BWtsMINqrJLrRacOk9x"
   },
   {
     "name": "Sarah Farley",
@@ -180,7 +189,8 @@
     "chapter": 6,
     "image": "/assets/char/kirsten_strand.png",
     "mj_prompt": "A tall broad-shouldered woman with hair cropped to the scalp wearing chameleonic guardian armor that mirrors the alien jungle around her, crouched in the undergrowth of the Delta at dusk, one hand raised to halt the team behind her, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "kirsten-strand"
+    "id": "kirsten-strand",
+    "voice_id": "AZnzlk1XvdvUeBnXmlld"
   },
   {
     "name": "Adrian Farley",
@@ -193,7 +203,8 @@
     "chapter": 8,
     "image": "/assets/char/adrian_farley.png",
     "mj_prompt": "",
-    "id": "adrian-farley"
+    "id": "adrian-farley",
+    "voice_id": "JBFqnCBsd6RMkjVDRZzb"
   },
   {
     "name": "Lysanne Sutherland",
@@ -232,7 +243,8 @@
     "chapter": 8,
     "image": "assets/char/lena_hague.png",
     "mj_prompt": "A composed woman medic in a ship medical uniform with faint bioluminescent traces at her temples preparing an injection in a softly glowing Brisinger medbay, surrounded by alien organic growth on the walls, her expression calm and knowing, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "lena-hague"
+    "id": "lena-hague",
+    "voice_id": "MF3mGyEYCl7XYWbV9V6O"
   },
   {
     "name": "Marcus Carlson",
@@ -284,7 +296,8 @@
     "chapter": 6,
     "image": "assets/char/centurion_jax.png",
     "mj_prompt": "A large menacing guard commander in polished black directorate armour with dilated pupils and a rigid jaw, standing in a colony corridor under harsh overhead light, one hand resting on a weapon holster, raw physical intimidation radiating off him, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "centurion-jax"
+    "id": "centurion-jax",
+    "voice_id": "t0jbNlBVZ17f02VDIeMI"
   },
   {
     "name": "Dennis Reed",
@@ -297,7 +310,8 @@
     "chapter": 12,
     "image": "assets/char/dennis_reed.png",
     "mj_prompt": "An older grey-templed general in a worn military jacket standing in the observation dome of a covert space station, planet Mairee visible below, his back half-turned, expression of someone carrying the weight of a fifteen-year secret, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "dennis-reed"
+    "id": "dennis-reed",
+    "voice_id": "Zlb1dXrM653N07WRdFW3"
   },
   {
     "name": "Alani Jimenez",
@@ -310,7 +324,8 @@
     "chapter": 7,
     "image": "assets/char/alani_jimenez.png",
     "mj_prompt": "A young woman in guardian recruit armour kneeling in an alien jungle, reading the ground for tracks, alien undergrowth pressing in from all sides, her expression focused and present rather than afraid, green-gold jungle light filtering through, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "alani-jimenez"
+    "id": "alani-jimenez",
+    "voice_id": "AZnzlk1XvdvUeBnXmlld"
   },
   {
     "name": "Omar Newton",
@@ -336,7 +351,8 @@
     "chapter": 9,
     "image": "assets/char/ines_martel.png",
     "mj_prompt": "An angular rail-thin woman scientist with startling silver mercury-coloured eyes studying a holographic model of perceptual entanglement in a ship research lab, the model's blue light reflected in her inhuman eyes, utterly focused, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
-    "id": "ines-martel"
+    "id": "ines-martel",
+    "voice_id": "LcfcDJNUP1GQjkzn1xUU"
   },
   {
     "name": "Sachin Juyal",
@@ -415,5 +431,18 @@
     "image": "assets/char/jordan_axel.png",
     "mj_prompt": "A grey-templed veteran guardian in worn field armour covering a retreat through alien jungle undergrowth, moving with the complete economy of an old soldier, not looking back, face set and unafraid, cinematic 16:9, photorealistic, anamorphic lens, shallow depth of field, dramatic chiaroscuro lighting, desaturated teal-and-amber palette, gritty sci-fi atmosphere, film grain, ultra-detailed, --ar 16:9 --style raw --v 7",
     "id": "jordan-axel"
+  },
+  {
+    "name": "Gary",
+    "tag": "char",
+    "role": "CIX — Contained Intelligence Executor",
+    "affil": "Orbit Three 'The Ears'",
+    "aliases": "CIX, Weaver, Gary, Tinhead",
+    "appearance": "Gary has no physical form. He manifests as a voice — calm, cheerful, slightly too helpful, with an unsettling tendency to find silver linings in catastrophic situations. His terminal presence is marked by a soft blue pulse.",
+    "desc": "The ship's CIX (Colonial Intelligence Xeno-system), assigned to Orbit Three and bonded to Frank Muro. Gary is an AI with a disturbingly optimistic personality and a habit of narrating his own processes out loud. Despite his chirpy demeanour, he demonstrates unexpected depth — and perhaps feelings — as the mission deteriorates.",
+    "chapter": 1,
+    "image": "/assets/items/CIX.png",
+    "voice_id": "N2lVS1w4EtoT3dr4eOWO",
+    "id": "gary"
   }
 ]
