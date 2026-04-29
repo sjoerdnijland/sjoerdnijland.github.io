@@ -508,7 +508,9 @@ function addParaRow(body, sec, pi, paraItem) {
   row.className = 'para-row';
 
   // Build speaker options
-  const speakerOpts = buildSpeakerOptions(speaker);
+  const speakerOpts    = buildSpeakerOptions(speaker);
+  const innerVoice     = typeof paraItem === 'object' ? (paraItem.inner_voice || '') : '';
+  const innerVoiceOpts = buildSpeakerOptions(innerVoice);
 
   row.innerHTML = `
     <span class="para-num">${pi + 1}</span>
@@ -519,9 +521,13 @@ function addParaRow(body, sec, pi, paraItem) {
         onfocus="lastFocusedTextarea = this"
       >${escHtml(text)}</textarea>
       <div class="para-meta">
-        <label class="speaker-label">🎙</label>
-        <select class="speaker-select" onchange="updateParaSpeaker('${sec.id}', ${pi}, this.value)" title="Speaker voice">
+        <label class="speaker-label" title="Dialogue speaker">🎙</label>
+        <select class="speaker-select" onchange="updateParaSpeaker('${sec.id}', ${pi}, this.value)" title="Dialogue speaker">
           ${speakerOpts}
+        </select>
+        <label class="speaker-label" title="Inner voice (italic thoughts)" style="margin-left:8px">💭</label>
+        <select class="speaker-select" onchange="updateParaInnerVoice('${sec.id}', ${pi}, this.value)" title="Inner voice">
+          ${innerVoiceOpts}
         </select>
       </div>
     </div>
@@ -563,7 +569,22 @@ function updateParaText(id, pi, val) {
   refreshPreview();
 }
 
-function updateParaSpeaker(id, pi, speakerId) {
+function updateParaInnerVoice(id, pi, voiceId) {
+  const sec = sections.find(s => s.id === id);
+  if (!sec) return;
+  const current = sec.paragraphs[pi];
+  if (typeof current === 'string') {
+    sec.paragraphs[pi] = voiceId ? { text: current, inner_voice: voiceId } : current;
+  } else {
+    if (voiceId) current.inner_voice = voiceId;
+    else delete current.inner_voice;
+  }
+  const select = document.querySelectorAll(`[onchange="updateParaInnerVoice('${id}', ${pi}, this.value)"]`)[0];
+  const row = select?.closest('.para-row');
+  if (row) row.classList.toggle('has-speaker', !!(voiceId || (typeof sec.paragraphs[pi] === 'object' && sec.paragraphs[pi].speaker)));
+  refreshPreview();
+  toast(voiceId ? `Inner voice set` : 'Inner voice cleared');
+}
   const sec = sections.find(s => s.id === id);
   if (!sec) return;
   const current = sec.paragraphs[pi];
@@ -723,8 +744,12 @@ function buildJSON() {
       // Output: plain string if no speaker, {text, speaker} if tagged
       out.paragraphs = sec.paragraphs.map(p => {
         if (typeof p === 'string') return p;
-        if (p.speaker) return { text: p.text, speaker: p.speaker };
-        return p.text; // object with no speaker → plain string
+        const obj = {};
+        obj.text = p.text;
+        if (p.speaker)     obj.speaker     = p.speaker;
+        if (p.inner_voice) obj.inner_voice = p.inner_voice;
+        if (!obj.speaker && !obj.inner_voice) return obj.text;
+        return obj;
       });
       return out;
     }).filter(Boolean)
