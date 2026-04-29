@@ -269,6 +269,8 @@ function cacheClear() {
   narrationCache = {};
   narrationCacheKeys.length = 0;
 }
+
+async function narrationGoTo(index) {
   // Hard-stop any currently playing audio immediately
   if (narrationAudio) {
     narrationAudio.pause();
