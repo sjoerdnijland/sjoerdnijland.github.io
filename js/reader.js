@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v11';
+const READER_VERSION = 'v12';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -490,52 +490,40 @@ async function narrationGoTo(index) {
   const isStitched = segments.length > 1;
 
   // Precompute which word indices (in narrationCurrentWords) belong to character segments
-  // Match by finding segment words in display word list — handles markup differences
+  // Key insight: normalise BOTH sides identically — strip all quote chars via norm()
+  // This means "The (display) and "The (segment) both → "the", so matching is always correct
   const charWordRanges = [];
   if (isStitched && narrationCurrentWords.length) {
-    // Normalise a word for matching — keep apostrophes, strip only punctuation/quotes
-    const norm = w => w.replace(/["""'\u201c\u201d]/g, '').replace(/[^a-z0-9''\u00e0-\u00ff]/gi, '').toLowerCase();
-
-    const displayWords = narrationCurrentWords.map(w => norm(w.text));
+    const norm = w => w.replace(/["""'\u201c\u201d]/g, '').replace(/[^a-z0-9\u00e0-\u00ff]/gi, '').toLowerCase();
+    const normDisplay = narrationCurrentWords.map(w => norm(w.text));
 
     let searchFrom = 0;
     for (const seg of segments) {
-      // Strip only outer quote chars, NOT apostrophes
-      const segPlain = seg.text
-        .replace(/^["""'\u201c\u201d]+|["""'\u201c\u201d]+$/g, '') // strip leading/trailing quotes only
-        .replace(/\s+/g, ' ').trim();
-      const segWords = segPlain.split(/\s+/).filter(Boolean).map(norm).filter(Boolean);
-
+      // Normalise segment words the same way as display — no pre-stripping
+      const segWords = seg.text.split(/\s+/).filter(Boolean).map(norm).filter(Boolean);
       if (!segWords.length) continue;
 
-      // Find where this segment starts in display words
       let matchStart = -1;
-      outer: for (let i = searchFrom; i < displayWords.length; i++) {
-        if (displayWords[i] === segWords[0]) {
-          // Verify up to 3 following words
+      outer: for (let i = searchFrom; i < normDisplay.length; i++) {
+        if (normDisplay[i] === segWords[0]) {
           for (let j = 1; j < Math.min(4, segWords.length); j++) {
-            if ((displayWords[i + j] || '') !== segWords[j]) continue outer;
+            if ((normDisplay[i + j] || '') !== segWords[j]) continue outer;
           }
           matchStart = i;
           break;
         }
       }
 
-      if (matchStart === -1) {
-        // No match — advance by segment word count as fallback
-        if (seg.voiceId) {
-          const fallbackEnd = Math.min(searchFrom + segWords.length - 1, narrationCurrentWords.length - 1);
-          charWordRanges.push({ start: searchFrom, end: fallbackEnd, voice: seg.voiceId });
-        }
-        searchFrom += segWords.length;
-        continue;
+      const count    = segWords.length;
+      const matchEnd = (matchStart === -1 ? searchFrom : matchStart) + count - 1;
+      if (seg.voiceId && matchStart !== -1) {
+        charWordRanges.push({
+          start: matchStart,
+          end: Math.min(matchEnd, narrationCurrentWords.length - 1),
+          voice: seg.voiceId
+        });
       }
-
-      const matchEnd = Math.min(matchStart + segWords.length - 1, narrationCurrentWords.length - 1);
-      if (seg.voiceId) {
-        charWordRanges.push({ start: matchStart, end: matchEnd, voice: seg.voiceId });
-      }
-      searchFrom = matchEnd + 1;
+      searchFrom = (matchStart === -1 ? searchFrom : matchStart) + count;
     }
   }
 
