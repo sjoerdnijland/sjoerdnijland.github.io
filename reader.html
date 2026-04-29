@@ -1219,12 +1219,13 @@ async function narrationGoTo(index) {
   cancelAnimationFrame(narrationRAF);
   narrationPlaying = false;
 
+  const textEl = document.getElementById('narration-text');
+
   // Cache key = pid + text hash to prevent stale audio mismatches
   const cacheKey = pid + '|' + text.slice(0, 40);
   let data = narrationCache[cacheKey];
   if (!data) {
     // Only show loading message when we actually need to fetch
-    const textEl = document.getElementById('narration-text');
     textEl.innerHTML = `<span class="narration-loading">the stone is listening…</span>`;
     try {
       const res = await fetch(NARRATE_URL, {
