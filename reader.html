@@ -849,11 +849,151 @@ body.wiki-hints-on .para.active .wiki-link {
 .toast.hidden { opacity: 0; }
 
 /* ── Responsive ────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .reader-wrap { grid-template-columns: 1fr; }
-  .reader-sidebar { position: fixed; right: 0; top: 64px; width: 320px; height: calc(100vh - 64px); transform: translateX(100%); transition: transform 0.3s; z-index: 150; }
+@media (max-width: 768px) {
+  .reader-wrap { grid-template-columns: 1fr; padding-top: 112px; }
+
+  /* Chapter bar — two rows on mobile */
+  .chapter-bar {
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+    gap: 0;
+  }
+  .chapter-bar-left {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .cb-logo { font-size: 0.9rem; }
+  .chapter-pills { gap: 4px; }
+  .cp-btn { padding: 4px 10px; font-size: 0.65rem; letter-spacing: 0.12em; }
+
+  .chapter-bar-right {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px; gap: 8px;
+    flex-wrap: nowrap; overflow-x: auto;
+  }
+  .chapter-bar-right::-webkit-scrollbar { display: none; }
+
+  .font-size-controls { gap: 3px; }
+  .fs-btn { padding: 5px 8px; font-size: 0.7rem; }
+
+  .narrate-hero-btn {
+    padding: 6px 12px; font-size: 0.65rem;
+    letter-spacing: 0.12em; gap: 5px;
+  }
+  .narrate-hero-icon { font-size: 0.7rem; }
+
+  /* Auth area — shrink avatar only */
+  .auth-name { display: none; }
+  .auth-avatar { width: 24px; height: 24px; }
+
+  /* Chapter content */
+  .chapter-content { padding: 32px 20px 100px; }
+  .ch-title { font-size: clamp(1.8rem, 6vw, 2.6rem); }
+
+  /* Paragraph text */
+  .para {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    padding: 6px 8px;
+    margin-left: -8px;
+  }
+
+  /* Para toolbar — stack if needed */
+  .para-toolbar {
+    flex-wrap: wrap; gap: 4px;
+  }
+  .pt-btn { font-size: 0.6rem; padding: 3px 8px; }
+
+  /* Sidebar — full width slide-in from bottom on mobile */
+  .reader-sidebar {
+    position: fixed;
+    right: 0; bottom: 0; left: 0; top: auto;
+    width: 100%;
+    height: 60vh;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    z-index: 150;
+    border-left: none;
+    border-top: 1px solid var(--line-strong);
+  }
   .reader-sidebar.open { transform: none; }
-  .chapter-content { padding: 48px 24px 80px; }
+
+  /* Narration overlay — mobile optimised */
+  .narration-overlay {
+    padding: 80px 20px 120px;
+    align-items: center;
+  }
+  .narration-text {
+    font-size: 1.15rem;
+    line-height: 1.85;
+    text-align: center;
+  }
+  .narration-counter {
+    font-size: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+  .narration-controls {
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0 12px;
+  }
+  .nc-btn {
+    padding: 8px 14px;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* Narration thread sidebar */
+  .narration-thread {
+    width: 100%;
+    top: auto; bottom: 0;
+    height: 60vh;
+    transform: translateY(100%);
+    border-left: none;
+    border-top: 1px solid var(--line-strong);
+  }
+  .narration-thread.open { transform: none; }
+
+  /* Podcast fab — slightly smaller, stays bottom-left */
+  .podcast-fab {
+    bottom: 16px; left: 16px;
+    padding: 10px 16px;
+  }
+  .podcast-fab-icon { font-size: 1.2rem; }
+  .podcast-fab-sub { font-size: 0.7rem; }
+
+  /* Wiki popup */
+  .wiki-popup {
+    left: 12px; right: 12px; width: auto;
+    max-height: 60vh;
+  }
+
+  /* Drop cap smaller on mobile */
+  .para.drop-cap::first-letter {
+    font-size: 3.2em;
+  }
+
+  /* Uplink / code blocks */
+  .uplink-block .para { font-size: 0.8rem; }
+  .code-block .para { font-size: 0.82rem !important; }
+  .uplink-heading-para { font-size: 0.65rem !important; }
+
+  /* Scene break */
+  .scene-break { margin: 28px 0; }
+}
+
+/* Extra small phones */
+@media (max-width: 390px) {
+  .chapter-bar-right { padding: 6px 12px; }
+  .narrate-hero-btn span:not(.narrate-hero-icon) { display: none; }
+  .narrate-hero-btn { padding: 6px 10px; }
 }
 </style>
 </head>
@@ -1353,7 +1493,7 @@ async function narrationGoTo(index) {
         el.className = `nw ${w.fmt || ''} spoken`;
       } else if (t >= w.start) {
         el.className = `nw ${w.fmt || ''} current`;
-        el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        if (window.innerWidth > 768) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       } else {
         el.className = `nw ${w.fmt || ''}`;
       }
