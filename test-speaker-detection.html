@@ -73,36 +73,27 @@ const TEST_CASES = [
   `Oliver looked at the wiring. It wasn't supposed to spark.`,
 ];
 
-const SAID_VERBS = 'said|asked|replied|whispered|called|snapped|muttered|shouted|added|answered|continued|growled|breathed|laughed|hissed|barked|pleaded|ordered|announced|warned|began|finished|interrupted|noted|insisted|admitted|confirmed|agreed|disagreed|protested';
-
-const ACTION_WORDS = 'scratched|leaned|crossed|turned|looked|nodded|shook|stepped|stood|sat|walked|ran|opened|closed|grabbed|pulled|pushed|reached|glanced|stared|smiled|frowned|sighed|paused|hesitated|squinted|raised|lowered|stretched|spun|moved|shifted|cleared';
+const SAID_VERBS = 'said|asked|replied|whispered|called|snapped|muttered|shouted|added|answered|continued|growled|breathed|laughed|hissed|barked|pleaded|ordered|announced|warned|began|finished|interrupted|noted|insisted|admitted|confirmed|agreed|protested';
+const ACTION_WORDS = 'scratched|leaned|crossed|turned|looked|nodded|shook|stepped|stood|sat|walked|ran|opened|closed|grabbed|pulled|pushed|reached|glanced|stared|smiled|frowned|sighed|paused|hesitated|squinted|raised|lowered|stretched|spun|moved|shifted|cleared|narrowed|rubbed';
 
 function hasQuotes(text) {
-  return /[""\u201c\u201d']/.test(text);
+  return /[""'\u201c\u201d]/.test(text);
 }
 
 function detectSpeaker(text) {
-  // Must have quoted speech to consider voice switching
   if (!text || !hasQuotes(text)) return null;
-
-  const q    = `[""\u201c\u201d']`;
-  const name = `([A-Z][a-z\u00e0-\u00ff]+(?:[\\s-][A-Z][a-z]+)?)`;
-  const verb = `(?:${SAID_VERBS})`;
-  const act  = `(?:${ACTION_WORDS})`;
-
+  const NAME = '([A-Z][a-z\u00e0-\u00ff]+(?:[\\s-][A-Z][a-z]+)?)';
+  const VERB = '(?:' + SAID_VERBS + ')';
+  const ACT  = '(?:' + ACTION_WORDS + ')';
+  const QA   = '[""\'\u201c\u201d]';
   const patterns = [
-    // "dialogue," Name verb
-    new RegExp(`${q}[^${q}]+${q}[,.]\\s*${name}\\s+${verb}`, 'i'),
-    // Name verb "dialogue"
-    new RegExp(`^${name}\\s+${verb}[,:]?\\s*${q}`, 'i'),
-    // Name action... "dialogue"  e.g. Muro scratched his temple. "Nothing..."
-    new RegExp(`^${name}\\s+${act}[^.]*\\.\\s*${q}`, 'i'),
-    // "dialogue" verb Name  e.g. "Hello" said Muro
-    new RegExp(`${q}[^${q}]+${q}\\s*${verb}\\s+${name}`, 'i'),
-    // Name's voice/tone + quote  e.g. Gary's voice was...
-    new RegExp(`^${name}'s\\s+(?:voice|tone|words)`, 'i'),
+    new RegExp(QA + '[^""\'\u201c\u201d]+' + QA + '\\s*,?\\s*' + NAME + '\\s+' + VERB, 'i'),
+    new RegExp(QA + '[^""\'\u201c\u201d,]+,["\"\u201d]\\s*' + NAME + '\\s+' + VERB, 'i'),
+    new RegExp('^' + NAME + '\\s+' + VERB + '[,:]?\\s*' + QA, 'i'),
+    new RegExp('^' + NAME + '\\s+' + ACT  + '[^.]*\\.\\s*' + QA, 'i'),
+    new RegExp(NAME + '\'s\\s+(?:voice|tone|words)', 'i'),
+    new RegExp(QA + '[^""\'\u201c\u201d]+' + QA + '\\s+' + VERB + '\\s+' + NAME, 'i'),
   ];
-
   for (const pat of patterns) {
     const m = text.match(pat);
     if (!m) continue;
@@ -110,10 +101,10 @@ function detectSpeaker(text) {
     const lower = raw.toLowerCase();
     const entry = wikiIndex[lower];
     if (entry) return { name: raw, entry };
-    const last    = lower.split(/\s+/).pop();
-    const byLast  = wikiIndex[last];
+    const last   = lower.split(/\s+/).pop();
+    const byLast = wikiIndex[last];
     if (byLast) return { name: raw, entry: byLast };
-    return { name: raw, entry: null }; // name found, not in wiki
+    return { name: raw, entry: null };
   }
   return null;
 }
