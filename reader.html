@@ -1258,7 +1258,7 @@ async function narrationGoTo(index) {
   narrationCurrentWords = taggedWords; // store for resume
 
   textEl.innerHTML = taggedWords.map((w, i) =>
-    `<span class="nw ${w.fmt}" id="nw-${i}">${escHtml(w.text)}</span>${w.space ? ' ' : ''}`
+    `<span class="nw ${w.fmt}" id="nw-${i}">${escHtml(w.text)}</span>${w.br ? '<br>' : (w.space ? ' ' : '')}`
   ).join('');
 
   // Create audio from base64
@@ -1472,20 +1472,28 @@ function buildWordTimings(text, alignment) {
 
   const words = [];
   let word = '', wordStart = 0, wordEnd = 0;
-  let inTag = false; // track if we're inside an SSML tag
+  let inTag = false;
+  let pendingBreak = false; // track \n for line break display
 
   for (let i = 0; i < chars.length; i++) {
     const c = chars[i];
 
-    // Skip SSML tags like <speak>, <break time="1.2s"/>
     if (c === '<') { inTag = true; continue; }
     if (c === '>') { inTag = false; continue; }
     if (inTag) continue;
 
-    if (c === ' ' || c === '\n') {
+    if (c === '\n') {
       if (word) {
-        words.push({ text: word, start: wordStart, end: wordEnd, space: true });
+        words.push({ text: word, start: wordStart, end: wordEnd, space: true, br: true });
         word = '';
+      } else {
+        pendingBreak = true;
+      }
+    } else if (c === ' ') {
+      if (word) {
+        words.push({ text: word, start: wordStart, end: wordEnd, space: true, br: pendingBreak });
+        word = '';
+        pendingBreak = false;
       }
     } else {
       if (!word) wordStart = startTimes[i] || 0;
@@ -1493,7 +1501,7 @@ function buildWordTimings(text, alignment) {
       wordEnd = endTimes[i] || 0;
     }
   }
-  if (word) words.push({ text: word, start: wordStart, end: wordEnd, space: false });
+  if (word) words.push({ text: word, start: wordStart, end: wordEnd, space: false, br: pendingBreak });
   return words;
 }
 
