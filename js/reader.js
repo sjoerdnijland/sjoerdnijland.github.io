@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v68';
+const READER_VERSION = 'v69';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -906,88 +906,62 @@ async function narrationGoTo(index) {
   // Create audio from base64
   const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
   const audioUrl  = URL.createObjectURL(audioBlob);
-
-  // Create fresh Audio element per paragraph.
-  // iOS trusts play() on new elements while the silent keepalive (persistentAudio)
-  // maintains the audio session — no need to reuse the same element.
-  // This avoids src-change events firing 'ended' prematurely on iOS.
-  narrationAudio = new Audio(audioUrl);
+  narrationAudio   = new Audio(audioUrl);
   narrationPlaying = true;
 
   document.getElementById('nc-play-btn').innerHTML = '<span class="nc-icon">⏸</span><span class="nc-lbl">Pause</span>';
 
-  // Prefetch next paragraph quietly
   prefetchNext(index + 1);
+  narrationLocked = false;
 
-  // Start playback + karaoke sync
-  narrationLocked = false; // unlock — audio is playing, navigation is safe again
-  // Dual sync: RAF for smooth desktop, timeupdate as iOS fallback
-  // iOS throttles RAF at audio seams — timeupdate fires from audio element itself
-  narrationAudio.addEventListener('timeupdate', updateKaraoke);
-
-  // Watchdog: if audio stalls (iOS suspend, play() silent fail, decode hang),
-  // force-advance after 4s of no progress. Clears itself when audio ends normally.
-  let watchdogLastTime = -1;
-  let watchdogTimer = null;
-  function watchdogTick() {
-    if (!narrationAudio || !narrationActive) return;
-    const ct = narrationAudio.currentTime;
-    if (narrationAudio.paused && narrationPlaying) {
-      // Audio is paused but we think we're playing — try to resume
-      console.warn('[watchdog] audio paused unexpectedly, resuming');
-      narrationAudio.play().catch(() => {
-        // Resume failed — re-prime and advance
-        console.warn('[watchdog] resume failed, advancing');
-        clearTimeout(watchdogTimer);
-        narrationGoTo(index + 1);
-      });
-    } else if (ct === watchdogLastTime && !narrationAudio.paused) {
-      // currentTime frozen while not paused — stalled decode or iOS suspend
-      console.warn('[watchdog] audio frozen at', ct, '— advancing');
-      clearTimeout(watchdogTimer);
-      // Re-prime before advancing so next play() has iOS permission
-      narrationGoTo(index + 1);
-      return;
-    }
-    watchdogLastTime = ct;
-    watchdogTimer = setTimeout(watchdogTick, 5000);
-  }
-  watchdogTimer = setTimeout(watchdogTick, 8000); // generous first window for iOS decode
-
-  narrationAudio.play().catch(e => {
-    console.warn('[narrate] play() failed:', e.name, e.message);
-    clearTimeout(watchdogTimer);
-    // play() failed outright — advance after brief delay
-    setTimeout(() => { if (narrationActive) narrationGoTo(index + 1); }, 800);
-  });
-
-  // ended fires once — remove listener to avoid duplicate on src change
-  narrationAudio.addEventListener('ended', () => {
+  // Guard: only ONE advance can happen per paragraph
+  let advanced = false;
+  let watchdogTimer = null; // hoisted so advance() can clearTimeout
+  function advance() {
+    if (advanced) return;
+    advanced = true;
     clearTimeout(watchdogTimer);
     cancelAnimationFrame(narrationRAF);
     narrationAudio.removeEventListener('timeupdate', updateKaraoke);
     URL.revokeObjectURL(audioUrl);
     narrationCurrentWords.forEach(w => {
       const el = document.getElementById('nw-' + w.idx);
-      if (el) el.className = `nw ${w.fmt || ''} spoken`;
+      if (el) el.className = 'nw ' + (w.fmt || '') + ' spoken';
     });
-    // Re-prime if needed (belt and suspenders for older iOS)
-    if (audioUnlocked && persistentAudio && persistentAudio.paused) {
-      persistentAudio.play().catch(() => {});
-    }
-    setTimeout(() => narrationGoTo(index + 1), 250);
-  });
+    setTimeout(() => { if (narrationActive) narrationGoTo(index + 1); }, 250);
+  }
 
-  // Also listen for stall/error events on the audio element
-  narrationAudio.addEventListener('stalled', () => {
-    console.warn('[narrate] audio stalled');
-  });
-  narrationAudio.addEventListener('error', (e) => {
-    console.warn('[narrate] audio error:', e);
-    clearTimeout(watchdogTimer);
-    narrationAudio.removeEventListener('timeupdate', updateKaraoke);
-    // Wait 2s before advancing — transient decode errors often self-resolve
-    setTimeout(() => { if (narrationActive) narrationGoTo(index + 1); }, 2000);
+  // ONLY the ended event advances normally
+  narrationAudio.addEventListener('ended', advance);
+
+  // Watchdog: retries play() if stalled — does NOT advance
+  // Only advances as last resort after 30s of total silence
+  let watchdogLastTime = -1;
+  let watchdogStallCount = 0;
+  function watchdogTick() {
+    if (!narrationAudio || !narrationActive || advanced) return;
+    const ct = narrationAudio.currentTime;
+    if (ct === watchdogLastTime) {
+      watchdogStallCount++;
+      if (narrationAudio.paused) {
+        narrationAudio.play().catch(() => {});
+      }
+      // Only advance after 6 consecutive stall ticks (30s) — truly stuck
+      if (watchdogStallCount >= 6) { advance(); return; }
+    } else {
+      watchdogStallCount = 0;
+    }
+    watchdogLastTime = ct;
+    watchdogTimer = setTimeout(watchdogTick, 5000);
+  }
+  watchdogTimer = setTimeout(watchdogTick, 5000);
+
+  // Dual sync: RAF for desktop smoothness, timeupdate for iOS
+  narrationAudio.addEventListener('timeupdate', updateKaraoke);
+
+  narrationAudio.play().catch(e => {
+    // Log only — keepalive session should handle iOS trust
+    console.warn('[narrate] play() failed:', e.name);
   });
 
   function updateKaraoke() {
