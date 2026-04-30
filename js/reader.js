@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v46';
+const READER_VERSION = 'v47';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -579,12 +579,19 @@ async function narrationGoTo(index) {
     // browser is backgrounded or the screen locks mid-fetch.
     function narrateFetch(body) {
       const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 25000);
+      const t = setTimeout(() => ctrl.abort(), 12000);
+      console.log('[narrate] fetching', body.text ? body.text.slice(0,40) : '?');
       return fetch(NARRATE_URL, {
         method: 'POST', signal: ctrl.signal,
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY },
         body: JSON.stringify(body)
-      }).then(r => r.json()).finally(() => clearTimeout(t));
+      }).then(r => {
+        console.log('[narrate] response', r.status);
+        return r.json();
+      }).catch(e => {
+        console.warn('[narrate] fetch error:', e.name, e.message);
+        throw e;
+      }).finally(() => clearTimeout(t));
     }
 
     try {
@@ -611,13 +618,17 @@ async function narrationGoTo(index) {
       cacheSet(cacheKey, data);
     } catch(e) {
       if (loadingTimer) clearTimeout(loadingTimer);
-      const isTimeout = e.name === 'AbortError' || e.message.includes('abort');
-      textEl.innerHTML = `<span class="narration-loading" style="color:var(--muted)">${isTimeout ? 'Connection timed out.' : 'Could not load audio.'}</span>
-        <div style="margin-top:16px">
-          <button onclick="narrationGoTo(${index})" style="background:transparent;border:1px solid var(--line-strong);color:var(--ivory);font-family:var(--mono);font-size:0.65rem;letter-spacing:0.15em;padding:8px 18px;cursor:pointer;border-radius:2px">↺ Retry</button>
-          <button onclick="narrationGoTo(${index + 1})" style="background:transparent;border:none;color:var(--muted);font-family:var(--mono);font-size:0.65rem;letter-spacing:0.12em;padding:8px 14px;cursor:pointer">Skip →</button>
+      console.warn('[narrate] caught:', e.name, e.message);
+      const isTimeout = e.name === 'AbortError' || e.message.includes('abort') || e.message.includes('abort');
+      narrationLocked = false; // always unlock on error
+      textEl.innerHTML = `<div style="text-align:center;padding:20px 0">
+          <div style="font-family:var(--mono);font-size:0.65rem;letter-spacing:0.18em;color:var(--muted);margin-bottom:20px">${isTimeout ? '⟳ Connection timed out' : '⚠ Could not load audio'}</div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <button onclick="narrationGoTo(${index})" style="background:rgba(233,74,124,0.12);border:1px solid var(--rose);color:var(--rose);font-family:var(--mono);font-size:0.65rem;letter-spacing:0.15em;padding:10px 20px;cursor:pointer;border-radius:2px">↺ Retry</button>
+            <button onclick="narrationGoTo(${index + 1})" style="background:transparent;border:1px solid var(--line-strong);color:var(--muted);font-family:var(--mono);font-size:0.65rem;letter-spacing:0.12em;padding:10px 16px;cursor:pointer;border-radius:2px">Skip →</button>
+            <button onclick="stopNarration()" style="background:transparent;border:none;color:var(--muted);font-family:var(--mono);font-size:0.65rem;padding:10px 12px;cursor:pointer">✕</button>
+          </div>
         </div>`;
-      narrationLocked = false;
       return;
     }
     if (loadingTimer) clearTimeout(loadingTimer);
@@ -1472,7 +1483,7 @@ function renderChapter(ch) {
           <span class="ch-narrate-icon">▶</span>
           <span class="ch-narrate-label">Listen</span>
         </button>
-        <p class="ch-narrate-hint">Narrated by Charlotte &amp; full cast</p>
+        <p class="ch-narrate-hint">Immersive · Full cast · Karaoke sync</p>
       </div>
     </div>`;
 
