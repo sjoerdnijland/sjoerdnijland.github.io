@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v74';
+const READER_VERSION = 'v76';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -244,7 +244,7 @@ function unlockAudio() {
   // Any new Audio().play() call is trusted while this session is alive.
   persistentAudio = new Audio(SILENT_MP3);
   persistentAudio.loop = true;  // loop silently to keep session alive
-  persistentAudio.volume = 0;   // completely silent
+  persistentAudio.volume = 0.001; // near-silent but iOS won't suspend as 'background-only'
   persistentAudio.play().then(() => {
     audioUnlocked = true;
   }).catch(() => {});
@@ -279,6 +279,103 @@ async function startNarration() {
   applyAmbientBtn(); applyMultiVoiceBtn();
 
   await narrationGoTo(0);
+}
+
+// ── iOS visibility / tap-to-continue ────────────────────
+if (IS_IOS) {
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      // Page just became visible again
+      if (narrationActive && narrationPlaying) {
+        // Re-establish audio session with fresh gesture opportunity
+        showIosTapToContinue();
+      }
+    }
+  });
+}
+
+function showIosTapToContinue() {
+  // Don't show if already visible
+  if (document.getElementById('ios-tap-overlay')) return;
+  const el = document.createElement('div');
+  el.id = 'ios-tap-overlay';
+  el.style.cssText = [
+    'position:fixed', 'inset:0', 'z-index:9999',
+    'display:flex', 'align-items:center', 'justify-content:center',
+    'background:rgba(6,22,25,0.85)', 'backdrop-filter:blur(8px)',
+    'cursor:pointer'
+  ].join(';');
+  el.innerHTML = '<div style="text-align:center;pointer-events:none">'
+    + '<div style="font-size:2.5rem;margin-bottom:16px">▶</div>'
+    + '<div style="font-family:var(--mono);font-size:0.72rem;letter-spacing:0.22em;'
+    + 'text-transform:uppercase;color:var(--ivory)">Tap to continue</div>'
+    + '</div>';
+  el.addEventListener('click', () => {
+    el.remove();
+    // Fresh gesture — re-establish iOS audio session
+    if (persistentAudio) {
+      persistentAudio.play().catch(() => {});
+    }
+    if (narrationAudio && narrationPlaying) {
+      narrationAudio.play().catch(() => {});
+    }
+  });
+  document.body.appendChild(el);
+}
+
+// ── iOS visibility resume ────────────────────────────────
+// When screen locks/page backgrounds mid-narration, iOS suspends the audio session.
+// On return, we show a tap-to-continue prompt to re-establish the session via user gesture.
+if (IS_IOS) {
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && narrationActive && narrationPlaying) {
+      // Page became visible while narration should be playing — session may be suspended
+      // Small delay to let iOS settle, then check if audio is actually playing
+      setTimeout(() => {
+        if (!narrationActive) return;
+        const audio = narrationAudio;
+        if (!audio || !audio.paused) return; // already playing fine
+        // Show tap-to-continue overlay
+        showIosTapPrompt();
+      }, 300);
+    }
+  });
+}
+
+function showIosTapPrompt() {
+  // Only show if not already visible
+  if (document.getElementById('ios-tap-prompt')) return;
+  const el = document.createElement('div');
+  el.id = 'ios-tap-prompt';
+  el.style.cssText = [
+    'position:fixed;inset:0;z-index:9999',
+    'display:flex;align-items:center;justify-content:center',
+    'background:rgba(6,22,25,0.75);backdrop-filter:blur(8px)',
+    'cursor:pointer',
+  ].join(';');
+  el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;padding:0 32px">'
+    + '<div style="font-size:2rem">▶</div>'
+    + '<div style="font-family:var(--mono);font-size:0.72rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--ivory)">Tap to continue</div>'
+    + '</div>';
+  el.addEventListener('click', () => {
+    el.remove();
+    // Re-establish audio session with fresh gesture
+    if (persistentAudio) {
+      persistentAudio.volume = 0.001;
+      persistentAudio.play().catch(() => {});
+    }
+    // Resume narration audio
+    if (narrationAudio && narrationAudio.paused && narrationPlaying) {
+      narrationAudio.play().catch(() => {
+        // Session still not ready — retry narrationGoTo from current position
+        narrationGoTo(narrationIndex);
+      });
+    } else if (narrationActive) {
+      // Audio element may be gone — restart from current index
+      narrationGoTo(narrationIndex);
+    }
+  }, { once: true });
+  document.body.appendChild(el);
 }
 
 function stopNarration() {
@@ -927,7 +1024,6 @@ async function narrationGoTo(index) {
   if (IS_IOS && isStitched && data.segmentMeta && data.segmentMeta.length > 1) {
     // iOS: play each segment as a separate Audio element to avoid
     // MP3 frame-boundary currentTime reset in concatenated blobs.
-    console.log('[iOS] sequential segments:', data.segmentMeta.length, 'IS_IOS:', IS_IOS);
     const fullBytes = atob(data.audio);
     const segMeta = data.segmentMeta;
     let segTimeBase = 0;
@@ -989,7 +1085,6 @@ async function narrationGoTo(index) {
 
   } else {
     // Desktop/single-segment or non-stitched: standard blob playback
-    console.log('[audio] standard path, IS_IOS:', IS_IOS, 'isStitched:', isStitched, 'segMeta:', data.segmentMeta?.length);
     const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
     const audioUrl  = URL.createObjectURL(audioBlob);
     narrationAudio  = new Audio(audioUrl);
