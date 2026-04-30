@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v61';
+const READER_VERSION = 'v62';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -894,9 +894,10 @@ async function narrationGoTo(index) {
   // always create a fresh Audio element for the actual content.
   // Reusing primedAudio with .load() causes iOS to stall on stitched blobs.
   if (primedAudio) {
-    // Play the silent primer to re-establish iOS gesture trust
+    // Play the silent primer to re-establish iOS gesture trust.
+    // Do NOT call pause() after — that creates an AbortError which voids
+    // the trust. Let it play the short silent mp3 naturally (inaudible).
     primedAudio.play().catch(() => {});
-    primedAudio.pause();
     primedAudio = null;
   }
   narrationAudio = new Audio(audioUrl);
@@ -947,9 +948,9 @@ async function narrationGoTo(index) {
       return;
     }
     watchdogLastTime = ct;
-    watchdogTimer = setTimeout(watchdogTick, 4000);
+    watchdogTimer = setTimeout(watchdogTick, 5000);
   }
-  watchdogTimer = setTimeout(watchdogTick, 4000);
+  watchdogTimer = setTimeout(watchdogTick, 8000); // generous first window for iOS decode
 
   narrationAudio.play().catch(e => {
     console.warn('[narrate] play() failed:', e.name, e.message);
@@ -984,7 +985,8 @@ async function narrationGoTo(index) {
   narrationAudio.addEventListener('error', (e) => {
     console.warn('[narrate] audio error:', e);
     clearTimeout(watchdogTimer);
-    setTimeout(() => { if (narrationActive) narrationGoTo(index + 1); }, 500);
+    // Wait 2s before advancing — transient decode errors often self-resolve
+    setTimeout(() => { if (narrationActive) narrationGoTo(index + 1); }, 2000);
   });
 
   function syncWords() {
