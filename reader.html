@@ -133,13 +133,14 @@
 </div>
 
 <div class="narration-controls" id="narration-controls" style="display:none">
-  <button class="nc-btn" onclick="narrationPrev()">← Prev</button>
-  <button class="nc-btn primary" id="nc-play-btn" onclick="narrationTogglePlay()">⏸ Pause</button>
-  <button class="nc-btn" onclick="narrationNext()">Next →</button>
-  <button class="nc-btn" id="nc-thread-btn" onclick="narrationToggleThread()">💬 Thread</button>
-  <button class="nc-btn" id="nc-voices-btn" onclick="toggleMultiVoice()" title="Switch between single narrator and character voices">◎ Narrator</button>
-  <button class="nc-btn" id="nc-music-btn" onclick="toggleAmbient()" title="Toggle background music">♪ Music</button>
-  <button class="nc-btn" onclick="stopNarration()">✕ Exit</button>
+  <button class="nc-btn" onclick="narrationPrev()"><span class="nc-icon">←</span><span class="nc-lbl">Prev</span></button>
+  <button class="nc-btn primary" id="nc-play-btn" onclick="narrationTogglePlay()"><span class="nc-icon">⏸</span><span class="nc-lbl">Pause</span></button>
+  <button class="nc-btn" onclick="narrationNext()"><span class="nc-icon">→</span><span class="nc-lbl">Next</span></button>
+  <div class="nc-row-break"></div>
+  <button class="nc-btn" id="nc-thread-btn" onclick="narrationToggleThread()"><span class="nc-icon">💬</span><span class="nc-lbl">Thread</span></button>
+  <button class="nc-btn" id="nc-voices-btn" onclick="toggleMultiVoice()" title="Switch between single narrator and character voices"><span class="nc-icon">◎</span><span class="nc-lbl">Voices</span></button>
+  <button class="nc-btn" id="nc-music-btn" onclick="toggleAmbient()" title="Toggle background music"><span class="nc-icon">♪</span><span class="nc-lbl">Music</span></button>
+  <button class="nc-btn" onclick="stopNarration()"><span class="nc-icon">✕</span><span class="nc-lbl">Exit</span></button>
 </div>
 
 <!-- ── NARRATION THREAD SIDEBAR ──────────────────────────── -->
