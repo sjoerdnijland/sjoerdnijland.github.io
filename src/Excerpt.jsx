@@ -62,7 +62,7 @@ function Excerpt() {
                 <em>As it was meant to be told.</em>
               </h2>
               <p className="xp-desc">
-                Charlotte narrates. Characters speak in their own voices.
+                Characters speak in their own voices.
                 The music shifts with the scene. You read along, word by word.
               </p>
             </div>
@@ -85,7 +85,6 @@ function Excerpt() {
               {/* Feature pills */}
               <div className="xp-pills">
                 {[
-                  '▶ Narrated',
                   '◉ Full cast',
                   '♪ Soundscape',
                   '◈ Wiki links',
