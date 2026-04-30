@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v29';
+const READER_VERSION = 'v30';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -389,6 +389,20 @@ async function narrationGoTo(index) {
     if (rawPrefixMatch) rawText = rawText.slice(rawPrefixMatch[0].length);
   }
 
+  // For transcript paragraphs, extract and preserve the speaker label
+  // so it can be shown above the karaoke text in the narration overlay.
+  // (data-transcript is set on the element; data-raw still has the full prefix)
+  const paraEl2 = document.getElementById(pid);
+  const isTranscriptPara = paraEl2?.dataset.transcript === 'true';
+  let transcriptSpeakerLabel = '';
+  if (isTranscriptPara) {
+    // Extract the prefix from the original data-raw before stripping
+    const TPRE2 = /^([A-Z][A-Z0-9 ·]+):\s+/;
+    const rawOrig = paraEl2?.dataset.raw || '';
+    const tm = rawOrig.match(TPRE2);
+    if (tm) transcriptSpeakerLabel = tm[1];
+  }
+
   // Stop previous audio
   if (narrationAudio) { narrationAudio.pause(); narrationAudio = null; }
   cancelAnimationFrame(narrationRAF);
@@ -580,11 +594,37 @@ async function narrationGoTo(index) {
       .replace(/~~([^~]+?)~~/g, '$1');
     let wordIdx = 0;
 
+    // Normalise a word for matching against timingWords
+    const normWord = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const PUNCT_ONLY = /^[^\p{L}\p{N}]+$/u;
+
     const pushWord = () => {
       if (!word) return;
       const timing = timingWords[wordIdx] || { start: 0, end: 0 };
+
+      // If this display word is pure punctuation (e.g. em-dash —, ellipsis …)
+      // and the current timingWord doesn't match it (ElevenLabs omitted it from
+      // alignment), reuse the previous word's end time and do NOT advance wordIdx.
+      // This prevents a 1-word drift per omitted punctuation token.
+      let usedIdx = wordIdx;
+      if (PUNCT_ONLY.test(word)) {
+        const twNorm = normWord(timing.text || '');
+        const wNorm  = normWord(word);
+        if (twNorm !== wNorm) {
+          // timing slot belongs to the next real word — borrow timing, don't consume
+          const prevTiming = tokens.filter(t => t.type === 'word').slice(-1)[0];
+          const punctTiming = prevTiming
+            ? { start: prevTiming.end, end: prevTiming.end }
+            : { start: timing.start, end: timing.start };
+          tokens.push({ type: 'word', text: word, fmt: getFmt(wordStart, wordStart + word.length),
+                        start: punctTiming.start, end: punctTiming.end, idx: wordIdx });
+          word = ''; wordStart = -1;
+          return; // do NOT increment wordIdx
+        }
+      }
+
       tokens.push({ type: 'word', text: word, fmt: getFmt(wordStart, wordStart + word.length),
-                    start: timing.start, end: timing.end, idx: wordIdx });
+                    start: timing.start, end: timing.end, idx: usedIdx });
       wordIdx++;
       word = ''; wordStart = -1;
     };
@@ -693,11 +733,16 @@ async function narrationGoTo(index) {
   charLabel.style.opacity = '0';
 
   // For code blocks: show TRANSMISSION label above word highlights
+  // Transcript speaker label shown above karaoke text in narration overlay
+  const transcriptLabelHtml = transcriptSpeakerLabel
+    ? `<div style="font-family:var(--mono);font-size:0.58rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--teal-bright);opacity:0.7;margin-bottom:18px;text-align:center">${escHtml(transcriptSpeakerLabel)}</div>`
+    : '';
+
   if (isCode) {
     textEl.innerHTML = `<div style="font-family:var(--mono);font-size:0.62rem;letter-spacing:0.35em;color:var(--teal-soft);margin-bottom:28px;text-align:center;opacity:0.7">◉ TRANSMISSION</div>`
       + displayTokens.map(t => `<span class="nw" id="nw-${t.idx}">${escHtml(t.text)}</span> `).join('');
   } else {
-    textEl.innerHTML = displayTokens.map(t => {
+    textEl.innerHTML = transcriptLabelHtml + displayTokens.map(t => {
       if (t.type === 'br')    return '<br>';
       if (t.type === 'space') return ' ';
       return `<span class="nw ${t.fmt}" id="nw-${t.idx}">${escHtml(t.text)}</span>`;
