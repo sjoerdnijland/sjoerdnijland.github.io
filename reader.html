@@ -116,7 +116,7 @@
 </div>
 
 <!-- ── NARRATION OVERLAY ─────────────────────────────────── -->
-<div class="narration-overlay" id="narration-overlay">
+<div class="narration-overlay" id="narration-overlay" style="display:none">
   <div class="narration-counter" id="narration-counter"></div>
   <div class="narration-text" id="narration-text">
     <span class="narration-loading" id="narration-loading">Preparing narration…</span>
@@ -136,7 +136,6 @@
   <button class="nc-btn" onclick="narrationPrev()">← Prev</button>
   <button class="nc-btn primary" id="nc-play-btn" onclick="narrationTogglePlay()">⏸ Pause</button>
   <button class="nc-btn" onclick="narrationNext()">Next →</button>
-  <div class="nc-row-break"></div>
   <button class="nc-btn" id="nc-thread-btn" onclick="narrationToggleThread()">💬 Thread</button>
   <button class="nc-btn" id="nc-voices-btn" onclick="toggleMultiVoice()" title="Switch between single narrator and character voices">◎ Narrator</button>
   <button class="nc-btn" id="nc-music-btn" onclick="toggleAmbient()" title="Toggle background music">♪ Music</button>
