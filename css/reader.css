@@ -824,7 +824,7 @@ body.wiki-hints-on .para.active .wiki-link {
 .nw {
   display: inline;
   transition: color 0.08s, text-shadow 0.08s;
-  color: rgba(244,234,217,0.3);
+  color: rgba(244,234,217,0.5);
 }
 .nw.spoken {
   color: rgba(244,234,217,0.55);
