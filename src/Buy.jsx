@@ -1,163 +1,299 @@
-// Buy section — TEASER mode (book not yet available)
-// To re-enable the full shop: swap the Buy function below with the one in the comment block at the bottom.
-
+// Buy section — LIVE (book available May 2026)
 function Buy() {
-  const { useState: useState_B, useEffect: useEffect_B } = React;
-  const [timeLeft, setTimeLeft_B] = useState_B(null);
+  const { useState: useState_B, useRef: useRef_B, useEffect: useEffect_B } = React;
+  const [visible, setVisible] = useState_B(false);
+  const ref = useRef_B(null);
 
   useEffect_B(() => {
-    const target = new Date('2026-05-01T00:00:00');
-    function tick() {
-      const diff = target - Date.now();
-      if (diff <= 0) { setTimeLeft_B(null); return; }
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor((diff % 86400000) / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      setTimeLeft_B({ d, h, m, s });
-    }
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.15 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
   }, []);
 
+  const RETAILERS = [
+    {
+      id: 'ebook',
+      label: 'eBook',
+      price: '€12.50',
+      available: true,
+      stores: [
+        { name: 'Kobo',      url: 'https://www.kobo.com/nl/nl/ebook/the-unfolding-15?sId=d9bffa5d-c38a-47b2-bde7-e8741c39fccd&ssId=HrqTDzPM0i5FGl_URGUHc&cPos=1', icon: '◈' },
+        { name: 'Bol.com',   url: 'https://www.bol.com/nl/nl/p/the-unfolding/9300000279913241/?cid=1777568759576-9294702268964&bltgh=5a6a8650-ce9b-46b6-aefd-36ddc2508fd8.ProductList_Middle.0.ProductTitle', icon: '◈' },
+        { name: 'Bookmundo', url: 'https://publishnl.bookmundo.com/books/22065296', icon: '◈' },
+      ],
+    },
+    {
+      id: 'hardcover',
+      label: 'Hardcover',
+      price: 'June 1st',
+      available: false,
+      note: 'First edition · Cloth-bound',
+      stores: [],
+    },
+  ];
+
   return (
-    <section id="buy" className="buy-teaser">
+    <section id="buy" className={`buy-live ${visible ? 'buy-visible' : ''}`} ref={ref}>
       <div className="container">
-        <div className="bt-inner">
 
-          <svg className="bt-ornament" viewBox="0 0 80 80" width="64" height="64" aria-hidden="true">
-            <circle cx="40" cy="40" r="28" fill="none" stroke="var(--rose)" strokeWidth="0.8" opacity="0.4"/>
-            <circle cx="40" cy="40" r="18" fill="none" stroke="var(--rose)" strokeWidth="0.5" opacity="0.3"/>
-            <circle cx="40" cy="40" r="5"  fill="var(--rose)" opacity="0.7"/>
-            {[0,45,90,135,180,225,270,315].map((deg, i) => {
-              const rad = deg * Math.PI / 180;
-              const x1 = 40 + 18 * Math.cos(rad), y1 = 40 + 18 * Math.sin(rad);
-              const x2 = 40 + 28 * Math.cos(rad), y2 = 40 + 28 * Math.sin(rad);
-              return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--rose)" strokeWidth="0.7" opacity="0.35"/>;
-            })}
-          </svg>
-
-          <span className="mono-label">III / The Book</span>
-
-          <h2 className="bt-date">
-            Available<br/>
-            <em>1st of May, 2026</em>
+        {/* Header */}
+        <div className="bl-head">
+          <span className="mono-label">III / Get the Book</span>
+          <h2 className="bl-title">
+            The Unfolding<br/>
+            <em>is out now.</em>
           </h2>
-
-          <p className="bt-sub">
-            Hardcover · Paperback · eBook<br/>
-            Pre-order details coming soon.
+          <p className="bl-sub">
+            eBook available today. Hardcover arriving June 1st.
           </p>
-
-          {timeLeft && (
-            <div className="bt-countdown">
-              {[['d','days'],['h','hrs'],['m','min'],['s','sec']].map(([k, label]) => (
-                <div key={k} className="bt-unit">
-                  <span className="bt-num">{String(timeLeft[k]).padStart(2,'0')}</span>
-                  <span className="bt-label">{label}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <p className="bt-nudge">
-            Join the community on{' '}
-            <a href="https://discord.gg/45bwdn8J" className="bt-link" target="_blank" rel="noopener">Discord</a>.
-          </p>
-
         </div>
+
+        {/* Format cards */}
+        <div className="bl-formats">
+          {RETAILERS.map((fmt, fi) => (
+            <div
+              key={fmt.id}
+              className={`bl-card ${!fmt.available ? 'bl-card--soon' : ''}`}
+              style={{ animationDelay: `${fi * 0.12}s` }}
+            >
+              <div className="bl-card-top">
+                <div className="bl-card-label">{fmt.label}</div>
+                <div className="bl-card-price">{fmt.price}</div>
+              </div>
+              {fmt.note && <p className="bl-card-note">{fmt.note}</p>}
+
+              {fmt.available ? (
+                <div className="bl-stores">
+                  {fmt.stores.map(s => (
+                    <a
+                      key={s.name}
+                      href={s.url}
+                      className="bl-store-btn"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      <span className="bl-store-arrow">→</span>
+                      {s.name}
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="bl-soon-badge">Coming 1 June 2026</div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Goodreads + Reader row */}
+        <div className="bl-actions">
+          <a
+            href="https://www.goodreads.com/book/show/251501817-the-unfolding?from_search=true&from_srp=true&qid=Qxvp1Kd87t&rank=1"
+            className="bl-action-link"
+            target="_blank"
+            rel="noopener"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{opacity:0.7}}>
+              <path d="M19.5 3h-15A1.5 1.5 0 0 0 3 4.5v15A1.5 1.5 0 0 0 4.5 21h15a1.5 1.5 0 0 0 1.5-1.5v-15A1.5 1.5 0 0 0 19.5 3zm-7 13.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+            </svg>
+            Add on Goodreads
+          </a>
+          <span className="bl-sep">·</span>
+          <a href="reader.html" className="bl-action-link">
+            ▶ Read the first chapter free
+          </a>
+          <span className="bl-sep">·</span>
+          <a href="https://discord.gg/45bwdn8J" className="bl-action-link" target="_blank" rel="noopener">
+            💬 Join the Discord
+          </a>
+        </div>
+
       </div>
 
       <style>{`
-        .buy-teaser {
+        /* ── Section ──────────────────────────────────────────── */
+        .buy-live {
           padding: 140px 0;
-          background: linear-gradient(180deg, transparent, rgba(45,91,102,0.08), transparent);
+          background: linear-gradient(180deg, transparent, rgba(45,91,102,0.06), transparent);
+          opacity: 0;
+          transform: translateY(24px);
+          transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1);
         }
-        .bt-inner {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+        .buy-live.buy-visible { opacity: 1; transform: none; }
+
+        /* ── Header ───────────────────────────────────────────── */
+        .bl-head {
           text-align: center;
-          gap: 20px;
+          margin-bottom: 56px;
         }
-        .bt-ornament { opacity: 0.9; animation: btSpin 24s linear infinite; }
-        @keyframes btSpin { to { transform: rotate(360deg); } }
-
-        .bt-date {
+        .bl-title {
           font-family: var(--serif);
-          font-size: clamp(2.4rem, 5vw, 4.2rem);
+          font-size: clamp(2.4rem, 5vw, 4rem);
           font-weight: 300;
-          line-height: 1.1;
+          line-height: 1.05;
           color: var(--ivory);
-          margin: 0;
+          margin: 16px 0 14px;
         }
-        .bt-date em { color: var(--rose); font-style: italic; }
-
-        .bt-sub {
+        .bl-title em { color: var(--rose); font-style: italic; }
+        .bl-sub {
           font-family: var(--serif);
-          font-size: 1.05rem;
           font-style: italic;
           color: var(--muted);
+          font-size: 1.05rem;
           margin: 0;
-          line-height: 1.7;
         }
 
-        .bt-countdown {
-          display: flex;
-          gap: 0;
-          align-items: flex-end;
-          margin: 8px 0;
-          padding: 20px 32px;
-          border: 1px solid var(--line-strong);
-          background: rgba(6,22,25,0.6);
+        /* ── Format cards ─────────────────────────────────────── */
+        .bl-formats {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          max-width: 780px;
+          margin: 0 auto 40px;
         }
-        .bt-unit {
+        .bl-card {
+          border: 1px solid var(--line-strong);
+          padding: 32px 28px;
           display: flex;
           flex-direction: column;
-          align-items: center;
-          gap: 4px;
-          min-width: 64px;
+          gap: 18px;
+          background: rgba(6,22,25,0.5);
+          transition: border-color 0.25s, box-shadow 0.25s;
+          animation: blCardIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
         }
-        .bt-unit + .bt-unit {
-          border-left: 1px solid var(--line);
+        @keyframes blCardIn {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: none; }
         }
-        .bt-num {
+        .buy-visible .bl-card { animation-play-state: running; }
+        .bl-card:not(.bl-card--soon):hover {
+          border-color: rgba(233,74,124,0.5);
+          box-shadow: 0 0 32px rgba(233,74,124,0.1);
+        }
+        .bl-card--soon {
+          opacity: 0.6;
+          border-style: dashed;
+        }
+
+        .bl-card-top {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 12px;
+        }
+        .bl-card-label {
           font-family: var(--mono);
-          font-size: 2rem;
-          font-weight: 500;
-          color: var(--ivory);
-          letter-spacing: 0.05em;
-          line-height: 1;
-        }
-        .bt-label {
-          font-family: var(--mono);
-          font-size: 0.58rem;
-          letter-spacing: 0.22em;
+          font-size: 0.62rem;
+          letter-spacing: 0.28em;
           text-transform: uppercase;
           color: var(--muted);
         }
-
-        .bt-nudge {
+        .bl-card-price {
           font-family: var(--serif);
-          font-size: 0.95rem;
+          font-size: 1.4rem;
+          font-weight: 300;
+          color: var(--ivory);
+          letter-spacing: -0.01em;
+        }
+        .bl-card--soon .bl-card-price {
+          font-family: var(--mono);
+          font-size: 0.72rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
           color: var(--muted);
-          font-style: italic;
-          margin: 0;
         }
-        .bt-link {
-          color: var(--rose);
-          border-bottom: 1px solid var(--rose);
-          padding-bottom: 1px;
-          text-decoration: none;
-          transition: opacity 0.2s;
+        .bl-card-note {
+          font-family: var(--mono);
+          font-size: 0.6rem;
+          letter-spacing: 0.14em;
+          color: var(--muted);
+          margin: -8px 0 0;
+          text-transform: uppercase;
         }
-        .bt-link:hover { opacity: 0.7; }
 
-        @media (max-width: 600px) {
-          .bt-countdown { padding: 16px 20px; }
-          .bt-unit { min-width: 52px; }
-          .bt-num { font-size: 1.5rem; }
+        /* ── Store buttons ────────────────────────────────────── */
+        .bl-stores {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .bl-store-btn {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 14px;
+          border: 1px solid var(--line);
+          background: transparent;
+          color: var(--ivory);
+          font-family: var(--mono);
+          font-size: 0.68rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          text-decoration: none;
+          border-radius: 2px;
+          transition: border-color 0.2s, color 0.2s, background 0.2s, padding-left 0.2s;
+        }
+        .bl-store-btn:hover {
+          border-color: var(--rose);
+          color: var(--rose);
+          background: rgba(233,74,124,0.06);
+          padding-left: 18px;
+        }
+        .bl-store-arrow {
+          color: var(--rose);
+          font-size: 0.75rem;
+          transition: transform 0.2s;
+        }
+        .bl-store-btn:hover .bl-store-arrow { transform: translateX(3px); }
+
+        /* ── Coming soon badge ────────────────────────────────── */
+        .bl-soon-badge {
+          font-family: var(--mono);
+          font-size: 0.6rem;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: var(--muted);
+          border: 1px dashed var(--line);
+          padding: 10px 14px;
+          text-align: center;
+          border-radius: 2px;
+        }
+
+        /* ── Actions row ──────────────────────────────────────── */
+        .bl-actions {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 14px;
+          flex-wrap: wrap;
+          max-width: 780px;
+          margin: 0 auto;
+          padding-top: 28px;
+          border-top: 1px solid var(--line);
+        }
+        .bl-action-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font-family: var(--mono);
+          font-size: 0.66rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--muted);
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .bl-action-link:hover { color: var(--ivory); }
+        .bl-sep {
+          color: var(--line-strong);
+          font-size: 1rem;
+        }
+
+        /* ── Mobile ───────────────────────────────────────────── */
+        @media (max-width: 620px) {
+          .buy-live { padding: 80px 0 100px; }
+          .bl-formats { grid-template-columns: 1fr; max-width: 420px; }
+          .bl-actions { gap: 10px; }
+          .bl-sep { display: none; }
         }
       `}</style>
     </section>
@@ -165,33 +301,3 @@ function Buy() {
 }
 
 window.Buy = Buy;
-
-
-/* ============================================================
-   FULL BUY SECTION — uncomment and replace Buy() above
-   when the book is available on 1 May 2026.
-   ============================================================
-
-const FORMATS = [
-  { id:'hardcover', name:'First Edition Hardcover', sub:'Cloth-bound · Dust jacket · 428 pages',
-    price:34.00, currency:'€', tagline:'A physical object built to survive the unfold.',
-    features:['Signed bookplate available','Endpapers with star chart','Free bookmark'], badge:"Editor's pick" },
-  { id:'paperback', name:'Trade Paperback', sub:'Soft-cover · 428 pages',
-    price:18.50, currency:'€', tagline:'Lighter. Lives in backpacks and waiting rooms.',
-    features:['Matte finish','French flaps','Travel-friendly'] },
-  { id:'ebook', name:'eBook', sub:'Kindle · Apple Books · Kobo · EPUB',
-    price:9.99, currency:'€', tagline:'Unfolds on any screen. DRM-free EPUB available.',
-    features:['Instant delivery','DRM-free EPUB option','All retailers supported'] },
-];
-
-function Buy() {
-  const { useState: useState_B } = React;
-  const [format, setFormat] = useState_B('hardcover');
-  const [qty, setQty] = useState_B(1);
-  const [retailer, setRetailer] = useState_B('direct');
-  const [stage, setStage] = useState_B('choose');
-  // ... full implementation — restore from git or previous build output
-}
-
-window.Buy = Buy;
-============================================================ */

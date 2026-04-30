@@ -58,7 +58,7 @@ function Hero({ onBuy }) {
           </p>
           <div className="hero-ctas">
             <button className="btn btn-primary" onClick={onBuy}>Available 1 May → <span style={{ fontSize: '1.1em' }}>→</span></button>
-            <a href="#excerpt" className="btn btn-ghost">Read the First Chapter</a>
+            <a href="reader.html" className="btn btn-ghost">Read the First Chapter →</a>
           </div>
           <div className="hero-listen">
             <span className="mono-label muted">A psychedelic space opera</span>
