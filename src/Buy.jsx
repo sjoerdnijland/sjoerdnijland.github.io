@@ -23,9 +23,6 @@ function Buy() {
 
   // Pick primary store based on detected region
   const isNL = countryHint === 'NL' || countryHint === 'BE';
-  const primaryStore = isNL ? BOL_NL : KOBO_UNIVERSAL;
-  const primaryName  = isNL ? 'Bol.com' : 'Kobo';
-
   return (
     <section id="buy" className={`buy-live ${visible ? 'buy-visible' : ''}`} ref={ref}>
       <div className="container">
@@ -48,28 +45,20 @@ function Buy() {
               <div className="bl-card-price">€12.50</div>
             </div>
 
-            {/* Primary store — locale-aware */}
-            <a href={primaryStore} className="bl-store-btn bl-store-primary" target="_blank" rel="noopener">
-              <span className="bl-store-arrow">→</span>
-              Buy on {primaryName}
-              <span className="bl-store-tag">Recommended for your region</span>
-            </a>
-
-            {/* More stores dropdown */}
-            <details className="bl-more-stores">
-              <summary className="bl-more-toggle">More stores ↓</summary>
-              <div className="bl-store-list">
-                <a href={KOBO_UNIVERSAL} className="bl-store-btn" target="_blank" rel="noopener">
-                  <span className="bl-store-arrow">→</span>Kobo <span className="bl-store-note">190+ countries</span>
-                </a>
+{/* All stores — always visible, Bol only for NL/BE */}
+            <div className="bl-store-list">
+              <a href={KOBO_UNIVERSAL} className="bl-store-btn" target="_blank" rel="noopener">
+                <span className="bl-store-arrow">→</span>Kobo <span className="bl-store-note">190+ countries</span>
+              </a>
+              {isNL && (
                 <a href={BOL_NL} className="bl-store-btn" target="_blank" rel="noopener">
-                  <span className="bl-store-arrow">→</span>Bol.com <span className="bl-store-note">Nederland/België</span>
+                  <span className="bl-store-arrow">→</span>Bol.com <span className="bl-store-note">Nederland / België</span>
                 </a>
-                <a href={BOOKMUNDO} className="bl-store-btn" target="_blank" rel="noopener">
-                  <span className="bl-store-arrow">→</span>Bookmundo
-                </a>
-              </div>
-            </details>
+              )}
+              <a href={BOOKMUNDO} className="bl-store-btn" target="_blank" rel="noopener">
+                <span className="bl-store-arrow">→</span>Bookmundo
+              </a>
+            </div>
           </div>
 
           {/* Hardcover card */}
