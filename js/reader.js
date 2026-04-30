@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v38';
+const READER_VERSION = 'v39';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -36,12 +36,26 @@ function sfxLoad(tag) {
   a.addEventListener('error', () => { sfxPreflight.delete(tag); console.warn('[SFX] File not found: assets/sfx/' + tag + '.mp3 -- drop the MP3 there to enable this effect'); }, { once: true });
 }
 
+let sfxActive = null; // currently playing SFX element
+
 function sfxPlay(tag) {
-  const cached = sfxCache[tag];
-  if (!cached) { console.warn('[SFX] not ready: ' + tag); return; }
-  const clone = cached.cloneNode();
-  clone.volume = sfxVolume;
-  clone.play().catch(function(e) { console.warn('[SFX] play failed:', e); });
+  // Stop any currently playing SFX
+  if (sfxActive) { sfxActive.pause(); sfxActive.currentTime = 0; sfxActive = null; }
+
+  const src = SFX_BASE_URL + tag + '.mp3';
+  const audio = sfxCache[tag] ? sfxCache[tag].cloneNode() : new Audio(src);
+  audio.volume = sfxVolume;
+  sfxActive = audio;
+  audio.play().catch(function(e) { console.warn('[SFX] play failed for ' + tag + ':', e); });
+  audio.addEventListener('ended', function() { if (sfxActive === audio) sfxActive = null; });
+}
+
+function sfxStopActive() {
+  if (sfxActive) {
+    sfxActive.pause();
+    sfxActive.currentTime = 0;
+    sfxActive = null;
+  }
 }
 let multiVoiceEnabled          = localStorage.getItem('multiVoice') !== 'off'; // default ON
 
@@ -261,6 +275,7 @@ function stopNarration() {
   narrationThreadOpen = false;
   document.body.style.overflow = '';
   sfxTriggers = []; sfxFired = new Set();
+  sfxStopActive();
   stopAmbientNow();
   document.getElementById('narration-comment-hint').classList.remove('visible');
 }
@@ -466,8 +481,9 @@ async function narrationGoTo(index) {
     if (tm) transcriptSpeakerLabel = tm[1];
   }
 
-  // Stop previous audio
+  // Stop previous audio and any active SFX
   if (narrationAudio) { narrationAudio.pause(); narrationAudio = null; }
+  sfxStopActive();
   cancelAnimationFrame(narrationRAF);
   narrationPlaying = false;
 
@@ -1267,6 +1283,7 @@ async function loadChapter(n) {
   narrationLastFemaleSpeaker = null;
   narrationLastSpeaker       = null;
   renderChapterPills();
+  preloadChapterSfx(ch);
   closeSidebar();
 
   const el = document.getElementById('chapter-content');
@@ -1398,6 +1415,20 @@ async function signIn() {
 
 async function signOut() {
   await db.auth.signOut();
+}
+
+function preloadChapterSfx(ch) {
+  // Scan all paragraph texts for [#tag] and preload them before narration starts
+  const SFX_SCAN_RE = /\[#([a-z0-9_-]+)\]/g;
+  const tags = new Set();
+  (ch.sections || []).forEach(sec => {
+    (sec.paragraphs || []).forEach(p => {
+      const t = typeof p === 'string' ? p : (p.text || '');
+      for (const m of t.matchAll(SFX_SCAN_RE)) tags.add(m[1]);
+    });
+  });
+  tags.forEach(tag => sfxLoad(tag));
+  if (tags.size) console.log('[SFX] Preloading ' + tags.size + ' effect(s):', [...tags].join(', '));
 }
 
 function renderChapter(ch) {
