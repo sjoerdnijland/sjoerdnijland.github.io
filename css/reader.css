@@ -1046,8 +1046,11 @@ body.wiki-hints-on .para.active .wiki-link {
     align-items: center;
     justify-content: flex-start;
     overflow: hidden;          /* overlay itself doesn't scroll */
-    display: flex;
     flex-direction: column;
+    /* display is controlled by .active class — do NOT set display:flex here */
+  }
+  .narration-overlay.active {
+    display: flex;
   }
   /* Text area scrolls independently, leaves room for fixed controls */
   .narration-text {
