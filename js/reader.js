@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v27';
+const READER_VERSION = 'v28';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -1325,8 +1325,23 @@ function renderChapter(ch) {
           return `<div class="uplink-section-divider uplink-s2" id="${pid}" data-para-id="${pid}" data-raw="${escAttr(text)}" data-speaker="${speakerTag||''}" data-comment-count="${count}">${parseMarkup(text)}</div>`;
         }
 
+        // Transcript paragraphs: extract SPEAKER: prefix and show as styled label
+        const isTranscript = typeof paraItem === 'object' && paraItem.transcript === true;
+        const TPRE = /^([A-Z][A-Z0-9 ·]+):\s+/;
+        let displayHtml = linked;
+        let transcriptLabel = '';
+        if (isTranscript) {
+          const m = text.match(TPRE);
+          if (m) {
+            transcriptLabel = `<span class="transcript-speaker">${m[1]}</span>`;
+            // Display text without the prefix
+            const speechText = text.slice(m[0].length);
+            displayHtml = autoLink(parseMarkup(speechText));
+          }
+        }
+
         return `
-          <p class="para${count > 0 ? ' has-comments' : ''}"
+          <p class="para${count > 0 ? ' has-comments' : ''}${isTranscript ? ' transcript-para' : ''}"
              id="${pid}"
              data-para-id="${pid}"
              data-comment-count="${count}"
@@ -1334,13 +1349,14 @@ function renderChapter(ch) {
              data-raw="${escAttr(text)}"
              data-speaker="${speakerTag || ''}" 
              data-inner-voice="${innerVoiceTag || ''}" 
+             data-transcript="${isTranscript ? 'true' : ''}"
              onclick="selectPara('${pid}', this)">
             <span class="para-toolbar">
               <button class="pt-btn" onclick="event.stopPropagation();lookupSelection('${pid}')">🔍 Look up</button>
               <button class="pt-btn" onclick="event.stopPropagation();openThread('${pid}')">💬 Thread${count > 0 ? ` (${count})` : ''}</button>
               <button class="pt-btn pt-narrate" onclick="event.stopPropagation();startNarrationFrom('${pid}')">▶ Narrate</button>
             </span>
-            ${linked}
+            ${transcriptLabel}${displayHtml}
           </p>`;
       }).join('');
 
