@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v53';
+const READER_VERSION = 'v54';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -1724,7 +1724,13 @@ function renderChapter(ch) {
 
 // ── Markup parser (*italic*, **bold**, ~~small caps~~, \n breaks) ──
 function parseMarkup(text) {
-  return text
+  // escHtml first so literal < > / in transmission text render visibly
+  // rather than being parsed as HTML elements by the browser
+  const safe = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  return safe
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/~~(.+?)~~/g, '<span style="font-variant:small-caps;letter-spacing:0.06em">$1</span>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
