@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v54';
+const READER_VERSION = 'v56';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -1240,15 +1240,13 @@ function buildWordTimings(text, alignment) {
 
   const words = [];
   let word = '', wordStart = 0, wordEnd = 0;
-  let inTag = false;
   let pendingBreak = false; // track \n for line break display
 
   for (let i = 0; i < chars.length; i++) {
     const c = chars[i];
 
-    if (c === '<') { inTag = true; continue; }
-    if (c === '>') { inTag = false; continue; }
-    if (inTag) continue;
+    // Note: no inTag skipping — we don't use SSML and transmission text
+    // has literal < > that should be treated as regular characters.
 
     if (c === '\n') {
       if (word) {
@@ -1651,7 +1649,7 @@ function renderChapter(ch) {
               <button class="pt-btn" onclick="event.stopPropagation();openThread('${pid}')">💬 Thread${count > 0 ? ` (${count})` : ''}</button>
               <button class="pt-btn pt-narrate" onclick="event.stopPropagation();startNarrationFrom('${pid}')">▶ Narrate</button>
             </span>
-            ${autoLink(parseMarkup(text))}
+            ${autoLink(parseMarkup(text.replace(/</g,'&lt;').replace(/>/g,'&gt;')))}
           </p>`;
       }).join('');
       html += `<div class="code-block">${parasHtml}</div>`;
@@ -1724,13 +1722,7 @@ function renderChapter(ch) {
 
 // ── Markup parser (*italic*, **bold**, ~~small caps~~, \n breaks) ──
 function parseMarkup(text) {
-  // escHtml first so literal < > / in transmission text render visibly
-  // rather than being parsed as HTML elements by the browser
-  const safe = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-  return safe
+  return text
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/~~(.+?)~~/g, '<span style="font-variant:small-caps;letter-spacing:0.06em">$1</span>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
