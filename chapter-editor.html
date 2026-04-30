@@ -511,6 +511,7 @@ function addParaRow(body, sec, pi, paraItem) {
   const speakerOpts    = buildSpeakerOptions(speaker);
   const innerVoice     = typeof paraItem === 'object' ? (paraItem.inner_voice || '') : '';
   const innerVoiceOpts = buildSpeakerOptions(innerVoice);
+  const isTranscript   = typeof paraItem === 'object' ? !!paraItem.transcript : false;
 
   row.innerHTML = `
     <span class="para-num">${pi + 1}</span>
@@ -529,6 +530,12 @@ function addParaRow(body, sec, pi, paraItem) {
         <select class="speaker-select" onchange="updateParaInnerVoice('${sec.id}', ${pi}, this.value)" title="Inner voice">
           ${innerVoiceOpts}
         </select>
+        <label class="speaker-label transcript-toggle-label" title="Transcript line: show speaker name as label, narrate speech only" style="margin-left:12px;display:flex;align-items:center;gap:5px;cursor:pointer">
+          <input type="checkbox" ${isTranscript ? 'checked' : ''}
+            onchange="updateParaTranscript('${sec.id}', ${pi}, this.checked)"
+            style="accent-color:var(--teal-bright);cursor:pointer"/>
+          <span style="font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--teal-bright)">Transcript</span>
+        </label>
       </div>
     </div>
     <button class="para-del" onclick="deletePara('${sec.id}', ${pi})" title="Delete paragraph">✕</button>`;
@@ -606,6 +613,25 @@ function updateParaSpeaker(id, pi, speakerId) {
   if (row) row.classList.toggle('has-speaker', !!speakerId);
   refreshPreview();
   toast(speakerId ? `Speaker set` : 'Speaker cleared');
+}
+
+function updateParaTranscript(id, pi, checked) {
+  const sec = sections.find(s => s.id === id);
+  if (!sec) return;
+  const current = sec.paragraphs[pi];
+  if (typeof current === 'string') {
+    if (checked) sec.paragraphs[pi] = { text: current, transcript: true };
+    // if unchecked and was a string, nothing to do
+  } else {
+    if (checked) current.transcript = true;
+    else delete current.transcript;
+    // Clean up to plain string if no special flags remain
+    if (!current.speaker && !current.inner_voice && !current.transcript) {
+      sec.paragraphs[pi] = current.text;
+    }
+  }
+  refreshPreview();
+  toast(checked ? 'Transcript mode on' : 'Transcript mode off');
 }
 
 function deletePara(id, pi) {
@@ -754,7 +780,8 @@ function buildJSON() {
         obj.text = p.text;
         if (p.speaker)     obj.speaker     = p.speaker;
         if (p.inner_voice) obj.inner_voice = p.inner_voice;
-        if (!obj.speaker && !obj.inner_voice) return obj.text;
+        if (p.transcript)  obj.transcript  = true;
+        if (!obj.speaker && !obj.inner_voice && !obj.transcript) return obj.text;
         return obj;
       });
       return out;
@@ -815,7 +842,7 @@ function handleFileLoad(e) {
           heading: sec.heading || '',
           // Preserve paragraph objects (with speaker/inner_voice) or plain strings
           paragraphs: (sec.paragraphs || ['']).map(p =>
-            typeof p === 'string' ? p : { ...p }
+            typeof p === 'string' ? p : { ...p }  // spread preserves transcript flag
           )
         };
       });
