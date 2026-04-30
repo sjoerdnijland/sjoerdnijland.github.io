@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v56';
+const READER_VERSION = 'v58';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -380,7 +380,7 @@ async function narrationGoTo(index) {
   // Counter — chapter · scene · paragraph progress
   const scene  = getSceneForPara(pid);
   const isCode = !!document.getElementById(pid)?.closest('.code-block');
-  document.getElementById('narration-overlay').classList.toggle('code-mode', isCode);
+  // Note: code-mode class applied later, after scene pause, to avoid flicker
   const chapterNames = { 1:'Assembly', 2:'The Startend', 3:'Doubt and Certainty' };
   const chName = chapterNames[currentChapter] || `Chapter ${currentChapter}`;
   document.getElementById('narration-counter').innerHTML =
@@ -417,6 +417,13 @@ async function narrationGoTo(index) {
     if (audioUnlocked && !primedAudio) {
       const primer = new Audio(SILENT_MP3);
       primer.play().then(() => { primedAudio = primer; }).catch(() => {});
+    }
+    // Also try to resume any suspended Web Audio context (iOS background/foreground)
+    if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC && window._ac && window._ac.state === 'suspended') {
+        window._ac.resume().catch(() => {});
+      }
     }
     await new Promise(r => setTimeout(r, pauseMs));
     if (narrationIndex !== index) { narrationLocked = false; return; }
@@ -865,6 +872,9 @@ async function narrationGoTo(index) {
       <style>.tx-dot{} @keyframes txPulse{0%,100%{opacity:0.4;transform:scale(0.85)}50%{opacity:1;transform:scale(1.2)}}</style>`
     : '';
 
+  // Apply code-mode now — after any scene pause, so overlay doesn't flicker mid-transition
+  document.getElementById('narration-overlay').classList.toggle('code-mode', isCode);
+
   if (isCode) {
     textEl.innerHTML = `<div style="font-family:var(--mono);font-size:0.62rem;letter-spacing:0.35em;color:var(--teal-soft);margin-bottom:28px;text-align:center;opacity:0.7">◉ TRANSMISSION</div>`
       + displayTokens.map(t => `<span class="nw" id="nw-${t.idx}">${escHtml(t.text)}</span> `).join('');
@@ -899,8 +909,44 @@ async function narrationGoTo(index) {
 
   // Start playback + karaoke sync
   narrationLocked = false; // unlock — audio is playing, navigation is safe again
-  narrationAudio.play().catch(e => console.warn('Audio play failed:', e));
+
+  // Watchdog: if audio stalls (iOS suspend, play() silent fail, decode hang),
+  // force-advance after 4s of no progress. Clears itself when audio ends normally.
+  let watchdogLastTime = -1;
+  let watchdogTimer = null;
+  function watchdogTick() {
+    if (!narrationAudio || !narrationActive) return;
+    const ct = narrationAudio.currentTime;
+    if (narrationAudio.paused && narrationPlaying) {
+      // Audio is paused but we think we're playing — try to resume
+      console.warn('[watchdog] audio paused unexpectedly, resuming');
+      narrationAudio.play().catch(() => {
+        // If resume fails, advance to next paragraph
+        console.warn('[watchdog] resume failed, advancing');
+        clearTimeout(watchdogTimer);
+        narrationGoTo(index + 1);
+      });
+    } else if (ct === watchdogLastTime && !narrationAudio.paused) {
+      // currentTime frozen while not paused — stalled decode or iOS suspend
+      console.warn('[watchdog] audio frozen at', ct, '— advancing');
+      clearTimeout(watchdogTimer);
+      narrationGoTo(index + 1);
+      return;
+    }
+    watchdogLastTime = ct;
+    watchdogTimer = setTimeout(watchdogTick, 4000);
+  }
+  watchdogTimer = setTimeout(watchdogTick, 4000);
+
+  narrationAudio.play().catch(e => {
+    console.warn('[narrate] play() failed:', e.name, e.message);
+    clearTimeout(watchdogTimer);
+    // play() failed outright — advance after brief delay
+    setTimeout(() => { if (narrationActive) narrationGoTo(index + 1); }, 800);
+  });
+
   narrationAudio.addEventListener('ended', () => {
+    clearTimeout(watchdogTimer);
     cancelAnimationFrame(narrationRAF);
     URL.revokeObjectURL(audioUrl); // free blob memory
     // Mark all words as spoken cleanly on audio end (fixes last-word blip)
@@ -909,6 +955,16 @@ async function narrationGoTo(index) {
       if (el) el.className = `nw ${w.fmt || ''} spoken`;
     });
     setTimeout(() => narrationGoTo(index + 1), 1200);
+  });
+
+  // Also listen for stall/error events on the audio element
+  narrationAudio.addEventListener('stalled', () => {
+    console.warn('[narrate] audio stalled');
+  });
+  narrationAudio.addEventListener('error', (e) => {
+    console.warn('[narrate] audio error:', e);
+    clearTimeout(watchdogTimer);
+    setTimeout(() => { if (narrationActive) narrationGoTo(index + 1); }, 500);
   });
 
   function syncWords() {
