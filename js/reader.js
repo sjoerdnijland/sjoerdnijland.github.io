@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v25';
+const READER_VERSION = 'v26';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -806,18 +806,29 @@ async function narrationGoTo(index) {
       });
 
     } else {
-      // Pure narrator — word-level karaoke throughout
-      charLabel.style.opacity = '0';
+      // Single-voice paragraph (narrator or single character).
+      // If it's a character voice, show label + char-voice colour throughout.
+      const singleVoice = segments.length === 1 ? segments[0].voiceId : null;
+      if (singleVoice) {
+        const entry = Object.values(wikiById).find(e => e.voice_id === singleVoice);
+        if (entry) {
+          charLabel.textContent = '◉ ' + entry.name.split(' ')[0];
+          charLabel.style.opacity = '1';
+        }
+      } else {
+        charLabel.style.opacity = '0';
+      }
       narrationCurrentWords.forEach((w, i) => {
         const el = document.getElementById('nw-' + w.idx);
         if (!el) return;
+        const isChar = !!singleVoice;
         if (i < currentIdx) {
-          el.className = `nw ${w.fmt || ''} spoken`;
+          el.className = `nw ${w.fmt || ''} spoken${isChar ? ' char-voice' : ''}`;
         } else if (i === currentIdx) {
-          el.className = `nw ${w.fmt || ''} current`;
+          el.className = `nw ${w.fmt || ''} current${isChar ? ' char-voice' : ''}`;
           if (window.innerWidth > 768) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         } else {
-          el.className = `nw ${w.fmt || ''}`;
+          el.className = `nw ${w.fmt || ''}${isChar ? ' char-voice' : ''}`;
         }
       });
     }
