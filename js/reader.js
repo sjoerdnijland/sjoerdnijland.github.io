@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v35';
+const READER_VERSION = 'v36';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -33,7 +33,7 @@ function sfxLoad(tag) {
   const a = new Audio(SFX_BASE_URL + tag + '.mp3');
   a.preload = 'auto';
   a.addEventListener('canplaythrough', () => { sfxCache[tag] = a; sfxPreflight.delete(tag); }, { once: true });
-  a.addEventListener('error', () => { sfxPreflight.delete(tag); console.warn('[SFX] could not load: ' + tag + '.mp3'); }, { once: true });
+  a.addEventListener('error', () => { sfxPreflight.delete(tag); console.warn('[SFX] File not found: assets/sfx/' + tag + '.mp3 -- drop the MP3 there to enable this effect'); }, { once: true });
 }
 
 function sfxPlay(tag) {
@@ -1444,7 +1444,8 @@ function renderChapter(ch) {
         const innerVoiceTag = typeof paraItem === 'object' ? paraItem.inner_voice || null : null;
         const pid   = `ch${currentChapter}-p${paraIndex}`;
         const count = commentCounts[pid] || 0;
-        const linked = autoLink(parseMarkup(text));
+        const displayText = text.replace(/\[#[a-z0-9_-]+\]/g, '').trim();
+        const linked = autoLink(parseMarkup(displayText));
         paraIndex++;
 
         // Level 1 (system): all-caps e.g. **SOL SYSTEM**, **YREUS SYSTEM**, **MAIREE**
