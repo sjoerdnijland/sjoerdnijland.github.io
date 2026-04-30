@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v34';
+const READER_VERSION = 'v35';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -402,7 +402,13 @@ async function narrationGoTo(index) {
   let rawText = getRawText(pid) || text;
   if (!text) { narrationLocked = false; await narrationGoTo(index + 1); return; }
 
-  // Declare isTranscriptPara early — used by SFX parser and prefix strip below
+  /// Normalise newlines to spaces in TTS text only.
+  // ElevenLabs adds unmeasured silence for newlines that the alignment timestamps
+  // do not reflect, causing karaoke to run ahead on multi-line paragraphs.
+  // rawText keeps newlines so buildDisplayTokens still emits br tokens.
+  text = text.split('\n').join(' ').replace(/  +/g, ' ').trim();
+
+    // Declare isTranscriptPara early — used by SFX parser and prefix strip below
   const paraEl2 = document.getElementById(pid);
   const isTranscriptPara = paraEl2?.dataset.transcript === 'true';
 
@@ -1102,7 +1108,9 @@ async function prefetchNext(index) {
   let text    = getParaText(pid);
   let rawText = getRawText(pid) || text;
   if (!text) return;
-  // Strip SFX tags for cache key consistency with narrationGoTo
+  // Normalise newlines (matches narrationGoTo for cache key consistency)
+  text = text.split('\n').join(' ').replace(/  +/g, ' ').trim();
+    // Strip SFX tags for cache key consistency with narrationGoTo
   text    = text.replace(/\[#[a-z0-9_-]+\]/g, '').trim();
   rawText = rawText.replace(/\[#[a-z0-9_-]+\]/g, '').trim();
   // Strip ALL-CAPS SPEAKER: prefix (same as narrationGoTo) for cache key match
