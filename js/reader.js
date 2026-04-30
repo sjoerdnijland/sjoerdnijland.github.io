@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v33';
+const READER_VERSION = 'v34';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -402,6 +402,10 @@ async function narrationGoTo(index) {
   let rawText = getRawText(pid) || text;
   if (!text) { narrationLocked = false; await narrationGoTo(index + 1); return; }
 
+  // Declare isTranscriptPara early — used by SFX parser and prefix strip below
+  const paraEl2 = document.getElementById(pid);
+  const isTranscriptPara = paraEl2?.dataset.transcript === 'true';
+
   // ── Parse and strip SFX tags [#tag-name] ─────────────────
   // Record position (afterWordIdx) and remove from both text and rawText
   // so the narrator never speaks the tag text.
@@ -444,9 +448,6 @@ async function narrationGoTo(index) {
 
   // For transcript paragraphs, extract and preserve the speaker label
   // so it can be shown above the karaoke text in the narration overlay.
-  // (data-transcript is set on the element; data-raw still has the full prefix)
-  const paraEl2 = document.getElementById(pid);
-  const isTranscriptPara = paraEl2?.dataset.transcript === 'true';
   let transcriptSpeakerLabel = '';
   if (isTranscriptPara) {
     // Extract the prefix from the original data-raw before stripping
