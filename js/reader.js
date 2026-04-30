@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v26';
+const READER_VERSION = 'v27';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -778,30 +778,17 @@ async function narrationGoTo(index) {
         const el = document.getElementById('nw-' + w.idx);
         if (!el) return;
         const wordVoice = getCharVoiceForWord(i);
+        const isChar    = !!wordVoice;
 
-        if (wordVoice) {
-          // Character word — find its range
-          const range = charWordRanges.find(r => i >= r.start && i <= r.end);
-          const rangeStartPassed = currentIdx >= range.start;
-          const rangeEndPassed   = currentIdx > range.end;
-          if (rangeEndPassed) {
-            el.className = `nw ${w.fmt || ''} spoken`;
-          } else if (rangeStartPassed) {
-            // Whole character segment lit at once
-            el.className = `nw ${w.fmt || ''} current char-voice`;
-          } else {
-            el.className = `nw ${w.fmt || ''}`;
-          }
+        // Word-level karaoke for both narrator and character words.
+        // Character words get 'char-voice' class for teal colour.
+        if (i < currentIdx) {
+          el.className = `nw ${w.fmt || ''} spoken${isChar ? ' char-voice' : ''}`;
+        } else if (i === currentIdx) {
+          el.className = `nw ${w.fmt || ''} current${isChar ? ' char-voice' : ''}`;
+          if (window.innerWidth > 768) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         } else {
-          // Narrator word — precise word-level karaoke
-          if (i < currentIdx) {
-            el.className = `nw ${w.fmt || ''} spoken`;
-          } else if (i === currentIdx) {
-            el.className = `nw ${w.fmt || ''} current`;
-            if (window.innerWidth > 768) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-          } else {
-            el.className = `nw ${w.fmt || ''}`;
-          }
+          el.className = `nw ${w.fmt || ''}${isChar ? ' char-voice' : ''}`;
         }
       });
 
