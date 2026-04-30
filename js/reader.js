@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v43';
+const READER_VERSION = 'v44';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -1446,9 +1446,20 @@ function renderChapter(ch) {
   let sceneIndex = 1;
   let prevSecType = null; // track previous section type for scene transitions
   let html = `
-    <div class="ch-eyebrow">Chapter ${currentChapter}</div>
-    <h1 class="ch-title">${ch.title}</h1>
-    <p class="ch-subtitle">${ch.subtitle}</p>`;
+    <div class="ch-hero">
+      <div class="ch-eyebrow">Chapter ${currentChapter}</div>
+      <h1 class="ch-title">${ch.title}</h1>
+      <p class="ch-subtitle">${ch.subtitle}</p>
+      <div class="ch-narrate-wrap">
+        <button class="ch-narrate-btn" onclick="startNarration()" id="ch-narrate-btn" aria-label="Start narration">
+          <span class="ch-narrate-ring"></span>
+          <span class="ch-narrate-ring ch-narrate-ring--2"></span>
+          <span class="ch-narrate-icon">▶</span>
+          <span class="ch-narrate-label">Listen</span>
+        </button>
+        <p class="ch-narrate-hint">Narrated by Charlotte &amp; full cast</p>
+      </div>
+    </div>`;
 
   ch.sections.forEach((sec) => {
 
