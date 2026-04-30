@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v52';
+const READER_VERSION = 'v53';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -1651,7 +1651,7 @@ function renderChapter(ch) {
               <button class="pt-btn" onclick="event.stopPropagation();openThread('${pid}')">💬 Thread${count > 0 ? ` (${count})` : ''}</button>
               <button class="pt-btn pt-narrate" onclick="event.stopPropagation();startNarrationFrom('${pid}')">▶ Narrate</button>
             </span>
-            ${escHtml(text)}
+            ${autoLink(parseMarkup(text))}
           </p>`;
       }).join('');
       html += `<div class="code-block">${parasHtml}</div>`;
@@ -2197,6 +2197,24 @@ function showNarrationChapterEnd() {
           ✕ Close
         </button>`}
       </div>
+      ${!hasNext ? `
+      <div style="margin-top:12px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;align-items:center;gap:16px;max-width:460px">
+        <p style="font-family:var(--serif);font-style:italic;color:var(--muted);font-size:0.95rem;text-align:center;margin:0">
+          The story continues. The hardcover arrives June 1st.
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+          <a href="https://www.kobo.com/ww/en/ebook/the-unfolding-15" target="_blank" rel="noopener"
+            style="padding:10px 20px;border:1px solid var(--rose);background:rgba(233,74,124,0.1);color:var(--rose);font-family:var(--mono);font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;text-decoration:none;border-radius:2px;transition:all 0.2s"
+            onmouseover="this.style.background='rgba(233,74,124,0.2)'" onmouseout="this.style.background='rgba(233,74,124,0.1)'">
+            ◈ Buy the eBook — €12.50
+          </a>
+          <a href="https://www.goodreads.com/book/show/251501817-the-unfolding" target="_blank" rel="noopener"
+            style="padding:10px 20px;border:1px solid var(--line-strong);background:transparent;color:var(--ivory-2);font-family:var(--mono);font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;text-decoration:none;border-radius:2px;transition:all 0.2s"
+            onmouseover="this.style.borderColor='var(--ivory-2)'" onmouseout="this.style.borderColor='var(--line-strong)'">
+            ★ Add on Goodreads
+          </a>
+        </div>
+      </div>` : ''}
     </div>`;
 }
 
