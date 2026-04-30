@@ -241,6 +241,26 @@ body.wiki-hints-on .para.active .wiki-link {
 .uplink-section-divider:first-child { border-top: none; padding-top: 4px; margin-top: 0; }
 .uplink-section-divider strong { font-weight: 600; }
 
+/* ── Transcript paragraphs ─────────────────────────────── */
+.transcript-speaker {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--teal-bright);
+  opacity: 0.75;
+  margin-bottom: 4px;
+  padding-left: 1px;
+}
+.transcript-para {
+  border-left: 2px solid rgba(74,154,170,0.25) !important;
+  padding-left: 14px !important;
+}
+.transcript-para + .transcript-para {
+  margin-top: -4px; /* tighten consecutive transcript lines */
+}
+
 /* Level 1: SOL SYSTEM, YREUS SYSTEM, MAIREE — prominent */
 .uplink-s1 {
   font-size: 0.68rem;
