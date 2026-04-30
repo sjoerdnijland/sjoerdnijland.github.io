@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v59';
+const READER_VERSION = 'v61';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -890,16 +890,16 @@ async function narrationGoTo(index) {
   const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
   const audioUrl  = URL.createObjectURL(audioBlob);
 
-  // iOS fix: reuse the already-gesture-unlocked Audio element for first play.
-  // Creating a new Audio() after async awaits loses iOS playback permission.
+  // iOS fix: use primedAudio to establish playback permission, then
+  // always create a fresh Audio element for the actual content.
+  // Reusing primedAudio with .load() causes iOS to stall on stitched blobs.
   if (primedAudio) {
-    narrationAudio = primedAudio;
+    // Play the silent primer to re-establish iOS gesture trust
+    primedAudio.play().catch(() => {});
+    primedAudio.pause();
     primedAudio = null;
-    narrationAudio.src = audioUrl;
-    narrationAudio.load();
-  } else {
-    narrationAudio = new Audio(audioUrl);
   }
+  narrationAudio = new Audio(audioUrl);
   narrationPlaying = true;
 
   document.getElementById('nc-play-btn').innerHTML = '<span class="nc-icon">⏸</span><span class="nc-lbl">Pause</span>';
@@ -988,7 +988,11 @@ async function narrationGoTo(index) {
   });
 
   function syncWords() {
-    if (!narrationAudio || narrationAudio.paused) return;
+    // Always reschedule RAF — even if paused, so we resume highlighting
+    // as soon as audio unpauses (iOS buffers briefly after play())
+    if (!narrationAudio || !narrationActive) { return; } // only stop if narration ended
+    narrationRAF = requestAnimationFrame(syncWords);
+    if (narrationAudio.paused) return; // skip highlights while paused, but RAF keeps running
     const t   = narrationAudio.currentTime;
     const dur = narrationAudio.duration || 9999;
 
@@ -1077,7 +1081,7 @@ async function narrationGoTo(index) {
       });
     }
 
-    narrationRAF = requestAnimationFrame(syncWords);
+    // RAF rescheduled at top of syncWords
   }
   narrationRAF = requestAnimationFrame(syncWords);
 }
