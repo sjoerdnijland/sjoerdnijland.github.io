@@ -87,7 +87,8 @@ function Buy() {
           </a>
           <span className="bl-sep">·</span>
           <a href="https://www.instagram.com/theunfoldingbook" className="bl-action-link" target="_blank" rel="noopener">
-            📷 @theunfoldingbook
+<img src="meta/insta.png" width="16" height="16" alt="Instagram" style={{borderRadius:'3px',verticalAlign:'middle'}} />
+            @theunfoldingbook
           </a>
         </div>
 
