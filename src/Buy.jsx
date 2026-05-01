@@ -85,6 +85,10 @@ function Buy() {
           <a href="https://discord.gg/45bwdn8J" className="bl-action-link" target="_blank" rel="noopener">
             💬 Join the Discord
           </a>
+          <span className="bl-sep">·</span>
+          <a href="https://www.instagram.com/theunfoldingbook" className="bl-action-link" target="_blank" rel="noopener">
+            📷 @theunfoldingbook
+          </a>
         </div>
 
       </div>
