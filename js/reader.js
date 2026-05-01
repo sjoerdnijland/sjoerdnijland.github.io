@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v86';
+const READER_VERSION = 'v87';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -239,6 +239,11 @@ function unlockAudio() {
   persistentAudio.volume = 0.001; // near-silent but iOS won't suspend as 'background-only'
   persistentAudio.play().then(() => {
     audioUnlocked = true;
+    // Touch all already-cached SFX elements so iOS grants them session trust
+    Object.values(sfxCache).forEach(a => {
+      a.volume = 0;
+      a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = sfxVolume; }).catch(() => {});
+    });
   }).catch(() => {});
 }
 
