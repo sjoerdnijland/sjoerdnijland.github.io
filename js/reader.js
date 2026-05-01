@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v79';
+const READER_VERSION = 'v81';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -497,7 +497,6 @@ async function narrationGoTo(index) {
   const scene  = getSceneForPara(pid);
   const isCode = !!document.getElementById(pid)?.closest('.code-block');
   // Note: code-mode class applied later, after scene pause, to avoid flicker
-  const chapterNames = { 1:'Assembly', 2:'The Startend', 3:'Doubt and Certainty' };
   const chName = chapterNames[currentChapter] || `Chapter ${currentChapter}`;
   document.getElementById('narration-counter').innerHTML =
     `<span style="color:var(--rose);letter-spacing:0.22em">CH. ${currentChapter}</span>`
@@ -1100,6 +1099,20 @@ async function narrationGoTo(index) {
     narrationAudio  = new Audio(audioUrl);
     narrationAudio.addEventListener('timeupdate', updateKaraoke);
     narrationAudio.addEventListener('ended', () => { URL.revokeObjectURL(audioUrl); advance(); });
+
+    // Stall guard: iOS sometimes doesn't fire 'ended' when audio finishes.
+    // Poll duration vs currentTime — only triggers if truly at end, respects user pause.
+    const stallAudio = narrationAudio;
+    function stallCheck() {
+      if (!narrationActive || advanced) return;
+      if (stallAudio !== narrationAudio) return;
+      if (!narrationPlaying) { setTimeout(stallCheck, 1000); return; } // user paused — wait
+      const dur = stallAudio.duration;
+      const ct  = stallAudio.currentTime;
+      if (!isNaN(dur) && dur > 0 && ct >= dur - 0.15) { advance(); return; }
+      setTimeout(stallCheck, 500);
+    }
+    setTimeout(stallCheck, 1000);
     narrationAudio.addEventListener('pause', () => {
       if (!narrationPlaying || !narrationActive || advanced) return;
       setTimeout(() => {
@@ -1524,7 +1537,8 @@ let wikiById         = {};   // id → entry  (for speaker tag lookups)
 let commentCounts    = {};   // paragraphId → count
 
 // ── Chapters — loaded from data/chapters/chapter-N.json ──
-const CHAPTER_COUNT = 3; // increment as you add files
+const CHAPTER_COUNT = 3;
+const chapterNames  = { 1:'Assembly', 2:'The Startend', 3:'Doubt and Certainty' }; // increment as you add files
 
 async function loadChapter(n) {
   currentChapter = n;
@@ -1551,6 +1565,28 @@ async function loadChapter(n) {
   await loadCommentCounts(n);
   preloadChapterSfx(ch);
   renderChapter(ch);
+  // Inject end card into reader (reading mode — narration has its own)
+  injectReaderEndCard(n, ch.title);
+}
+
+function injectReaderEndCard(n, chapterTitle) {
+  const el = document.getElementById('chapter-content');
+  if (!el) return;
+  const hasNext = n < CHAPTER_COUNT;
+  const card = document.createElement('div');
+  card.className = 'chapter-end-card visible';
+  card.style.cssText = 'margin: 80px auto 40px; text-align:center;';
+  card.innerHTML = `
+    <div class="cec-label">Chapter ${n} complete</div>
+    <div class="cec-title">${chapterTitle || ''}</div>
+    <div class="cec-sub">Vera and Milo are ready to discuss it.</div>
+    <div class="cec-actions">
+      <button class="cec-btn secondary" onclick="openPodcastPanel()">🎙 Decoded — AI podcast review</button>
+      ${hasNext ? `<button class="cec-btn primary" onclick="loadChapter(${n + 1})">Continue to Chapter ${n + 1} →</button>` : `
+      <a href="index.html#buy" class="cec-btn primary">Buy the eBook →</a>
+      <a href="https://www.goodreads.com/book/show/251501817-the-unfolding" class="cec-btn secondary" target="_blank" rel="noopener">★ Add on Goodreads</a>`}
+    </div>`;
+  el.appendChild(card);
 }
 
 function renderChapterPills() {
