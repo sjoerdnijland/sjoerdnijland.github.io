@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v83';
+const READER_VERSION = 'v84';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -2405,13 +2405,33 @@ function closePodcastPanel() {
 }
 
 function showNarrationChapterEnd() {
-  // Delegate to the single reader end card — no duplicate logic needed
-  injectReaderEndCard(currentChapter, chapterNames[currentChapter] || '');
-  // Scroll end card into view
-  setTimeout(() => {
-    const card = document.querySelector('#chapter-content .chapter-end-card');
-    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 100);
+  // Build the end card HTML (same as injectReaderEndCard)
+  const n = currentChapter;
+  const hasNext = n < CHAPTER_COUNT;
+  const card = document.createElement('div');
+  card.className = 'chapter-end-card visible';
+  card.innerHTML = `
+    <div class="cec-label">Chapter ${n} complete</div>
+    <div class="cec-title">${chapterNames[n] || ''}</div>
+    <div class="cec-sub">Vera and Milo are ready to discuss it.</div>
+    <div class="cec-actions">
+      <button class="cec-btn secondary" onclick="openPodcastPanel()">🎙 Decoded — AI podcast review</button>
+      ${hasNext
+        ? `<button class="cec-btn primary" onclick="loadChapter(${n + 1})">Continue to Chapter ${n + 1} →</button>`
+        : `<a href="index.html#buy" class="cec-btn primary">Buy the eBook →</a>
+           <a href="https://www.goodreads.com/book/show/251501817-the-unfolding" class="cec-btn secondary" target="_blank" rel="noopener">★ Add on Goodreads</a>`}
+    </div>`;
+
+  // Show inside the narration overlay text area
+  const textEl = document.getElementById('narration-text');
+  if (textEl) {
+    textEl.innerHTML = '';
+    textEl.appendChild(card);
+  }
+
+  // Also update the reader end card for when overlay closes
+  injectReaderEndCard(n, chapterNames[n] || '');
+
   // Show the podcast FAB
   document.getElementById('podcast-fab').classList.add('visible');
 }
