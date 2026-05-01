@@ -28,6 +28,8 @@
             <a href="wiki.html">Wiki</a>
             <a href="reader.html" target="_blank" rel="noopener">Read</a>
             <a href="https://discord.gg/MWejqk8a" target="_blank" rel="noopener">Discord</a>
+            <span style={{margin: '0 8px', opacity: 0.3}}>·</span>
+            <a href="https://www.instagram.com/theunfoldingbook" target="_blank" rel="noopener">Instagram</a>
           </div>
 
         </div>
