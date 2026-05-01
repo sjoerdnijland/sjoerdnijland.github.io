@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v84';
+const READER_VERSION = 'v86';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -10,14 +10,10 @@ let narrationParaIds   = [];
 let narrationIndex     = 0;
 let narrationAudio     = null;
 let narrationPlaying   = false;
-let narrationAlignment = null;
 let narrationRAF       = null;
 let narrationCache     = {};
 let narrationLocked    = false;
 let narrationCurrentWords = [];
-let narrationLastMaleSpeaker   = null;
-let narrationLastFemaleSpeaker = null;
-let narrationLastSpeaker       = null; // last named speaker regardless of gender
 
 // ── SFX overlay state ─────────────────────────────────────
 const SFX_BASE_URL = 'assets/sfx/';
@@ -65,9 +61,6 @@ function toggleMultiVoice() {
   applyMultiVoiceBtn();
   // Clear cache and re-fetch current paragraph with new voice setting
   cacheClear();
-  narrationLastSpeaker = null;
-  narrationLastMaleSpeaker = null;
-  narrationLastFemaleSpeaker = null;
   // Re-narrate from current position so the voice change takes effect immediately
   if (narrationActive) {
     if (narrationAudio) { narrationAudio.pause(); narrationAudio = null; }
@@ -234,7 +227,6 @@ const IS_IOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navig
 const SILENT_MP3 = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjMyLjEwNAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhgCenp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6e////////////////////////////////////////////////////////////////AAAAAExhdmM1OC41NAAAAAAAAAAAAAAAACQAAAAAAAAAAw4g3QAAAAAAAAAAAAAAAAAA//tQxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
 let audioUnlocked = false;
 
-let primedAudio = null;         // kept for backwards compat
 let persistentAudio = null;    // single Audio element reused for all paragraphs (iOS trust)
 
 function unlockAudio() {
@@ -526,20 +518,6 @@ async function narrationGoTo(index) {
     const isCached = Object.keys(narrationCache).some(k => k.startsWith(nextCacheKey));
     const pauseMs = index === 0 ? 800 : (isCached ? 400 : 800);
     textEl.innerHTML = `<span class="narration-loading" style="opacity:0.25">✦</span>`;
-    // iOS fix: create a new primed Audio element BEFORE the await.
-    // Each await boundary can revoke iOS playback permission.
-    // We re-prime here so the next play() call has a gesture-unlocked element.
-    if (audioUnlocked && !primedAudio) {
-      const primer = new Audio(SILENT_MP3);
-      primer.play().then(() => { primedAudio = primer; }).catch(() => {});
-    }
-    // Also try to resume any suspended Web Audio context (iOS background/foreground)
-    if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (AC && window._ac && window._ac.state === 'suspended') {
-        window._ac.resume().catch(() => {});
-      }
-    }
     await new Promise(r => setTimeout(r, pauseMs));
     if (narrationIndex !== index) { narrationLocked = false; return; }
   }
@@ -645,31 +623,6 @@ async function narrationGoTo(index) {
     // 2. Pattern detection fallback
     if (!speakerVoiceId) speakerVoiceId = detectSpeakerVoice(rawText);
 
-    if (!speakerVoiceId && /["\u201c\u201d]/.test(rawText)) {
-      const SAID_RE = /\b(?:said|asked|replied|whispered|continued|added|stated|called|announced|noted|insisted|scoffed|relayed|declared|muttered)\b/i;
-      if (/\bshe\b/i.test(rawText) && SAID_RE.test(rawText)) {
-        speakerVoiceId = narrationLastFemaleSpeaker;
-      } else if (/\bhe\b/i.test(rawText) && SAID_RE.test(rawText)) {
-        speakerVoiceId = narrationLastMaleSpeaker;
-      } else if (/^["\u201c\u201d]/.test(rawText.trim()) && !SAID_RE.test(rawText)) {
-        speakerVoiceId = narrationLastSpeaker;
-      }
-      if (!speakerVoiceId && /^CIX\s+WEAVER:/i.test(rawText.trim())) {
-        const gary = wikiIndex['gary'] || wikiIndex['weaver'] || wikiIndex['cix weaver'];
-        if (gary && gary.voice_id) speakerVoiceId = gary.voice_id;
-      }
-    }
-
-    if (speakerVoiceId) {
-      const femaleVoices = new Set(Object.values(wikiIndex)
-        .filter(e => ['astrid-vilde','ionie-jia','joana-perera','sarah-farley','kirsten-strand',
-          'lena-hague','stacey-kiran','eva-bellamy','lysanne-sutherland','alani-jimenez',
-          'ines-martel','nabiha-al-fahim','læsa'].includes(e.id))
-        .map(e => e.voice_id).filter(Boolean));
-      if (femaleVoices.has(speakerVoiceId)) narrationLastFemaleSpeaker = speakerVoiceId;
-      else narrationLastMaleSpeaker = speakerVoiceId;
-      if (detectSpeakerVoice(rawText)) narrationLastSpeaker = speakerVoiceId;
-    }
   } // end multiVoiceEnabled
 
   // ── Segment-based fetch: narrator for prose, character for quoted dialogue ──
@@ -759,7 +712,6 @@ async function narrationGoTo(index) {
     if (loadingTimer) clearTimeout(loadingTimer);
   }
 
-  narrationAlignment = data.alignment;
 
   // For stitched paragraphs, build word timings using per-segment alignment
   // Narrator segments use their own accurate timestamps
@@ -1544,9 +1496,6 @@ async function loadChapter(n) {
   currentChapter = n;
   currentParaId  = null;
   cacheClear();
-  narrationLastMaleSpeaker   = null;
-  narrationLastFemaleSpeaker = null;
-  narrationLastSpeaker       = null;
   renderChapterPills();
   closeSidebar();
 
@@ -1569,6 +1518,17 @@ async function loadChapter(n) {
   injectReaderEndCard(n, ch.title);
 }
 
+function continueToNextChapter(n) {
+  if (narrationActive) {
+    // Narration mode: load chapter then start narration automatically
+    stopNarration();
+    loadChapter(n).then(() => startNarration());
+  } else {
+    // Reading mode: just load the chapter
+    loadChapter(n);
+  }
+}
+
 function injectReaderEndCard(n, chapterTitle) {
   const el = document.getElementById('chapter-content');
   if (!el) return;
@@ -1584,7 +1544,7 @@ function injectReaderEndCard(n, chapterTitle) {
     <div class="cec-sub">Vera and Milo are ready to discuss it.</div>
     <div class="cec-actions">
       <button class="cec-btn secondary" onclick="openPodcastPanel()">🎙 Decoded — AI podcast review</button>
-      ${hasNext ? `<button class="cec-btn primary" onclick="loadChapter(${n + 1})">Continue to Chapter ${n + 1} →</button>` : `
+      ${hasNext ? `<button class="cec-btn primary" onclick="continueToNextChapter(${n + 1})">Continue to Chapter ${n + 1} →</button>` : `
       <a href="index.html#buy" class="cec-btn primary">Buy the eBook →</a>
       <a href="https://www.goodreads.com/book/show/251501817-the-unfolding" class="cec-btn secondary" target="_blank" rel="noopener">★ Add on Goodreads</a>`}
     </div>`;
@@ -2417,7 +2377,7 @@ function showNarrationChapterEnd() {
     <div class="cec-actions">
       <button class="cec-btn secondary" onclick="openPodcastPanel()">🎙 Decoded — AI podcast review</button>
       ${hasNext
-        ? `<button class="cec-btn primary" onclick="loadChapter(${n + 1})">Continue to Chapter ${n + 1} →</button>`
+        ? `<button class="cec-btn primary" onclick="continueToNextChapter(${n + 1})">Continue to Chapter ${n + 1} →</button>`
         : `<a href="index.html#buy" class="cec-btn primary">Buy the eBook →</a>
            <a href="https://www.goodreads.com/book/show/251501817-the-unfolding" class="cec-btn secondary" target="_blank" rel="noopener">★ Add on Goodreads</a>`}
     </div>`;
