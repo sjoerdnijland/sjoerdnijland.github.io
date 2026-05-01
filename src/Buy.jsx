@@ -73,22 +73,23 @@ function Buy() {
 
         </div>
 
-        <div className="bl-actions">
-          <a href={GOODREADS} className="bl-action-link" target="_blank" rel="noopener">
-            ★ Add on Goodreads
-          </a>
-          <span className="bl-sep">·</span>
+        {/* Text CTAs */}
+        <div className="bl-reader-cta">
           <a href="reader.html" className="bl-action-link">
             ▶ Read the first chapter free
           </a>
           <span className="bl-sep">·</span>
-          <a href="https://discord.gg/45bwdn8J" className="bl-action-link" target="_blank" rel="noopener">
-            💬 Join the Discord
+          <a href={GOODREADS} className="bl-action-link" target="_blank" rel="noopener">
+            ★ Add on Goodreads
           </a>
-          <span className="bl-sep">·</span>
-          <a href="https://www.instagram.com/theunfoldingbook" className="bl-action-link" target="_blank" rel="noopener">
-<img src="meta/insta.png" width="16" height="16" alt="Instagram" style={{borderRadius:'3px',verticalAlign:'middle'}} />
-            @theunfoldingbook
+        </div>
+        {/* Social icon bar */}
+        <div className="bl-social-bar">
+          <a href="https://www.instagram.com/theunfoldingbook" className="bl-social-btn" target="_blank" rel="noopener" title="Instagram @theunfoldingbook">
+            <img src="meta/insta.png" width="22" height="22" alt="Instagram" style={{borderRadius:'4px'}} />
+          </a>
+          <a href="https://discord.gg/45bwdn8J" className="bl-social-btn" target="_blank" rel="noopener" title="Join our Discord">
+            <img src="meta/discord.png" width="22" height="22" alt="Discord" />
           </a>
         </div>
 
@@ -236,6 +237,29 @@ function Buy() {
         .bl-action-link:hover { color: var(--ivory); }
         .bl-sep { color: var(--line-strong); font-size: 1rem; }
 
+        .bl-reader-cta {
+          display: flex; align-items: center; justify-content: center;
+          gap: 14px; flex-wrap: wrap;
+          max-width: 780px; margin: 0 auto 16px;
+          padding-top: 28px; border-top: 1px solid var(--line);
+        }
+        .bl-social-bar {
+          display: flex; align-items: center; justify-content: center;
+          gap: 10px; max-width: 780px; margin: 0 auto;
+        }
+        .bl-social-btn {
+          display: flex; align-items: center; justify-content: center;
+          width: 40px; height: 40px;
+          border: 1px solid var(--line); border-radius: 6px;
+          background: rgba(255,255,255,0.03);
+          transition: border-color 0.2s, background 0.2s, transform 0.15s;
+          text-decoration: none;
+        }
+        .bl-social-btn:hover {
+          border-color: var(--line-strong);
+          background: rgba(255,255,255,0.08);
+          transform: translateY(-2px);
+        }
         @media (max-width: 620px) {
           .buy-live { padding: 80px 0 100px; }
           .bl-formats { grid-template-columns: 1fr; max-width: 420px; }
