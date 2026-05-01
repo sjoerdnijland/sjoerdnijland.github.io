@@ -1,5 +1,5 @@
 // ── Version ───────────────────────────────────────────────
-const READER_VERSION = 'v33';
+const READER_VERSION = 'v91';
 console.log('[reader.js] loaded', READER_VERSION);
 
 // ── Narration state ──────────────────────────────────────
@@ -10,14 +10,10 @@ let narrationParaIds   = [];
 let narrationIndex     = 0;
 let narrationAudio     = null;
 let narrationPlaying   = false;
-let narrationAlignment = null;
 let narrationRAF       = null;
 let narrationCache     = {};
 let narrationLocked    = false;
 let narrationCurrentWords = [];
-let narrationLastMaleSpeaker   = null;
-let narrationLastFemaleSpeaker = null;
-let narrationLastSpeaker       = null; // last named speaker regardless of gender
 
 // ── SFX overlay state ─────────────────────────────────────
 const SFX_BASE_URL = 'assets/sfx/';
@@ -33,15 +29,38 @@ function sfxLoad(tag) {
   const a = new Audio(SFX_BASE_URL + tag + '.mp3');
   a.preload = 'auto';
   a.addEventListener('canplaythrough', () => { sfxCache[tag] = a; sfxPreflight.delete(tag); }, { once: true });
-  a.addEventListener('error', () => { sfxPreflight.delete(tag); console.warn('[SFX] could not load: ' + tag + '.mp3'); }, { once: true });
+  a.addEventListener('error', () => { sfxPreflight.delete(tag); console.warn('[SFX] File not found: assets/sfx/' + tag + '.mp3 -- drop the MP3 there to enable this effect'); }, { once: true });
 }
 
+let sfxActive = null; // currently playing SFX element
+
 function sfxPlay(tag) {
-  const cached = sfxCache[tag];
-  if (!cached) { console.warn('[SFX] not ready: ' + tag); return; }
-  const clone = cached.cloneNode();
-  clone.volume = sfxVolume;
-  clone.play().catch(function(e) { console.warn('[SFX] play failed:', e); });
+  if (sfxActive) { sfxActive.pause(); sfxActive.currentTime = 0; sfxActive = null; }
+  const url = SFX_BASE_URL + tag + '.mp3';
+  if (IS_IOS && sfxAudio) {
+    // iOS: src-swap the persistent trusted element — only reliable method
+    // from non-gesture callbacks (RAF/timeupdate)
+    sfxAudio.src = url;
+    sfxAudio.volume = sfxVolume;
+    sfxAudio.currentTime = 0;
+    sfxActive = sfxAudio;
+    sfxAudio.play().catch(e => console.warn('[SFX] play failed:', tag, e.name));
+    sfxAudio.addEventListener('ended', () => { if (sfxActive === sfxAudio) sfxActive = null; }, { once: true });
+  } else {
+    const audio = new Audio(url);
+    audio.volume = sfxVolume;
+    sfxActive = audio;
+    audio.play().catch(e => console.warn('[SFX] play failed:', tag, e.name));
+    audio.addEventListener('ended', () => { if (sfxActive === audio) sfxActive = null; }, { once: true });
+  }
+}
+
+function sfxStopActive() {
+  if (sfxActive) {
+    sfxActive.pause();
+    sfxActive.currentTime = 0;
+    sfxActive = null;
+  }
 }
 let multiVoiceEnabled          = localStorage.getItem('multiVoice') !== 'off'; // default ON
 
@@ -51,9 +70,6 @@ function toggleMultiVoice() {
   applyMultiVoiceBtn();
   // Clear cache and re-fetch current paragraph with new voice setting
   cacheClear();
-  narrationLastSpeaker = null;
-  narrationLastMaleSpeaker = null;
-  narrationLastFemaleSpeaker = null;
   // Re-narrate from current position so the voice change takes effect immediately
   if (narrationActive) {
     if (narrationAudio) { narrationAudio.pause(); narrationAudio = null; }
@@ -67,11 +83,11 @@ function applyMultiVoiceBtn() {
   const btn = document.getElementById('nc-voices-btn');
   if (!btn) return;
   if (multiVoiceEnabled) {
-    btn.textContent = '◉ All voices';
+    btn.innerHTML = '<span class="nc-icon">◉</span><span class="nc-lbl">All voices</span>';
     btn.style.color = 'var(--rose)';
     btn.style.borderColor = 'var(--rose)';
   } else {
-    btn.textContent = '◎ Narrator';
+    btn.innerHTML = '<span class="nc-icon">◎</span><span class="nc-lbl">Narrator</span>';
     btn.style.color = '';
     btn.style.borderColor = '';
   }
@@ -84,7 +100,8 @@ let ambientEnabled = localStorage.getItem('ambientMusic') !== 'off';
 function applyAmbientBtn() {
   const btn = document.getElementById('nc-music-btn');
   if (!btn) return;
-  btn.textContent = ambientEnabled ? '♪ Music on' : '♪ Music off';
+  const lbl = ambientEnabled ? 'Music on' : 'Music off';
+  btn.innerHTML = '<span class="nc-icon">♪</span><span class="nc-lbl">' + lbl + '</span>';
   btn.style.color = ambientEnabled ? 'var(--teal-bright)' : '';
   btn.style.borderColor = ambientEnabled ? 'var(--teal-soft)' : '';
 }
@@ -214,31 +231,56 @@ function getNarrableParagraphs() {
 }
 
 // Silent MP3 to unlock audio on iOS Safari — must be played within a user gesture
+const IS_IOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
 const SILENT_MP3 = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjMyLjEwNAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhgCenp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6enp6e////////////////////////////////////////////////////////////////AAAAAExhdmM1OC41NAAAAAAAAAAAAAAAACQAAAAAAAAAAw4g3QAAAAAAAAAAAAAAAAAA//tQxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
 let audioUnlocked = false;
 
-let primedAudio = null; // iOS-unlocked Audio element, reused for first para
+let persistentAudio = null;    // single Audio element reused for all paragraphs (iOS trust)
 
 function unlockAudio() {
   if (audioUnlocked) return;
-  const a = new Audio(SILENT_MP3);
-  a.play().then(() => {
+  // Create a silent looping keepalive Audio element during the user gesture.
+  // This keeps the iOS audio session active for the entire narration session.
+  // Any new Audio().play() call is trusted while this session is alive.
+  persistentAudio = new Audio(SILENT_MP3);
+  persistentAudio.loop = true;  // loop silently to keep session alive
+  persistentAudio.volume = 0.001; // near-silent but iOS won't suspend as 'background-only'
+  persistentAudio.play().then(() => {
     audioUnlocked = true;
   }).catch(() => {});
-  // Keep a reference — we'll reuse this element for the first real paragraph
-  // so iOS doesn't revoke playback permission across await boundaries
-  primedAudio = a;
+  // Persistent SFX element — created in same gesture, src-swapped per effect on iOS
+  sfxAudio = new Audio(SILENT_MP3);
+  sfxAudio.volume = sfxVolume;
+  sfxAudio.play().then(() => { sfxAudio.pause(); sfxAudio.currentTime = 0; }).catch(() => {});
 }
 
 async function startNarration() {
   unlockAudio(); // must be called within user gesture, before any await
+
+  // Force-reset any stuck state from a previous attempt (e.g. iOS suspended fetch)
+  narrationLocked  = false;
+  if (narrationAudio) { narrationAudio.pause(); narrationAudio = null; }
+  cancelAnimationFrame(narrationRAF);
+  // Ensure keepalive is running (restart if paused from stopNarration)
+  if (!persistentAudio) {
+    unlockAudio();
+  } else if (persistentAudio.paused) {
+    persistentAudio.play().catch(() => {});
+    if (sfxAudio && sfxAudio.paused && !sfxActive) {
+      sfxAudio.play().then(() => { sfxAudio.pause(); }).catch(() => {});
+    }
+  }
+
   narrationParaIds = getNarrableParagraphs();
   if (!narrationParaIds.length) return;
 
   narrationActive  = true;
   narrationIndex   = 0;
 
-  document.getElementById('narration-overlay').classList.add('active');
+  const overlayEl = document.getElementById('narration-overlay');
+  overlayEl.style.display = ''; // clear inline style set in HTML
+  overlayEl.classList.add('active');
   document.getElementById('narration-progress').style.display = 'block';
   document.getElementById('narration-controls').style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -247,10 +289,116 @@ async function startNarration() {
   await narrationGoTo(0);
 }
 
+// ── iOS visibility / tap-to-continue ────────────────────
+if (IS_IOS) {
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      // Page just became visible again
+      if (narrationActive && narrationPlaying) {
+        // Re-establish audio session with fresh gesture opportunity
+        showIosTapToContinue();
+      }
+    }
+  });
+}
+
+function showIosTapToContinue() {
+  // Don't show if already visible
+  if (document.getElementById('ios-tap-overlay')) return;
+  const el = document.createElement('div');
+  el.id = 'ios-tap-overlay';
+  el.style.cssText = [
+    'position:fixed', 'inset:0', 'z-index:9999',
+    'display:flex', 'align-items:center', 'justify-content:center',
+    'background:rgba(6,22,25,0.85)', 'backdrop-filter:blur(8px)',
+    'cursor:pointer'
+  ].join(';');
+  el.innerHTML = '<div style="text-align:center;pointer-events:none">'
+    + '<div style="font-size:2.5rem;margin-bottom:16px">▶</div>'
+    + '<div style="font-family:var(--mono);font-size:0.72rem;letter-spacing:0.22em;'
+    + 'text-transform:uppercase;color:var(--ivory)">Tap to continue</div>'
+    + '</div>';
+  el.addEventListener('click', () => {
+    el.remove();
+    // Fresh gesture — re-establish iOS audio session
+    if (persistentAudio) {
+      persistentAudio.play().catch(() => {});
+    }
+    if (narrationAudio && narrationPlaying) {
+      narrationAudio.play().catch(() => {});
+    }
+  });
+  document.body.appendChild(el);
+}
+
+// ── iOS visibility resume ────────────────────────────────
+// When screen locks/page backgrounds mid-narration, iOS suspends the audio session.
+// On return, we show a tap-to-continue prompt to re-establish the session via user gesture.
+if (IS_IOS) {
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && narrationActive && narrationPlaying) {
+      // Page became visible while narration should be playing — session may be suspended
+      // Small delay to let iOS settle, then check if audio is actually playing
+      setTimeout(() => {
+        if (!narrationActive) return;
+        const audio = narrationAudio;
+        if (!audio || !audio.paused) return; // already playing fine
+        // Show tap-to-continue overlay
+        showIosTapPrompt();
+      }, 300);
+    }
+  });
+}
+
+function showIosTapPrompt() {
+  // Only show if not already visible
+  if (document.getElementById('ios-tap-prompt')) return;
+  const el = document.createElement('div');
+  el.id = 'ios-tap-prompt';
+  el.style.cssText = [
+    'position:fixed;inset:0;z-index:9999',
+    'display:flex;align-items:center;justify-content:center',
+    'background:rgba(6,22,25,0.75);backdrop-filter:blur(8px)',
+    'cursor:pointer',
+  ].join(';');
+  el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;padding:0 32px">'
+    + '<div style="font-size:2rem">▶</div>'
+    + '<div style="font-family:var(--mono);font-size:0.72rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--ivory)">Tap to continue</div>'
+    + '</div>';
+  el.addEventListener('click', () => {
+    el.remove();
+    // Re-establish audio session with fresh gesture
+    if (persistentAudio) {
+      persistentAudio.volume = 0.001;
+      persistentAudio.play().catch(() => {});
+    }
+    // Resume narration audio
+    if (narrationAudio && narrationAudio.paused && narrationPlaying) {
+      narrationAudio.play().catch(() => {
+        // Session still not ready — retry narrationGoTo from current position
+        narrationGoTo(narrationIndex);
+      });
+    } else if (narrationActive) {
+      // Audio element may be gone — restart from current index
+      narrationGoTo(narrationIndex);
+    }
+  }, { once: true });
+  document.body.appendChild(el);
+}
+
 function stopNarration() {
   narrationActive  = false;
   narrationPlaying = false;
-  if (narrationAudio) { narrationAudio.pause(); narrationAudio = null; }
+  narrationLocked  = false; // always reset — prevents stuck state on re-open
+  if (narrationAudio) {
+    narrationAudio.pause();
+    narrationAudio = null;
+  }
+  // Stop the silent keepalive when narration session ends
+  if (persistentAudio) {
+    persistentAudio.pause();
+    // Don't null it — reuse on next startNarration
+  }
   cancelAnimationFrame(narrationRAF);
 
   document.getElementById('narration-overlay').classList.remove('active');
@@ -261,6 +409,7 @@ function stopNarration() {
   narrationThreadOpen = false;
   document.body.style.overflow = '';
   sfxTriggers = []; sfxFired = new Set();
+  sfxStopActive();
   stopAmbientNow();
   document.getElementById('narration-comment-hint').classList.remove('visible');
 }
@@ -344,9 +493,8 @@ async function narrationGoTo(index) {
   narrationIndex = index;
   if (index >= narrationParaIds.length) {
     narrationLocked = false;
-    stopNarration();
-    // Chapter finished naturally — invite to podcast
-    setTimeout(() => showNarrationEndPrompt(), 800);
+    // Chapter finished — show end card INSIDE the overlay, don't close it
+    showNarrationChapterEnd();
     return;
   }
 
@@ -356,8 +504,7 @@ async function narrationGoTo(index) {
   // Counter — chapter · scene · paragraph progress
   const scene  = getSceneForPara(pid);
   const isCode = !!document.getElementById(pid)?.closest('.code-block');
-  document.getElementById('narration-overlay').classList.toggle('code-mode', isCode);
-  const chapterNames = { 1:'Assembly', 2:'The Startend', 3:'Doubt and Certainty' };
+  // Note: code-mode class applied later, after scene pause, to avoid flicker
   const chName = chapterNames[currentChapter] || `Chapter ${currentChapter}`;
   document.getElementById('narration-counter').innerHTML =
     `<span style="color:var(--rose);letter-spacing:0.22em">CH. ${currentChapter}</span>`
@@ -385,7 +532,7 @@ async function narrationGoTo(index) {
   if (scene !== prevScene) {
     const nextCacheKey = READER_VERSION + '|' + pid + '|'; // prefix check
     const isCached = Object.keys(narrationCache).some(k => k.startsWith(nextCacheKey));
-    const pauseMs = index === 0 ? 1200 : (isCached ? 800 : 1800);
+    const pauseMs = index === 0 ? 800 : (isCached ? 400 : 800);
     textEl.innerHTML = `<span class="narration-loading" style="opacity:0.25">✦</span>`;
     await new Promise(r => setTimeout(r, pauseMs));
     if (narrationIndex !== index) { narrationLocked = false; return; }
@@ -402,7 +549,23 @@ async function narrationGoTo(index) {
   let rawText = getRawText(pid) || text;
   if (!text) { narrationLocked = false; await narrationGoTo(index + 1); return; }
 
-  // Declare isTranscriptPara early — used by SFX parser and prefix strip below
+  /// Normalise newlines to spaces in TTS text only.
+  // ElevenLabs adds unmeasured silence for newlines that the alignment timestamps
+  // do not reflect, causing karaoke to run ahead on multi-line paragraphs.
+  // rawText keeps newlines so buildDisplayTokens still emits br tokens.
+  text = text.split('\n').join(' ').replace(/  +/g, ' ').trim();
+
+  // Epigraph: double all pause characters for a slower, more deliberate delivery
+  if (isEpigraphPara(pid)) {
+    text = text
+      .replace(/\.\s/g,  '.   ')
+      .replace(/\?\s/g,  '?   ')
+      .replace(/!\s/g,   '!   ')
+      .replace(/…/g,     '…   ')
+      .replace(/,\s/g,   ',   ');
+  }
+
+    // Declare isTranscriptPara early — used by SFX parser and prefix strip below
   const paraEl2 = document.getElementById(pid);
   const isTranscriptPara = paraEl2?.dataset.transcript === 'true';
 
@@ -428,11 +591,14 @@ async function narrationGoTo(index) {
     return { out: out.trim(), triggers };
   }
 
-  const sfxParsed = parseSfxTags(text);
-  text    = sfxParsed.out;
+  // Parse SFX tags from rawText (data-raw) — it always has original text.
+  // getParaText reads innerText which no longer has [#tag] since renderChapter strips them.
+  // rawText comes from getRawText(data-raw) which is set before any stripping.
+  const sfxParsed = parseSfxTags(rawText);
   sfxTriggers = sfxParsed.triggers;
-  // Strip tags from rawText too (keep same word positions)
-  rawText = rawText.replace(SFX_TAG_RE, '').trim();
+  // Strip tags from both text and rawText before TTS/display
+  rawText = sfxParsed.out;
+  text    = text.replace(SFX_TAG_RE, '').trim();
 
   // Strip ALL-CAPS SPEAKER: prefix ONLY for transcript-flagged paragraphs.
   // Gated on isTranscriptPara to avoid stripping headings like PARTICIPANTS:
@@ -457,8 +623,9 @@ async function narrationGoTo(index) {
     if (tm) transcriptSpeakerLabel = tm[1];
   }
 
-  // Stop previous audio
+  // Stop previous audio and any active SFX
   if (narrationAudio) { narrationAudio.pause(); narrationAudio = null; }
+  sfxStopActive();
   cancelAnimationFrame(narrationRAF);
   narrationPlaying = false;
 
@@ -482,31 +649,6 @@ async function narrationGoTo(index) {
     // 2. Pattern detection fallback
     if (!speakerVoiceId) speakerVoiceId = detectSpeakerVoice(rawText);
 
-    if (!speakerVoiceId && /["\u201c\u201d]/.test(rawText)) {
-      const SAID_RE = /\b(?:said|asked|replied|whispered|continued|added|stated|called|announced|noted|insisted|scoffed|relayed|declared|muttered)\b/i;
-      if (/\bshe\b/i.test(rawText) && SAID_RE.test(rawText)) {
-        speakerVoiceId = narrationLastFemaleSpeaker;
-      } else if (/\bhe\b/i.test(rawText) && SAID_RE.test(rawText)) {
-        speakerVoiceId = narrationLastMaleSpeaker;
-      } else if (/^["\u201c\u201d]/.test(rawText.trim()) && !SAID_RE.test(rawText)) {
-        speakerVoiceId = narrationLastSpeaker;
-      }
-      if (!speakerVoiceId && /^CIX\s+WEAVER:/i.test(rawText.trim())) {
-        const gary = wikiIndex['gary'] || wikiIndex['weaver'] || wikiIndex['cix weaver'];
-        if (gary && gary.voice_id) speakerVoiceId = gary.voice_id;
-      }
-    }
-
-    if (speakerVoiceId) {
-      const femaleVoices = new Set(Object.values(wikiIndex)
-        .filter(e => ['astrid-vilde','ionie-jia','joana-perera','sarah-farley','kirsten-strand',
-          'lena-hague','stacey-kiran','eva-bellamy','lysanne-sutherland','alani-jimenez',
-          'ines-martel','nabiha-al-fahim','læsa'].includes(e.id))
-        .map(e => e.voice_id).filter(Boolean));
-      if (femaleVoices.has(speakerVoiceId)) narrationLastFemaleSpeaker = speakerVoiceId;
-      else narrationLastMaleSpeaker = speakerVoiceId;
-      if (detectSpeakerVoice(rawText)) narrationLastSpeaker = speakerVoiceId;
-    }
   } // end multiVoiceEnabled
 
   // ── Segment-based fetch: narrator for prose, character for quoted dialogue ──
@@ -516,7 +658,9 @@ async function narrationGoTo(index) {
   if (isTranscriptPara && speakerVoiceId) {
     segments = [{ text, voiceId: speakerVoiceId }];
   } else {
-    segments = buildSegments(text, speakerVoiceId, innerVoiceId);
+    // buildSegments needs rawText (has *asterisks* intact) to detect inner-voice
+    // italic spans. It already strips asterisks from ttsText before sending to TTS.
+    segments = buildSegments(rawText, speakerVoiceId, innerVoiceId);
   }
   const isStitched = segments.length > 1;
   const cacheKey   = READER_VERSION + '|' + pid + '|' + segments.map(s => (s.voiceId||'n')+':'+s.text.slice(0,20)).join('|');
@@ -535,35 +679,41 @@ async function narrationGoTo(index) {
       textEl.innerHTML = `<span class="narration-loading">the stone is listening…</span>`;
       loadingShown = true;
     }
+    // Fetch with 25s timeout — prevents iOS Safari from hanging when the
+    // browser is backgrounded or the screen locks mid-fetch.
+    function narrateFetch(body) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 12000);
+      console.log('[narrate] fetching', body.text ? body.text.slice(0,40) : '?');
+      return fetch(NARRATE_URL, {
+        method: 'POST', signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY },
+        body: JSON.stringify(body)
+      }).then(r => {
+        console.log('[narrate] response', r.status);
+        return r.json();
+      }).catch(e => {
+        console.warn('[narrate] fetch error:', e.name, e.message);
+        throw e;
+      }).finally(() => clearTimeout(t));
+    }
+
     try {
       if (segments.length === 1) {
-        // Single segment — normal fetch
         const seg = segments[0];
-        const res = await fetch(NARRATE_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
-          body: JSON.stringify({ text: seg.text, ...(seg.voiceId ? { voiceId: seg.voiceId } : {}) })
-        });
-        data = await res.json();
+        data = await narrateFetch(Object.assign({ text: seg.text }, seg.voiceId ? { voiceId: seg.voiceId } : {}));
         if (data.error) throw new Error(data.error);
       } else {
         // Multiple segments — fetch each and stitch alignment
-        const results = await Promise.all(segments.map(seg =>
-          fetch(NARRATE_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
-            body: JSON.stringify({ text: seg.text, ...(seg.voiceId ? { voiceId: seg.voiceId } : {}) })
-          }).then(r => r.json()).catch(e => ({ error: e.message }))
-        ));
-        // If any segment failed, fall back to narrator-only for whole paragraph
+        const results = await Promise.all(
+          segments.map(seg =>
+            narrateFetch(Object.assign({ text: seg.text }, seg.voiceId ? { voiceId: seg.voiceId } : {}))
+              .catch(e => ({ error: e.message }))
+          )
+        );
         const anyFailed = results.some(r => r.error);
         if (anyFailed) {
-          const res = await fetch(NARRATE_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
-            body: JSON.stringify({ text })
-          });
-          data = await res.json();
+          data = await narrateFetch({ text });
         } else {
           data = stitchSegments(results);
         }
@@ -572,14 +722,22 @@ async function narrationGoTo(index) {
       cacheSet(cacheKey, data);
     } catch(e) {
       if (loadingTimer) clearTimeout(loadingTimer);
-      textEl.innerHTML = `<span class="narration-loading">Could not load audio — ${e.message}</span>`;
-      narrationLocked = false;
+      console.warn('[narrate] caught:', e.name, e.message);
+      const isTimeout = e.name === 'AbortError' || e.message.includes('abort') || e.message.includes('abort');
+      narrationLocked = false; // always unlock on error
+      textEl.innerHTML = `<div style="text-align:center;padding:20px 0">
+          <div style="font-family:var(--mono);font-size:0.65rem;letter-spacing:0.18em;color:var(--muted);margin-bottom:20px">${isTimeout ? '⟳ Connection timed out' : '⚠ Could not load audio'}</div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <button onclick="narrationGoTo(${index})" style="background:rgba(233,74,124,0.12);border:1px solid var(--rose);color:var(--rose);font-family:var(--mono);font-size:0.65rem;letter-spacing:0.15em;padding:10px 20px;cursor:pointer;border-radius:2px">↺ Retry</button>
+            <button onclick="narrationGoTo(${index + 1})" style="background:transparent;border:1px solid var(--line-strong);color:var(--muted);font-family:var(--mono);font-size:0.65rem;letter-spacing:0.12em;padding:10px 16px;cursor:pointer;border-radius:2px">Skip →</button>
+            <button onclick="stopNarration()" style="background:transparent;border:none;color:var(--muted);font-family:var(--mono);font-size:0.65rem;padding:10px 12px;cursor:pointer">✕</button>
+          </div>
+        </div>`;
       return;
     }
     if (loadingTimer) clearTimeout(loadingTimer);
   }
 
-  narrationAlignment = data.alignment;
 
   // For stitched paragraphs, build word timings using per-segment alignment
   // Narrator segments use their own accurate timestamps
@@ -807,6 +965,9 @@ async function narrationGoTo(index) {
       <style>.tx-dot{} @keyframes txPulse{0%,100%{opacity:0.4;transform:scale(0.85)}50%{opacity:1;transform:scale(1.2)}}</style>`
     : '';
 
+  // Apply code-mode now — after any scene pause, so overlay doesn't flicker mid-transition
+  document.getElementById('narration-overlay').classList.toggle('code-mode', isCode);
+
   if (isCode) {
     textEl.innerHTML = `<div style="font-family:var(--mono);font-size:0.62rem;letter-spacing:0.35em;color:var(--teal-soft);margin-bottom:28px;text-align:center;opacity:0.7">◉ TRANSMISSION</div>`
       + displayTokens.map(t => `<span class="nw" id="nw-${t.idx}">${escHtml(t.text)}</span> `).join('');
@@ -818,43 +979,141 @@ async function narrationGoTo(index) {
     }).join('');
   }
 
-  // Create audio from base64
-  const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
-  const audioUrl  = URL.createObjectURL(audioBlob);
-
-  // iOS fix: reuse the already-gesture-unlocked Audio element for first play.
-  // Creating a new Audio() after async awaits loses iOS playback permission.
-  if (primedAudio) {
-    narrationAudio = primedAudio;
-    primedAudio = null;
-    narrationAudio.src = audioUrl;
-    narrationAudio.load();
-  } else {
-    narrationAudio = new Audio(audioUrl);
-  }
-  narrationPlaying = true;
-
-  document.getElementById('nc-play-btn').textContent = '⏸ Pause';
-
-  // Prefetch next paragraph quietly
   prefetchNext(index + 1);
+  narrationLocked = false;
+  narrationPlaying = true;
+  document.getElementById('nc-play-btn').innerHTML = '<span class="nc-icon">\u23f8</span><span class="nc-lbl">Pause</span>';
 
-  // Start playback + karaoke sync
-  narrationLocked = false; // unlock — audio is playing, navigation is safe again
-  narrationAudio.play().catch(e => console.warn('Audio play failed:', e));
-  narrationAudio.addEventListener('ended', () => {
+  // Guard: only ONE advance per paragraph
+  let advanced = false;
+  function advance() {
+    if (advanced) return;
+    advanced = true;
     cancelAnimationFrame(narrationRAF);
-    URL.revokeObjectURL(audioUrl); // free blob memory
-    // Mark all words as spoken cleanly on audio end (fixes last-word blip)
+    if (narrationAudio) narrationAudio.removeEventListener('timeupdate', updateKaraoke);
     narrationCurrentWords.forEach(w => {
       const el = document.getElementById('nw-' + w.idx);
-      if (el) el.className = `nw ${w.fmt || ''} spoken`;
+      if (el) el.className = 'nw ' + (w.fmt || '') + ' spoken';
     });
-    setTimeout(() => narrationGoTo(index + 1), 1200);
-  });
+    setTimeout(() => { if (narrationActive) narrationGoTo(index + 1); }, 250);
+  }
 
-  function syncWords() {
-    if (!narrationAudio || narrationAudio.paused) return;
+  if (IS_IOS && isStitched && data.segmentMeta && data.segmentMeta.length > 1) {
+    // iOS: play each segment as a separate Audio element to avoid
+    // MP3 frame-boundary currentTime reset in concatenated blobs.
+    const fullBytes = atob(data.audio);
+    const segMeta = data.segmentMeta;
+    let segTimeBase = 0;
+
+    function playSegment(si) {
+      if (!narrationActive || advanced) return;
+      if (si >= segMeta.length) { advance(); return; }
+      const meta = segMeta[si];
+      const bytes = fullBytes.slice(meta.byteStart, meta.byteEnd);
+      const arr = new Uint8Array(bytes.length);
+      for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+      const url = URL.createObjectURL(new Blob([arr], { type: 'audio/mpeg' }));
+      const audio = new Audio(url);
+      narrationAudio = audio;
+
+      const base = segTimeBase;
+      const lastSegEnds = segMeta[segMeta.length-1].alignment && segMeta[segMeta.length-1].alignment.character_end_times_seconds;
+      const totalDur = segMeta[segMeta.length-1].timeOffset + (lastSegEnds && lastSegEnds.length ? lastSegEnds[lastSegEnds.length-1] : 0);
+
+      function segUpdate() {
+        if (!narrationActive || advanced || narrationAudio !== audio) return;
+        if (audio.paused) return;
+        const t = audio.currentTime + base;
+        document.getElementById('narration-progress-bar').style.width = (totalDur > 0 ? Math.min(100, t/totalDur*100) : 0) + '%';
+        const LOOKAHEAD = 0.08;
+        let ci = -1;
+        for (let i = 0; i < narrationCurrentWords.length; i++) {
+          if (narrationCurrentWords[i].start <= t + LOOKAHEAD) ci = i;
+          else break;
+        }
+        narrationCurrentWords.forEach((w, i) => {
+          const el = document.getElementById('nw-' + w.idx);
+          if (!el) return;
+          const isCh = !!getCharVoiceForWord(i);
+          if (i < ci)       el.className = 'nw '+(w.fmt||'')+' spoken'  +(isCh?' char-voice':'');
+          else if (i === ci) el.className = 'nw '+(w.fmt||'')+' current' +(isCh?' char-voice':'');
+          else               el.className = 'nw '+(w.fmt||'')            +(isCh?' char-voice':'');
+        });
+        const cv = getCharVoiceForWord(ci);
+        if (cv) { const e2 = Object.values(wikiById).find(e => e.voice_id===cv); if(e2){charLabel.textContent='\u25cf '+e2.name.split(' ')[0];charLabel.style.opacity='1';} }
+        else charLabel.style.opacity = '0';
+        for (const tr of sfxTriggers) { const k=tr.afterWordIdx+':'+tr.tag; if(!sfxFired.has(k)&&ci>tr.afterWordIdx){sfxFired.add(k);sfxPlay(tr.tag);} }
+      }
+
+      audio.addEventListener('timeupdate', segUpdate);
+      (function raf() { if (!narrationActive||advanced||narrationAudio!==audio) return; segUpdate(); narrationRAF=requestAnimationFrame(raf); })();
+
+      audio.addEventListener('ended', () => {
+        cancelAnimationFrame(narrationRAF);
+        audio.removeEventListener('timeupdate', segUpdate);
+        URL.revokeObjectURL(url);
+        const se = meta.alignment && meta.alignment.character_end_times_seconds;
+        segTimeBase += se && se.length ? se[se.length-1] : (meta.byteEnd-meta.byteStart)/16000;
+        playSegment(si + 1);
+      });
+      audio.play().catch(e => {
+        console.warn('[seg'+si+'] play:', e.name);
+        if (IS_IOS && e.name === 'NotAllowedError') showIosTapPrompt();
+      });
+      // Proactive check: if audio hasn't started after 1.5s and user hasn't paused
+      if (IS_IOS) setTimeout(() => {
+        if (!narrationActive || advanced) return;
+        const btn = document.getElementById('nc-play-btn');
+        const showingPause = btn && btn.querySelector('.nc-icon') && btn.querySelector('.nc-icon').textContent === '⏸';
+        if (audio.paused && showingPause) showIosTapPrompt();
+      }, 1500);
+    }
+    playSegment(0);
+
+  } else {
+    // Desktop/single-segment or non-stitched: standard blob playback
+    const audioBlob = base64ToBlob(data.audio, 'audio/mpeg');
+    const audioUrl  = URL.createObjectURL(audioBlob);
+    narrationAudio  = new Audio(audioUrl);
+    narrationAudio.addEventListener('timeupdate', updateKaraoke);
+    narrationAudio.addEventListener('ended', () => { URL.revokeObjectURL(audioUrl); advance(); });
+
+    // Stall guard: iOS sometimes doesn't fire 'ended' when audio finishes.
+    // Poll duration vs currentTime — only triggers if truly at end, respects user pause.
+    const stallAudio = narrationAudio;
+    function stallCheck() {
+      if (!narrationActive || advanced) return;
+      if (stallAudio !== narrationAudio) return;
+      if (!narrationPlaying) { setTimeout(stallCheck, 1000); return; } // user paused — wait
+      const dur = stallAudio.duration;
+      const ct  = stallAudio.currentTime;
+      if (!isNaN(dur) && dur > 0 && ct >= dur - 0.15) { advance(); return; }
+      setTimeout(stallCheck, 500);
+    }
+    setTimeout(stallCheck, 1000);
+    narrationAudio.addEventListener('pause', () => {
+      if (!narrationPlaying || !narrationActive || advanced) return;
+      setTimeout(() => {
+        if (!narrationPlaying || !narrationActive || advanced) return;
+        if (narrationAudio && narrationAudio.paused) narrationAudio.play().catch(() => {});
+      }, 300);
+    });
+    narrationAudio.play().catch(e => {
+      console.warn('[narrate] play:', e.name);
+      if (IS_IOS && e.name === 'NotAllowedError') showIosTapPrompt();
+    });
+    // Proactive check for iOS: if audio hasn't started after 1.5s and user hasn't paused
+    if (IS_IOS) setTimeout(() => {
+      if (!narrationActive || advanced) return;
+      const btn = document.getElementById('nc-play-btn');
+      const showingPause = btn && btn.querySelector('.nc-icon') && btn.querySelector('.nc-icon').textContent === '⏸';
+      if (narrationAudio && narrationAudio.paused && showingPause) showIosTapPrompt();
+    }, 1500);
+  }
+
+  function updateKaraoke() {
+    if (!narrationAudio || !narrationActive) return;
+    if (narrationAudio.paused) return;
     const t   = narrationAudio.currentTime;
     const dur = narrationAudio.duration || 9999;
 
@@ -943,6 +1202,10 @@ async function narrationGoTo(index) {
       });
     }
 
+  }
+  function syncWords() {
+    if (!narrationAudio || !narrationActive) return;
+    updateKaraoke();
     narrationRAF = requestAnimationFrame(syncWords);
   }
   narrationRAF = requestAnimationFrame(syncWords);
@@ -953,7 +1216,7 @@ function narrationTogglePlay() {
   if (narrationAudio.paused) {
     narrationAudio.play().catch(e => console.warn('Audio resume failed:', e));
     narrationPlaying = true;
-    document.getElementById('nc-play-btn').textContent = '⏸ Pause';
+    document.getElementById('nc-play-btn').innerHTML = '<span class="nc-icon">⏸</span><span class="nc-lbl">Pause</span>';
     // Resume karaoke sync using stored word timings
     function resumeSync() {
       if (!narrationAudio || narrationAudio.paused) return;
@@ -981,7 +1244,7 @@ function narrationTogglePlay() {
     narrationAudio.pause();
     narrationPlaying = false;
     cancelAnimationFrame(narrationRAF);
-    document.getElementById('nc-play-btn').textContent = '▶ Play';
+    document.getElementById('nc-play-btn').innerHTML = '<span class="nc-icon">▶</span><span class="nc-lbl">Play</span>';
   }
 }
 
@@ -997,12 +1260,15 @@ function narrationNext() {
 
 async function startNarrationFrom(pid) {
   unlockAudio(); // must be within user gesture
+  narrationLocked = false; // reset any stuck state
   narrationParaIds = getNarrableParagraphs();
   const idx = narrationParaIds.indexOf(pid);
   narrationIndex = idx >= 0 ? idx : 0;
   narrationActive = true;
 
-  document.getElementById('narration-overlay').classList.add('active');
+  const overlayEl2 = document.getElementById('narration-overlay');
+  overlayEl2.style.display = ''; // clear inline style
+  overlayEl2.classList.add('active');
   document.getElementById('narration-progress').style.display = 'block';
   document.getElementById('narration-controls').style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -1102,7 +1368,19 @@ async function prefetchNext(index) {
   let text    = getParaText(pid);
   let rawText = getRawText(pid) || text;
   if (!text) return;
-  // Strip SFX tags for cache key consistency with narrationGoTo
+  // Normalise newlines (matches narrationGoTo for cache key consistency)
+  text = text.split('\n').join(' ').replace(/  +/g, ' ').trim();
+
+  // Epigraph: double all pause characters for a slower, more deliberate delivery
+  if (isEpigraphPara(pid)) {
+    text = text
+      .replace(/\.\s/g,  '.   ')
+      .replace(/\?\s/g,  '?   ')
+      .replace(/!\s/g,   '!   ')
+      .replace(/…/g,     '…   ')
+      .replace(/,\s/g,   ',   ');
+  }
+    // Strip SFX tags for cache key consistency with narrationGoTo
   text    = text.replace(/\[#[a-z0-9_-]+\]/g, '').trim();
   rawText = rawText.replace(/\[#[a-z0-9_-]+\]/g, '').trim();
   // Strip ALL-CAPS SPEAKER: prefix (same as narrationGoTo) for cache key match
@@ -1120,21 +1398,24 @@ async function prefetchNext(index) {
   prefetchInFlight.add(cacheKey);
   try {
     let data;
-    if (segments.length === 1) {
-      const seg = segments[0];
+    const pfFetch = async (body) => {
+      const ctrl = new AbortController();
+      setTimeout(() => ctrl.abort(), 20000);
       const res = await fetch(NARRATE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
-        body: JSON.stringify({ text: seg.text, ...(seg.voiceId ? { voiceId: seg.voiceId } : {}) })
+        body: JSON.stringify(body),
+        signal: ctrl.signal,
       });
-      data = await res.json();
+      return res.json();
+    };
+    if (segments.length === 1) {
+      const seg = segments[0];
+      data = await pfFetch({ text: seg.text, ...(seg.voiceId ? { voiceId: seg.voiceId } : {}) });
     } else {
       const results = await Promise.all(segments.map(seg =>
-        fetch(NARRATE_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPA_KEY}` },
-          body: JSON.stringify({ text: seg.text, ...(seg.voiceId ? { voiceId: seg.voiceId } : {}) })
-        }).then(r => r.json()).catch(e => ({ error: e.message }))
+        pfFetch({ text: seg.text, ...(seg.voiceId ? { voiceId: seg.voiceId } : {}) })
+          .catch(e => ({ error: e.message }))
       ));
       data = results.some(r => r.error) ? null : stitchSegments(results);
     }
@@ -1174,15 +1455,13 @@ function buildWordTimings(text, alignment) {
 
   const words = [];
   let word = '', wordStart = 0, wordEnd = 0;
-  let inTag = false;
   let pendingBreak = false; // track \n for line break display
 
   for (let i = 0; i < chars.length; i++) {
     const c = chars[i];
 
-    if (c === '<') { inTag = true; continue; }
-    if (c === '>') { inTag = false; continue; }
-    if (inTag) continue;
+    // Note: no inTag skipping — we don't use SSML and transmission text
+    // has literal < > that should be treated as regular characters.
 
     if (c === '\n') {
       if (word) {
@@ -1246,15 +1525,13 @@ let wikiById         = {};   // id → entry  (for speaker tag lookups)
 let commentCounts    = {};   // paragraphId → count
 
 // ── Chapters — loaded from data/chapters/chapter-N.json ──
-const CHAPTER_COUNT = 3; // increment as you add files
+const CHAPTER_COUNT = 4;
+const chapterNames  = { 1:'Assembly', 2:'The Startend', 3:'Doubt and Certainty', 4:'The Grid' }; // increment as you add files
 
 async function loadChapter(n) {
   currentChapter = n;
   currentParaId  = null;
   cacheClear();
-  narrationLastMaleSpeaker   = null;
-  narrationLastFemaleSpeaker = null;
-  narrationLastSpeaker       = null;
   renderChapterPills();
   closeSidebar();
 
@@ -1271,7 +1548,43 @@ async function loadChapter(n) {
   }
 
   await loadCommentCounts(n);
+  preloadChapterSfx(ch);
   renderChapter(ch);
+  // Inject end card into reader (reading mode — narration has its own)
+  injectReaderEndCard(n, ch.title);
+}
+
+function continueToNextChapter(n) {
+  if (narrationActive) {
+    // Narration mode: load chapter then start narration automatically
+    stopNarration();
+    loadChapter(n).then(() => startNarration());
+  } else {
+    // Reading mode: just load the chapter
+    loadChapter(n);
+  }
+}
+
+function injectReaderEndCard(n, chapterTitle) {
+  const el = document.getElementById('chapter-content');
+  if (!el) return;
+  // Remove any existing end card first (narration may have added one already)
+  el.querySelectorAll('.chapter-end-card').forEach(c => c.remove());
+  const hasNext = n < CHAPTER_COUNT;
+  const card = document.createElement('div');
+  card.className = 'chapter-end-card visible';
+  card.style.cssText = 'margin: 80px auto 40px; text-align:center;';
+  card.innerHTML = `
+    <div class="cec-label">Chapter ${n} complete</div>
+    <div class="cec-title">${chapterTitle || ''}</div>
+    <div class="cec-sub">Vera and Milo are ready to discuss it.</div>
+    <div class="cec-actions">
+      <button class="cec-btn secondary" onclick="openPodcastPanel()">🎙 Decoded — AI podcast review</button>
+      ${hasNext ? `<button class="cec-btn primary" onclick="continueToNextChapter(${n + 1})">Continue to Chapter ${n + 1} →</button>` : `
+      <a href="index.html#buy" class="cec-btn primary">Buy the eBook →</a>
+      <a href="https://www.goodreads.com/book/show/251501817-the-unfolding" class="cec-btn secondary" target="_blank" rel="noopener">★ Add on Goodreads</a>`}
+    </div>`;
+  el.appendChild(card);
 }
 
 function renderChapterPills() {
@@ -1389,6 +1702,20 @@ async function signOut() {
   await db.auth.signOut();
 }
 
+function preloadChapterSfx(ch) {
+  // Scan all paragraph texts for [#tag] and preload them before narration starts
+  const SFX_SCAN_RE = /\[#([a-z0-9_-]+)\]/g;
+  const tags = new Set();
+  (ch.sections || []).forEach(sec => {
+    (sec.paragraphs || []).forEach(p => {
+      const t = typeof p === 'string' ? p : (p.text || '');
+      for (const m of t.matchAll(SFX_SCAN_RE)) tags.add(m[1]);
+    });
+  });
+  tags.forEach(tag => sfxLoad(tag));
+  if (tags.size) console.log('[SFX] Preloading ' + tags.size + ' effect(s):', [...tags].join(', '));
+}
+
 function renderChapter(ch) {
   const el = document.getElementById('chapter-content');
 
@@ -1396,9 +1723,19 @@ function renderChapter(ch) {
   let sceneIndex = 1;
   let prevSecType = null; // track previous section type for scene transitions
   let html = `
-    <div class="ch-eyebrow">Chapter ${currentChapter}</div>
-    <h1 class="ch-title">${ch.title}</h1>
-    <p class="ch-subtitle">${ch.subtitle}</p>`;
+    <div class="ch-hero">
+      <div class="ch-eyebrow">Chapter ${currentChapter}</div>
+      <h1 class="ch-title">${ch.title}</h1>
+      <p class="ch-subtitle">${ch.subtitle}</p>
+      <div class="ch-narrate-wrap">
+        <button class="ch-narrate-btn ch-narrate-btn--icon" onclick="startNarration()" id="ch-narrate-btn" aria-label="Start narration">
+          <span class="ch-narrate-ring"></span>
+          <span class="ch-narrate-ring ch-narrate-ring--2"></span>
+          <span class="ch-narrate-icon">▶</span>
+        </button>
+        <p class="ch-narrate-hint">Immersive · Full cast</p>
+      </div>
+    </div>`;
 
   ch.sections.forEach((sec) => {
 
@@ -1436,7 +1773,8 @@ function renderChapter(ch) {
         const innerVoiceTag = typeof paraItem === 'object' ? paraItem.inner_voice || null : null;
         const pid   = `ch${currentChapter}-p${paraIndex}`;
         const count = commentCounts[pid] || 0;
-        const linked = autoLink(parseMarkup(text));
+        const displayText = text.replace(/\[#[a-z0-9_-]+\]/g, '').trim();
+        const linked = autoLink(parseMarkup(displayText));
         paraIndex++;
 
         // Level 1 (system): all-caps e.g. **SOL SYSTEM**, **YREUS SYSTEM**, **MAIREE**
@@ -1509,7 +1847,8 @@ function renderChapter(ch) {
         const innerVoiceTag = typeof paraItem === 'object' ? paraItem.inner_voice || null : null;
         const pid   = `ch${currentChapter}-p${paraIndex}`;
         const count = commentCounts[pid] || 0;
-        const linked = autoLink(parseMarkup(text));
+        const displayText = text.replace(/\[#[a-z0-9_-]+\]/g, '').trim();
+        const linked = autoLink(parseMarkup(displayText));
         paraIndex++;
         return `
           <p class="para epigraph-para${count > 0 ? ' has-comments' : ''}"
@@ -1558,7 +1897,7 @@ function renderChapter(ch) {
               <button class="pt-btn" onclick="event.stopPropagation();openThread('${pid}')">💬 Thread${count > 0 ? ` (${count})` : ''}</button>
               <button class="pt-btn pt-narrate" onclick="event.stopPropagation();startNarrationFrom('${pid}')">▶ Narrate</button>
             </span>
-            ${escHtml(text)}
+            ${autoLink(parseMarkup(text.replace(/</g,'&lt;').replace(/>/g,'&gt;')))}
           </p>`;
       }).join('');
       html += `<div class="code-block">${parasHtml}</div>`;
@@ -1585,7 +1924,8 @@ function renderChapter(ch) {
       const pid   = `ch${currentChapter}-p${paraIndex}`;
       const count = commentCounts[pid] || 0;
       const isFirst = paraIndex === 0;
-      const linked  = autoLink(parseMarkup(text));
+      const displayText = text.replace(/\[#[a-z0-9_-]+\]/g, '').trim();
+      const linked  = autoLink(parseMarkup(displayText));
       paraIndex++;
       html += `
         <p class="para${isFirst ? ' drop-cap' : ''}${count > 0 ? ' has-comments' : ''}"
@@ -1622,6 +1962,8 @@ function renderChapter(ch) {
       <button class="cec-btn secondary" onclick="openPodcastPanel()">🎙 Decoded — AI podcast review</button>
       ${hasNext ? `<button class="cec-btn primary" onclick="loadChapter(${currentChapter + 1})">Continue to Chapter ${currentChapter + 1} →</button>` : ''}
     </div>`;
+  // Remove any existing reader end card to avoid duplicates
+  document.getElementById('chapter-content')?.querySelectorAll('.chapter-end-card').forEach(c => c.remove());
   el.appendChild(endCard);
 
   // Show the FAB
@@ -1870,9 +2212,14 @@ function stitchSegments(results) {
     const starts = r.alignment?.character_start_times_seconds || [];
     const ends   = r.alignment?.character_end_times_seconds   || [];
 
-    // Byte-based duration is more reliable than alignment maxEnd + padding
-    // 128kbps MP3 = 16000 bytes/sec
-    const segDuration = byteCount / 16000;
+    // Use actual audio duration from alignment timestamps — more accurate than
+    // byte-based estimation which assumes fixed bitrate (ElevenLabs varies).
+    // Fall back to byte estimate only if alignment is empty.
+    const segEnds = r.alignment?.character_end_times_seconds || [];
+    const alignDuration = segEnds.length > 0 ? Math.max(...segEnds) : 0;
+    const byteDuration   = byteCount / 16000; // 128kbps fallback
+    // Add small padding (80ms) to ensure no overlap at segment boundary
+    const segDuration = (alignDuration > 0 ? alignDuration : byteDuration) + 0.08;
 
     segmentMeta.push({ timeOffset, byteStart, byteEnd: byteStart + byteCount, alignment: r.alignment });
 
@@ -1952,8 +2299,8 @@ function getParaText(pid) {
   const txLabel = clone.querySelector('.transcript-speaker');
   if (txLabel) txLabel.remove();
   let text = clone.innerText.trim();
-  // Strip SFX tags — narrator should never speak [#tag-name]
-  text = text.replace(/\[#[a-z0-9_-]+\]/g, '').trim();
+  // Note: SFX tags [#tag] are NOT stripped here — narrationGoTo needs them
+  // to register triggers before stripping. They are stripped after parseSfxTags.
   // Strip transmission wrapper chars for TTS — < YREUS | ERROR /> → YREUS ERROR
   if (el.closest('.code-block')) {
     text = text
@@ -2053,20 +2400,55 @@ function closePodcastPanel() {
   document.getElementById('podcast-panel').classList.remove('open');
 }
 
+function showNarrationChapterEnd() {
+  // Build the end card HTML (same as injectReaderEndCard)
+  const n = currentChapter;
+  const hasNext = n < CHAPTER_COUNT;
+  const card = document.createElement('div');
+  card.className = 'chapter-end-card visible';
+  card.innerHTML = `
+    <div class="cec-label">Chapter ${n} complete</div>
+    <div class="cec-title">${chapterNames[n] || ''}</div>
+    <div class="cec-sub">Vera and Milo are ready to discuss it.</div>
+    <div class="cec-actions">
+      <button class="cec-btn secondary" onclick="openPodcastPanel()">🎙 Decoded — AI podcast review</button>
+      ${hasNext
+        ? `<button class="cec-btn primary" onclick="continueToNextChapter(${n + 1})">Continue to Chapter ${n + 1} →</button>`
+        : `<a href="index.html#buy" class="cec-btn primary">Buy the eBook →</a>
+           <a href="https://www.goodreads.com/book/show/251501817-the-unfolding" class="cec-btn secondary" target="_blank" rel="noopener">★ Add on Goodreads</a>`}
+    </div>`;
+
+  // Show inside the narration overlay text area
+  const textEl = document.getElementById('narration-text');
+  if (textEl) {
+    textEl.innerHTML = '';
+    textEl.appendChild(card);
+  }
+
+  // Also update the reader end card for when overlay closes
+  injectReaderEndCard(n, chapterNames[n] || '');
+
+  // Show the podcast FAB
+  document.getElementById('podcast-fab').classList.add('visible');
+}
+
+function narrationOpenPodcast() {
+  stopNarration();
+  openPodcastPanel();
+}
+
+async function narrationContinueNext() {
+  const next = currentChapter + 1;
+  // Close overlay cleanly, load chapter, then auto-start narration
+  stopNarration();
+  await loadChapter(next);
+  // Small delay to let chapter render
+  setTimeout(() => startNarration(), 400);
+}
+
+// Keep old name as alias for toast-based usage (e.g. from chapter-end-card)
 function showNarrationEndPrompt() {
-  const el = document.getElementById('toast');
-  const hasNext = currentChapter < CHAPTER_COUNT;
-  el.innerHTML = `Chapter complete.`
-    + ` <button onclick="openPodcastPanel()" style="background:transparent;border:none;color:var(--teal-bright);font-family:var(--mono);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;margin-left:4px">🎙 Decoded →</button>`
-    + (hasNext ? ` <button onclick="loadChapter(${currentChapter + 1})" style="background:transparent;border:none;color:var(--rose);font-family:var(--mono);font-size:inherit;cursor:pointer;text-decoration:underline;padding:0;margin-left:8px">Ch. ${currentChapter + 1} →</button>` : '');
-  el.classList.remove('hidden');
-  el.style.pointerEvents = 'auto';
-  clearTimeout(el._podcastTimer);
-  el._podcastTimer = setTimeout(() => {
-    el.classList.add('hidden');
-    el.style.pointerEvents = '';
-    el.innerHTML = '';
-  }, 10000);
+  showNarrationChapterEnd();
 }
 
 // Close panel on Escape (add to existing keydown handler)
