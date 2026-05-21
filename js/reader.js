@@ -2586,7 +2586,7 @@ function renderChapter(ch) {
   let sceneIndex = 1;
   let prevSecType = null; // track previous section type for scene transitions
   const previewNoteHtml = (currentChapter <= FREE_CHAPTERS_LIMIT)
-    ? `<div class="ch-preview-note">Free preview · Chapter ${currentChapter} of ${FREE_CHAPTERS_LIMIT}</div>`
+    ? `<div class="ch-preview-note">Free preview up to chapter ${FREE_CHAPTERS_LIMIT}</div>`
     : '';
 
   let html = `
