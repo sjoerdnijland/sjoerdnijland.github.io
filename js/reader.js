@@ -2185,6 +2185,9 @@ function getAvatarUrl(meta) {
 }
 
 function renderAuthArea() {
+  // Toggle global paid-reader class — used by CSS to hide the free-preview hint
+  document.body.classList.toggle('paid-reader', paidCache === true);
+
   const el = document.getElementById('auth-area');
   if (currentUser) {
     const meta = currentUser.user_metadata;
@@ -2582,9 +2585,14 @@ function renderChapter(ch) {
   let paraIndex = 0;
   let sceneIndex = 1;
   let prevSecType = null; // track previous section type for scene transitions
+  const previewNoteHtml = (currentChapter <= FREE_CHAPTERS_LIMIT)
+    ? `<div class="ch-preview-note">Free preview · Chapter ${currentChapter} of ${FREE_CHAPTERS_LIMIT}</div>`
+    : '';
+
   let html = `
     <div class="ch-hero">
       <div class="ch-eyebrow">Chapter ${currentChapter}</div>
+      ${previewNoteHtml}
       <h1 class="ch-title">${ch.title}</h1>
       <div class="ch-narrate-wrap">
         <button class="ch-narrate-btn ch-narrate-btn--icon" onclick="startNarration()" id="ch-narrate-btn" aria-label="Start narration">

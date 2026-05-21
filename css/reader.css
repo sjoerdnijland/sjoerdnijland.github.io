@@ -360,6 +360,18 @@
   font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.3em;
   text-transform: uppercase; color: var(--rose); margin-bottom: 16px;
 }
+/* Subtle free-preview hint — only shown to unpaid users on chapters 1–8.
+   Hidden globally once <body> picks up the .paid-reader class. */
+.ch-preview-note {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(127,178,137,0.65);
+  margin: -8px 0 14px;
+  opacity: 0.85;
+}
+body.paid-reader .ch-preview-note { display: none; }
 .ch-title {
   font-family: var(--serif); font-size: clamp(2.2rem, 4vw, 3.4rem);
   font-weight: 300; color: var(--ivory); margin-bottom: 10px; line-height: 1.1;
