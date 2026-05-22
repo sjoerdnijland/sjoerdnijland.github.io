@@ -656,5 +656,19 @@
     "id": "samantha",
     "voice_id": "6u6JbqKdaQy89ENzLSju",
     "narration": "Go in. Stop him. If you don't move now…"
+  },
+  {
+    "name": "Jimmy Voss",
+    "tag": "char",
+    "role": "Mason's Apprentice",
+    "affil": "Guild of Masons / Ivaldi",
+    "aliases": "Jim, Voss, the Dowser",
+    "appearance": "Jimmy is a slight young man whose Köldur thermal suit fits him a size too large — Ivaldi stocks only the measurements the original crew brought aboard, and Jimmy hadn't been measured yet when he was rotated up the lift. He keeps the sleeves rolled and the inner cuffs cinched with strips of electrical tape. His face is windburned at the edges of the visor seal — two pink crescents framing pale, freckled cheeks — and his hair has been cropped short by his own hand with a multitool. His lower lip is permanently split from the cold, and his fingertips, when his gloves come off, are stained the dull copper of the Plateau's iron-rich dust.",
+    "desc": "Jimmy is the youngest Mason on Chief Heston's drill teams. He came up from the Freya Homestead at fifteen — his father a foreman on the Ivaldi run, his mother a hydroponics worker who lost the argument when Jimmy's apprenticeship slot came through. He walks the seismic survey carts, advancing ahead of the drill heads with a sensor rod taller than he is, listening for hollows in the rock. Heston calls him \"the dowser\" and pretends to be exasperated by him; the other Masons look out for him without saying so. On shift he is quiet and methodical; off shift he is chatty in a way that suggests he has been alone with the wind for too long. He keeps a battered notebook in which he catalogues the Plateau's wind sounds by direction, hour, and what he calls \"mood.\" His most important possession is a thin metal cigarette case — empty, never used for cigarettes — that his father pressed into his hand on his first transfer up the lift.",
+    "chapter": 13,
+    "image": "/assets/char/jimmy_voss.png",
+    "id": "jimmy-voss",
+    "voice_id": "",
+    "narration": "The rock talks. You just have to be small enough to hear it."
   }
 ]
