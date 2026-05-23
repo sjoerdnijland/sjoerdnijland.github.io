@@ -161,6 +161,12 @@
   }
   .rv-card--critical .rv-body { margin-bottom: 14px; }
   .rv-card--critical .rv-body:last-of-type { margin-bottom: 0; }
+  .rv-card--critical .rv-body mark {
+    background: transparent;
+    color: var(--rose);
+    font-style: italic;
+    padding: 0;
+  }
 
   /* Per-segment score grid for critical reviews */
   .rv-scores {
@@ -390,14 +396,16 @@
     }[c]));
   }
 
-  // Allow only <em>…</em> in body text. Escape everything else.
+  // Allow only <em>…</em> and <mark>…</mark> in body text. Escape everything else.
   function sanitizeInline(html) {
     return String(html || '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/&lt;em&gt;/g, '<em>')
-      .replace(/&lt;\/em&gt;/g, '</em>');
+      .replace(/&lt;\/em&gt;/g, '</em>')
+      .replace(/&lt;mark&gt;/g, '<mark>')
+      .replace(/&lt;\/mark&gt;/g, '</mark>');
   }
 
   function stars(n) {

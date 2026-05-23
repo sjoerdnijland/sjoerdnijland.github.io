@@ -53,6 +53,9 @@ function Synopsis() {
         </div>
       </div>
 
+      {/* Critical review — appears above the three themes */}
+      <Reviews />
+
       {/* Themes */}
       <div className="container themes-wrap">
         <div className="themes-grid">
@@ -98,6 +101,9 @@ function Synopsis() {
         .rose-word { color: var(--rose); font-style: italic; }
 
         .themes-wrap { margin-top: 100px; }
+        /* When the Reviews promo sits above the themes, the section's own
+           bottom padding already provides breathing room — don't stack it. */
+        .rv-promo + .themes-wrap { margin-top: 0; }
         .themes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 
         .oath { text-align: center; margin-top: 120px; }
