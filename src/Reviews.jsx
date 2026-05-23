@@ -1,8 +1,22 @@
-// Reviews — quiet social-proof segment with the Readers' Favorite badge.
+// Reviews — quiet social-proof segment driven by data/critical-reviews.json.
 function Reviews() {
   const { useEffect, useRef, useState } = React;
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
+  const [pick, setPick] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetch('data/critical-reviews.json', { cache: 'no-cache' })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(list => {
+        if (!alive || !Array.isArray(list) || list.length === 0) return;
+        const featured = list.find(r => r && r.featured) || list[0];
+        setPick(featured);
+      })
+      .catch(err => console.warn('Critical reviews load failed:', err));
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -11,44 +25,47 @@ function Reviews() {
     );
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
-  }, []);
+  }, [pick]);
+
+  if (!pick) return null;
 
   return (
     <section id="reviews" className={`rv-promo ${visible ? 'rv-promo-in' : ''}`} ref={ref}>
       <div className="container-narrow">
         <div className="rv-promo-card">
-          <a
-            href="https://readersfavorite.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rv-promo-badge"
-            aria-label="Readers' Favorite 5-star review"
-          >
-            <img
-              src="assets/Readers-Favorite-5star-shiny-small-dark-300x300.png"
-              alt="Readers' Favorite — 5-star review"
-              loading="lazy"
-            />
-          </a>
+          {pick.badge && (
+            <a
+              href={pick.source_url || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rv-promo-badge"
+              aria-label={`${pick.source} ${pick.overall || 5}-star review`}
+            >
+              <img src={pick.badge} alt={`${pick.source} — ${pick.overall || 5}-star review`} loading="lazy" />
+            </a>
+          )}
 
           <div className="rv-promo-body">
             <span className="rv-promo-eyebrow">◈ Critical reception</span>
 
             <blockquote className="rv-promo-quote">
               <span className="rv-promo-mark">"</span>
-              <em>Science fiction at its finest.</em>
+              <em>{pick.headline}</em>
               <span className="rv-promo-mark">"</span>
             </blockquote>
 
-            <p className="rv-promo-tail">
-              With sharp writing and an ending that promises more,
-              I look forward to seeing where Nyland takes us next.
-            </p>
+            {pick.tail && <p className="rv-promo-tail">{pick.tail}</p>}
 
             <div className="rv-promo-attrib">
-              <span className="rv-promo-name">Jamie Michele</span>
+              <span className="rv-promo-name">{pick.reviewer}</span>
               <span className="rv-promo-dot">·</span>
-              <span className="rv-promo-source">Readers' Favorite</span>
+              <span className="rv-promo-source">{pick.source}</span>
+              {pick.total != null && pick.max_total != null && (
+                <>
+                  <span className="rv-promo-dot">·</span>
+                  <span className="rv-promo-total">{pick.total}/{pick.max_total}</span>
+                </>
+              )}
             </div>
 
             <a href="reviews.html" className="rv-promo-link">
@@ -165,6 +182,12 @@ function Reviews() {
         .rv-promo-name { color: var(--ivory); letter-spacing: 0.14em; }
         .rv-promo-dot { opacity: 0.5; }
         .rv-promo-source { color: #e8a47c; }
+        .rv-promo-total {
+          color: #e8a47c;
+          font-weight: 500;
+          font-variant-numeric: tabular-nums;
+          letter-spacing: 0.12em;
+        }
 
         .rv-promo-link {
           align-self: flex-start;

@@ -162,20 +162,52 @@
   .rv-card--critical .rv-body { margin-bottom: 14px; }
   .rv-card--critical .rv-body:last-of-type { margin-bottom: 0; }
 
-  .rv-ratings-row {
+  /* Per-segment score grid for critical reviews */
+  .rv-scores {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0;
+    margin: 4px 0 22px;
+    border: 1px solid rgba(232,164,124,0.18);
+    border-radius: 3px;
+    overflow: hidden;
+    background: rgba(232,164,124,0.025);
+  }
+  .rv-score-cell {
+    padding: 10px 8px;
+    text-align: center;
+    border-right: 1px solid rgba(232,164,124,0.12);
+    display: flex; flex-direction: column; gap: 4px;
+    align-items: center; justify-content: center;
+  }
+  .rv-score-cell:last-child { border-right: none; }
+  .rv-score-label {
     font-family: var(--mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.14em;
+    font-size: 0.5rem;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--muted);
-    margin: 0 0 18px;
-    line-height: 1.7;
+    line-height: 1.2;
   }
-  .rv-ratings-row strong {
-    color: #e8a47c;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    margin-right: 6px;
+  .rv-score-value {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    color: var(--ivory);
+    font-weight: 400;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .rv-score-cell--total {
+    background: rgba(232,164,124,0.07);
+  }
+  .rv-score-cell--total .rv-score-label { color: #e8a47c; letter-spacing: 0.2em; }
+  .rv-score-cell--total .rv-score-value { color: #e8a47c; font-weight: 500; }
+
+  @media (max-width: 620px) {
+    .rv-scores { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .rv-score-cell:nth-child(3n) { border-right: none; }
+    .rv-score-cell { border-bottom: 1px solid rgba(232,164,124,0.12); }
+    .rv-score-cell:nth-last-child(-n+3) { border-bottom: none; }
   }
 
   .rv-stars { font-size: 1rem; letter-spacing: 1px; color: #f4ce74; line-height: 1; }
@@ -319,26 +351,9 @@
   </div>
 
   <!-- Critical / editorial reviews — prioritized above reader voices -->
-  <div class="rv-section-heading">Critical reviews</div>
-  <div class="rv-list">
-    <div class="rv-card rv-card--critical">
-      <div class="rv-card-head">
-        <div class="rv-avatar rv-avatar--placeholder">J</div>
-        <div class="rv-meta">
-          <div class="rv-name">Jamie Michele</div>
-          <div class="rv-sub">
-            <span>Editorial review</span>
-            <span class="rv-source rv-source--rf">Readers' Favorite</span>
-          </div>
-        </div>
-        <div class="rv-stars" aria-label="5 out of 5">★★★★★</div>
-      </div>
-      <div class="rv-ratings-row">
-        <strong>5/5</strong>Appearance · Plot · Development · Formatting · Marketability
-      </div>
-      <p class="rv-body">In S. Nyland's <em>The Unfolding: Mairee</em>, after the Fold connecting Earth to the colony world of Mairee disappears, administrator Astrid Vilde announces that the settlers are permanently cut off from the Sol system. Within hours, Astrid vanishes into captivity while Directorate official Ulre Corbin expands the colony's Grid into a system controlling food access, movement, emotional regulation, and labor assignments across the settlements. Teenager Oliver Savannen discovers that his missing father created the COG Egg, a hidden device capable of rewriting Grid identities, just as the damaged colony ship Brisinger crashes near Freya Port carrying survivors altered by prolonged exposure inside the Fold. While neuroscientist Joana Perera investigates seizures spreading through the population, communications officer Frank Muro uncovers signals moving between Mairee's fungal network and the orbital stations. As the colony fractures under isolation, Oliver becomes tied to a conflict involving the Grid, the Brisinger, and the planet itself.</p>
-      <p class="rv-body">S. Nyland's <em>The Unfolding: Mairee</em> is science fiction at its finest. The Grid is the regulator of everything across the settlements, and it amplifies an already believable survival structure. The author makes life on Mairee feel realistic, with every settlement operating by leaning into environmental demands. Plateau workers endure volcanic cold inside mining installations built from former starships, while Delta researchers travel through fungal tunnel systems mapped through temporary drone routes. The standout is Freya Homestead, functioning through detachable habitation capsules positioned beneath the Sickle Mountains, beside atmospheric processors and public plazas. For me, Oliver is the novel's strongest emotional anchor. His engineering curiosity repeatedly pushes him toward forbidden systems connected to his father Kaspar's COG Egg. I love Sarah Farley. A smart and capable female, she refuses to abandon missing personnel beneath floodwaters and actually tranquilizes someone so she can continue searching. With sharp writing and an ending that promises more, I look forward to seeing where Nyland takes us next. Very highly recommended.</p>
-    </div>
+  <div id="rv-critical-section" hidden>
+    <div class="rv-section-heading">Critical reviews</div>
+    <div class="rv-list" id="rv-critical-list"></div>
   </div>
 
   <div class="rv-section-heading">Reader reviews</div>
@@ -361,6 +376,93 @@
 
 <div id="site-footer"></div>
 <script src="js/footer.js"></script>
+
+<script>
+// ── Critical reviews (editorial — loaded from data/critical-reviews.json) ──
+(async function loadCriticalReviews() {
+  const section = document.getElementById('rv-critical-section');
+  const list    = document.getElementById('rv-critical-list');
+  if (!section || !list) return;
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  // Allow only <em>…</em> in body text. Escape everything else.
+  function sanitizeInline(html) {
+    return String(html || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/&lt;em&gt;/g, '<em>')
+      .replace(/&lt;\/em&gt;/g, '</em>');
+  }
+
+  function stars(n) {
+    let out = '';
+    for (let i = 1; i <= 5; i++) out += i <= n ? '★' : '<span class="empty">★</span>';
+    return out;
+  }
+
+  function scoreCell(label, value, max, isTotal) {
+    return `
+      <div class="rv-score-cell${isTotal ? ' rv-score-cell--total' : ''}">
+        <span class="rv-score-label">${esc(label)}</span>
+        <span class="rv-score-value">${esc(value)}/${esc(max)}</span>
+      </div>`;
+  }
+
+  function renderCard(r) {
+    const initial = (r.reviewer || '?').trim().charAt(0).toUpperCase();
+    const segLabels = [
+      ['Appearance',   r.scores?.appearance],
+      ['Plot',         r.scores?.plot],
+      ['Development',  r.scores?.development],
+      ['Formatting',   r.scores?.formatting],
+      ['Marketability',r.scores?.marketability],
+    ];
+    const segHtml = segLabels.map(([l, v]) => scoreCell(l, v ?? '–', 5, false)).join('');
+    const totalHtml = scoreCell('Total', r.total ?? '–', r.max_total ?? 25, true);
+
+    const sourceLink = r.source_url
+      ? `<a href="${esc(r.source_url)}" target="_blank" rel="noopener" class="rv-source rv-source--rf">${esc(r.source)}</a>`
+      : `<span class="rv-source rv-source--rf">${esc(r.source)}</span>`;
+
+    const bodyHtml = (r.body || []).map(p => `<p class="rv-body">${sanitizeInline(p)}</p>`).join('');
+
+    return `
+      <div class="rv-card rv-card--critical">
+        <div class="rv-card-head">
+          <div class="rv-avatar rv-avatar--placeholder">${esc(initial)}</div>
+          <div class="rv-meta">
+            <div class="rv-name">${esc(r.reviewer)}</div>
+            <div class="rv-sub">
+              <span>Editorial review</span>
+              ${sourceLink}
+            </div>
+          </div>
+          ${r.overall ? `<div class="rv-stars" aria-label="${esc(r.overall)} out of 5">${stars(r.overall)}</div>` : ''}
+        </div>
+        <div class="rv-scores">${segHtml}${totalHtml}</div>
+        ${bodyHtml}
+      </div>`;
+  }
+
+  try {
+    const res = await fetch('data/critical-reviews.json', { cache: 'no-cache' });
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return;
+    list.innerHTML = data.map(renderCard).join('');
+    section.hidden = false;
+  } catch (err) {
+    // Silently swallow — the reader-reviews section still loads.
+    console.warn('Critical reviews load failed:', err);
+  }
+})();
+</script>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>

@@ -1,0 +1,27 @@
+[
+  {
+    "id": "readers-favorite-jamie-michele",
+    "reviewer": "Jamie Michele",
+    "source": "Readers' Favorite",
+    "source_slug": "rf",
+    "source_url": "https://readersfavorite.com/",
+    "badge": "assets/Readers-Favorite-5star-shiny-small-dark-300x300.png",
+    "date": "2026-05",
+    "featured": true,
+    "headline": "Science fiction at its finest.",
+    "tail": "With sharp writing and an ending that promises more, I look forward to seeing where Nyland takes us next.",
+    "scores": {
+      "appearance": 5,
+      "plot": 5,
+      "development": 5,
+      "formatting": 5,
+      "marketability": 5
+    },
+    "total": 25,
+    "max_total": 25,
+    "overall": 5,
+    "body": [
+      "S. Nyland's <em>The Unfolding: Mairee</em> is <strong>science fiction at its finest</strong>. The Grid is the regulator of everything across the settlements, and it amplifies an already believable survival structure. The author makes life on Mairee feel realistic, with every settlement operating by leaning into environmental demands. Plateau workers endure volcanic cold inside mining installations built from former starships, while Delta researchers travel through fungal tunnel systems mapped through temporary drone routes. The standout is Freya Homestead, functioning through detachable habitation capsules positioned beneath the Sickle Mountains, beside atmospheric processors and public plazas. For me, Oliver is the novel's strongest emotional anchor. His engineering curiosity repeatedly pushes him toward forbidden systems connected to his father Kaspar's COG Egg. I love Sarah Farley. A smart and capable female, she refuses to abandon missing personnel beneath floodwaters and actually tranquilizes someone so she can continue searching. With sharp writing and an ending that promises more, I look forward to seeing where Nyland takes us next. Very highly recommended."
+    ]
+  }
+]
