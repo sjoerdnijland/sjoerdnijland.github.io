@@ -48,6 +48,10 @@ function Reviews() {
           <div className="rv-promo-body">
             <span className="rv-promo-eyebrow">◈ Critical reception</span>
 
+            <div className="rv-promo-stars" aria-label={`${pick.overall || 5} out of 5 stars`}>
+              {'★'.repeat(pick.overall || 5)}
+            </div>
+
             <blockquote className="rv-promo-quote">
               <span className="rv-promo-mark">"</span>
               <em>{pick.headline}</em>
@@ -133,6 +137,15 @@ function Reviews() {
           letter-spacing: 0.26em;
           text-transform: uppercase;
           color: var(--muted);
+        }
+
+        .rv-promo-stars {
+          color: #f4ce74;
+          font-size: 1.1rem;
+          letter-spacing: 0.18em;
+          line-height: 1;
+          text-shadow: 0 0 14px rgba(244,206,116,0.35);
+          margin-top: -4px;
         }
 
         .rv-promo-quote {
