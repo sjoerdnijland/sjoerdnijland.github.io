@@ -131,6 +131,52 @@
   .rv-source--goodreads { color: #d6b87a; border-color: rgba(214,184,122,0.35); }
   .rv-source--curated   { color: var(--muted); }
   .rv-source--site      { color: #7fb289;  border-color: rgba(127,178,137,0.35); }
+  .rv-source--rf        { color: #e8a47c;  border-color: rgba(232,164,124,0.45); }
+
+  /* Section dividers between critical and reader reviews */
+  .rv-section-heading {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 12px 0 22px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .rv-section-heading::before,
+  .rv-section-heading::after {
+    content: ''; flex: 1; height: 1px; background: var(--line);
+  }
+  .rv-section-heading + .rv-list { margin-bottom: 48px; }
+
+  /* Critical (editorial) review card */
+  .rv-card--critical {
+    border-color: rgba(232,164,124,0.35);
+    background: rgba(232,164,124,0.04);
+  }
+  .rv-card--critical:hover { border-color: rgba(232,164,124,0.55); }
+  .rv-card--critical .rv-avatar--placeholder {
+    color: #e8a47c;
+    border-color: rgba(232,164,124,0.45);
+  }
+  .rv-card--critical .rv-body { margin-bottom: 14px; }
+  .rv-card--critical .rv-body:last-of-type { margin-bottom: 0; }
+
+  .rv-ratings-row {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 18px;
+    line-height: 1.7;
+  }
+  .rv-ratings-row strong {
+    color: #e8a47c;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    margin-right: 6px;
+  }
 
   .rv-stars { font-size: 1rem; letter-spacing: 1px; color: #f4ce74; line-height: 1; }
   .rv-stars .empty { color: rgba(255,255,255,0.15); }
@@ -272,6 +318,30 @@
     <span class="rv-top-cta-note">Get 50% off the shop · helps other readers find the book · support the author.</span>
   </div>
 
+  <!-- Critical / editorial reviews — prioritized above reader voices -->
+  <div class="rv-section-heading">Critical reviews</div>
+  <div class="rv-list">
+    <div class="rv-card rv-card--critical">
+      <div class="rv-card-head">
+        <div class="rv-avatar rv-avatar--placeholder">J</div>
+        <div class="rv-meta">
+          <div class="rv-name">Jamie Michele</div>
+          <div class="rv-sub">
+            <span>Editorial review</span>
+            <span class="rv-source rv-source--rf">Readers' Favorite</span>
+          </div>
+        </div>
+        <div class="rv-stars" aria-label="5 out of 5">★★★★★</div>
+      </div>
+      <div class="rv-ratings-row">
+        <strong>5/5</strong>Appearance · Plot · Development · Formatting · Marketability
+      </div>
+      <p class="rv-body">In S. Nyland's <em>The Unfolding: Mairee</em>, after the Fold connecting Earth to the colony world of Mairee disappears, administrator Astrid Vilde announces that the settlers are permanently cut off from the Sol system. Within hours, Astrid vanishes into captivity while Directorate official Ulre Corbin expands the colony's Grid into a system controlling food access, movement, emotional regulation, and labor assignments across the settlements. Teenager Oliver Savannen discovers that his missing father created the COG Egg, a hidden device capable of rewriting Grid identities, just as the damaged colony ship Brisinger crashes near Freya Port carrying survivors altered by prolonged exposure inside the Fold. While neuroscientist Joana Perera investigates seizures spreading through the population, communications officer Frank Muro uncovers signals moving between Mairee's fungal network and the orbital stations. As the colony fractures under isolation, Oliver becomes tied to a conflict involving the Grid, the Brisinger, and the planet itself.</p>
+      <p class="rv-body">S. Nyland's <em>The Unfolding: Mairee</em> is science fiction at its finest. The Grid is the regulator of everything across the settlements, and it amplifies an already believable survival structure. The author makes life on Mairee feel realistic, with every settlement operating by leaning into environmental demands. Plateau workers endure volcanic cold inside mining installations built from former starships, while Delta researchers travel through fungal tunnel systems mapped through temporary drone routes. The standout is Freya Homestead, functioning through detachable habitation capsules positioned beneath the Sickle Mountains, beside atmospheric processors and public plazas. For me, Oliver is the novel's strongest emotional anchor. His engineering curiosity repeatedly pushes him toward forbidden systems connected to his father Kaspar's COG Egg. I love Sarah Farley. A smart and capable female, she refuses to abandon missing personnel beneath floodwaters and actually tranquilizes someone so she can continue searching. With sharp writing and an ending that promises more, I look forward to seeing where Nyland takes us next. Very highly recommended.</p>
+    </div>
+  </div>
+
+  <div class="rv-section-heading">Reader reviews</div>
   <div id="rv-content">
     <div class="rv-loading">Loading reviews…</div>
   </div>
