@@ -33,6 +33,7 @@
           <span>&copy; 2026 STUART NYLAND &middot; ALL RIGHTS, QUIETLY, RESERVED.</span>
           <span>
             <a href="legal.html" style="color:var(--muted);text-decoration:none;margin-right:14px">Privacy &amp; Terms</a>
+            <a href="https://the-unfolding.net/legal.html#contact" style="color:var(--muted);text-decoration:none;margin-right:14px">Contact</a>
             UNFOLDING.IO
           </span>
         </div>
