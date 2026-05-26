@@ -209,6 +209,10 @@
   .rv-score-cell--total .rv-score-label { color: #e8a47c; letter-spacing: 0.2em; }
   .rv-score-cell--total .rv-score-value { color: #e8a47c; font-weight: 500; }
 
+  /* Total-only variant — used when a source doesn't provide subcategory scores */
+  .rv-scores--total-only { grid-template-columns: 1fr; }
+  .rv-scores--total-only .rv-score-cell { padding: 14px 8px; }
+
   @media (max-width: 620px) {
     .rv-scores { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .rv-score-cell:nth-child(3n) { border-right: none; }
@@ -424,6 +428,7 @@
 
   function renderCard(r) {
     const initial = (r.reviewer || '?').trim().charAt(0).toUpperCase();
+    const hasSubscores = r.scores && Object.values(r.scores).some(v => v != null);
     const segLabels = [
       ['Appearance',   r.scores?.appearance],
       ['Plot',         r.scores?.plot],
@@ -431,8 +436,13 @@
       ['Formatting',   r.scores?.formatting],
       ['Marketability',r.scores?.marketability],
     ];
-    const segHtml = segLabels.map(([l, v]) => scoreCell(l, v ?? '–', 5, false)).join('');
-    const totalHtml = scoreCell('Total', r.total ?? '–', r.max_total ?? 25, true);
+    const segHtml = hasSubscores
+      ? segLabels.map(([l, v]) => scoreCell(l, v ?? '–', 5, false)).join('')
+      : '';
+    const totalHtml = scoreCell('Total', r.total ?? 25, r.max_total ?? 25, true);
+    const scoresHtml = hasSubscores
+      ? `<div class="rv-scores">${segHtml}${totalHtml}</div>`
+      : `<div class="rv-scores rv-scores--total-only">${totalHtml}</div>`;
 
     const sourceLink = r.source_url
       ? `<a href="${esc(r.source_url)}" target="_blank" rel="noopener" class="rv-source rv-source--rf">${esc(r.source)}</a>`
@@ -453,7 +463,7 @@
           </div>
           ${r.overall ? `<div class="rv-stars" aria-label="${esc(r.overall)} out of 5">${stars(r.overall)}</div>` : ''}
         </div>
-        <div class="rv-scores">${segHtml}${totalHtml}</div>
+        ${scoresHtml}
         ${bodyHtml}
       </div>`;
   }
