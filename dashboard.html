@@ -267,37 +267,479 @@
   }
   .pulse { animation: pulse 1.4s ease-in-out infinite; }
   @keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
+
+  /* ── Auth gate ── */
+  .auth-gate {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .auth-card {
+    max-width: 440px;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 48px 36px;
+    text-align: center;
+  }
+  .auth-card .sub {
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 14px;
+  }
+  .auth-card h2 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+    color: var(--ivory);
+  }
+  .auth-card p {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 28px;
+  }
+  .auth-card .discord-btn {
+    background: #5865F2;
+    color: #fff;
+    border: none;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 14px 26px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .auth-card .discord-btn:hover { background: #4752c4; }
+  .auth-card .deny-info {
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-top: 18px;
+    font-family: var(--mono);
+  }
+  .auth-card .signout-link {
+    display: inline-block;
+    margin-top: 16px;
+    background: none;
+    border: none;
+    color: var(--pink);
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .auth-card .signout-link:hover { opacity: 0.75; }
+
+  /* Identity chip in header (signed-in admin) */
+  .admin-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .admin-chip img {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .admin-chip .signout {
+    background: none;
+    border: none;
+    color: var(--pink);
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 6px;
+  }
+  .admin-chip .signout:hover { opacity: 0.75; }
+
+  /* ── View switcher ── */
+  .view-switch {
+    padding: 20px 48px 0;
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .view-btn {
+    background: none;
+    border: 1px solid transparent;
+    border-bottom: none;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 12px 22px;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+  .view-btn:hover { color: var(--ivory); }
+  .view-btn.active {
+    color: var(--ivory);
+    border-color: var(--border);
+    border-bottom-color: var(--bg);
+    background: var(--surface);
+  }
+
+  /* ── OKR view ── */
+  .okr-wrap {
+    padding: 40px 48px 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .okr-objective {
+    margin-bottom: 36px;
+    padding: 28px 32px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--teal);
+    background: var(--surface);
+    border-radius: 4px;
+  }
+  .okr-objective .obj-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 10px;
+  }
+  .okr-objective h2 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(1.4rem, 2.4vw, 1.8rem);
+    line-height: 1.3;
+    color: var(--ivory);
+    letter-spacing: 0.01em;
+  }
+
+  .kr-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px 26px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+  .kr-card:hover { border-color: rgba(255,255,255,0.14); }
+  .kr-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .kr-badge {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    color: var(--teal);
+    background: rgba(78,205,196,0.08);
+    border: 1px solid rgba(78,205,196,0.25);
+    padding: 5px 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .kr-title {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    color: var(--ivory);
+    line-height: 1.4;
+    flex: 1;
+    min-width: 220px;
+  }
+  .kr-status {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 2px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .kr-status--on  { color: #7fb289; border-color: rgba(127,178,137,0.45); background: rgba(127,178,137,0.07); }
+  .kr-status--off { color: var(--pink); border-color: rgba(232,67,147,0.45); background: rgba(232,67,147,0.07); }
+  .kr-status--manual { color: var(--muted); border-color: var(--border); }
+
+  .kr-progress-row {
+    display: grid;
+    grid-template-columns: 1fr 160px;
+    gap: 24px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 700px) {
+    .kr-progress-row { grid-template-columns: 1fr; gap: 12px; }
+  }
+  .kr-bar-wrap {
+    height: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .kr-bar {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--teal), #7fb289);
+    transition: width 0.9s cubic-bezier(0.16,1,0.3,1);
+    width: 0%;
+  }
+  .kr-bar--off { background: linear-gradient(90deg, var(--pink), #e8a47c); }
+  .kr-bar--manual { background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.35)); }
+  .kr-numbers {
+    text-align: right;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .kr-numbers .now {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    color: var(--ivory);
+    line-height: 1;
+  }
+  .kr-numbers .target {
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+  }
+  .kr-numbers .pct {
+    font-size: 0.6rem;
+    color: var(--teal);
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+  .kr-numbers .pct--off { color: var(--pink); }
+
+  .kr-note {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .kr-note strong { color: var(--ivory); font-style: normal; font-weight: 400; }
+  .kr-source {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-right: 10px;
+  }
+  .kr-source--live { color: var(--teal); }
+  .kr-source--manual { color: #e8a47c; }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="header-left">
+<!-- Auth gate — visible while session is unknown / unauthorized -->
+<div id="auth-gate" class="auth-gate">
+  <div class="auth-card">
     <div class="sub">◉ Mission Control</div>
-    <h1>The Unfolding</h1>
+    <h2 id="auth-title">Restricted</h2>
+    <p id="auth-message">Sign in with Discord to access the dashboard.</p>
+    <div id="auth-actions">
+      <button class="discord-btn" onclick="signIn()">
+        <span>◎</span>
+        <span>Sign in with Discord</span>
+      </button>
+    </div>
   </div>
-  <div class="header-right">
-    <div class="last-updated" id="last-updated">—</div>
-    <button class="refresh-btn" onclick="load()">↺ Refresh</button>
-  </div>
-</header>
-
-<div class="range-bar">
-  <button class="range-btn active" data-days="7" onclick="setRange(7, this)">7 days</button>
-  <button class="range-btn" data-days="30" onclick="setRange(30, this)">30 days</button>
-  <button class="range-btn" data-days="90" onclick="setRange(90, this)">90 days</button>
-  <button class="range-btn" data-days="0" onclick="setRange(0, this)">All time</button>
 </div>
 
-<div id="main">
-  <div class="loading"><span class="pulse">Loading mission data…</span></div>
+<!-- Dashboard shell — hidden until authorized -->
+<div id="dashboard-shell" hidden>
+  <header>
+    <div class="header-left">
+      <div class="sub">◉ Mission Control</div>
+      <h1>The Unfolding</h1>
+    </div>
+    <div class="header-right">
+      <div id="admin-identity"></div>
+      <div class="last-updated" id="last-updated">—</div>
+      <button class="refresh-btn" onclick="load()">↺ Refresh</button>
+    </div>
+  </header>
+
+  <div class="view-switch">
+    <button class="view-btn active" data-view="analytics" onclick="setView('analytics', this)">Analytics</button>
+    <button class="view-btn" data-view="okrs" onclick="setView('okrs', this)">OKRs — Year 1</button>
+  </div>
+
+  <!-- Analytics view -->
+  <div id="view-analytics">
+    <div class="range-bar">
+      <button class="range-btn active" data-days="7" onclick="setRange(7, this)">7 days</button>
+      <button class="range-btn" data-days="30" onclick="setRange(30, this)">30 days</button>
+      <button class="range-btn" data-days="90" onclick="setRange(90, this)">90 days</button>
+      <button class="range-btn" data-days="0" onclick="setRange(0, this)">All time</button>
+    </div>
+
+    <div id="main">
+      <div class="loading"><span class="pulse">Loading mission data…</span></div>
+    </div>
+  </div>
+
+  <!-- OKR view -->
+  <div id="view-okrs" hidden>
+    <div id="okr-main">
+      <div class="loading"><span class="pulse">Loading OKR data…</span></div>
+    </div>
+  </div>
 </div>
 
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 const SUPA_URL = 'https://sscpikfblqtmcefegrpv.supabase.co';
-// Use service role key for dashboard reads — keep this file private/password-protected
-// For now uses anon key; update RLS policy to allow reads from your IP or add basic auth
+// Anon key — Supabase Auth replaces it with the user's JWT once signed in,
+// so RLS policies on analytics_events / reviews enforce per-user access.
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzY3Bpa2ZibHF0bWNlZmVncnB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNzUzMzgsImV4cCI6MjA5Mjk1MTMzOH0.I9qzVnzmiYxwZ6RPLV7KWva8P9L0Q1MHFqgmlmr3g0g';
+
+// Admin allowlist — only these accounts can view the dashboard.
+// Matches against Discord email (from user_metadata) and provider sub (Discord user ID).
+const ADMIN_EMAILS = ['sjoerd.nyland@gmail.com'];
+const ADMIN_DISCORD_IDS = []; // optional — fill after first sign-in if you want stricter checks
+
+const { createClient } = window.supabase;
+const db = createClient(SUPA_URL, SUPA_KEY, {
+  auth: { lock: (_name, _ttl, fn) => fn() },
+});
+
+let currentUser = null;
+
+function isAdmin(user) {
+  if (!user) return false;
+  const meta = user.user_metadata || {};
+  const email = (user.email || meta.email || '').toLowerCase();
+  const discordId = meta.provider_id || meta.sub || '';
+  if (email && ADMIN_EMAILS.map(e => e.toLowerCase()).includes(email)) return true;
+  if (discordId && ADMIN_DISCORD_IDS.includes(String(discordId))) return true;
+  return false;
+}
+
+async function signIn() {
+  await db.auth.signInWithOAuth({
+    provider: 'discord',
+    options: {
+      redirectTo: window.location.origin + window.location.pathname,
+      scopes: 'identify email',
+    },
+  });
+}
+
+async function signOut() {
+  await db.auth.signOut();
+  // Render the gate again immediately
+  renderAuthState(null);
+}
+
+function renderAuthState(user) {
+  const gate     = document.getElementById('auth-gate');
+  const shell    = document.getElementById('dashboard-shell');
+  const title    = document.getElementById('auth-title');
+  const message  = document.getElementById('auth-message');
+  const actions  = document.getElementById('auth-actions');
+  const identity = document.getElementById('admin-identity');
+
+  if (user && isAdmin(user)) {
+    gate.hidden  = true;
+    shell.hidden = false;
+
+    const meta   = user.user_metadata || {};
+    const name   = meta.custom_claims?.global_name || meta.full_name || meta.name || user.email || 'Admin';
+    const avatar = meta.avatar_url || meta.picture || '';
+    identity.innerHTML = `
+      <span class="admin-chip">
+        ${avatar ? `<img src="${avatar}" alt="${name}"/>` : ''}
+        <span>${name}</span>
+        <button class="signout" onclick="signOut()">Sign out</button>
+      </span>`;
+    return;
+  }
+
+  // Not authorized — show gate
+  gate.hidden  = false;
+  shell.hidden = true;
+
+  if (user) {
+    // Signed in, but not in the allowlist
+    const meta = user.user_metadata || {};
+    const name = meta.custom_claims?.global_name || meta.full_name || meta.name || user.email || 'Unknown';
+    title.textContent   = 'Access denied';
+    message.textContent = `Signed in as ${name}, but this account is not an admin on the dashboard.`;
+    actions.innerHTML = `
+      <button class="signout-link" onclick="signOut()">Sign out and try another account</button>`;
+  } else {
+    title.textContent   = 'Restricted';
+    message.textContent = 'Sign in with Discord to access the dashboard.';
+    actions.innerHTML = `
+      <button class="discord-btn" onclick="signIn()">
+        <span>◎</span>
+        <span>Sign in with Discord</span>
+      </button>`;
+  }
+}
+
+async function initAuth() {
+  // OAuth redirect: Supabase parses the hash automatically on createClient,
+  // but if the session hasn't materialized yet, fall back to setSession.
+  const { data: { session: s1 } } = await db.auth.getSession();
+  if (!s1 && window.location.hash.includes('access_token')) {
+    const params = new URLSearchParams(window.location.hash.replace(/^#+/, ''));
+    const access_token  = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
+    if (access_token && refresh_token) {
+      try { await db.auth.setSession({ access_token, refresh_token }); } catch {}
+    }
+  }
+  if (window.location.hash.includes('access_token')) {
+    history.replaceState(null, '', window.location.pathname);
+  }
+
+  const { data: { session } } = await db.auth.getSession();
+  currentUser = session?.user ?? null;
+  renderAuthState(currentUser);
+  if (isAdmin(currentUser)) load();
+
+  db.auth.onAuthStateChange((_event, session) => {
+    currentUser = session?.user ?? null;
+    renderAuthState(currentUser);
+    if (isAdmin(currentUser)) load();
+  });
+}
 
 const CHAPTER_NAMES = {
   1: 'Assembly', 2: 'The Startend', 3: 'Doubt & Certainty',
@@ -321,14 +763,18 @@ function setRange(days, btn) {
   load();
 }
 
+async function authHeaders() {
+  const { data: { session } } = await db.auth.getSession();
+  const token = session?.access_token || SUPA_KEY;
+  return { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${token}` };
+}
+
 async function query(event, extra = '') {
   const since = rangeDays > 0
     ? `&ts=gte.${new Date(Date.now() - rangeDays * 86400000).toISOString()}`
     : '';
   const url = `${SUPA_URL}/rest/v1/analytics_events?event=eq.${event}${since}${extra}&select=*`;
-  const res = await fetch(url, {
-    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
-  });
+  const res = await fetch(url, { headers: await authHeaders() });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -338,9 +784,7 @@ async function fetchReaderReviews() {
     ? `&created_at=gte.${new Date(Date.now() - rangeDays * 86400000).toISOString()}`
     : '';
   const url = `${SUPA_URL}/rest/v1/reviews?select=id,rating,source,created_at,body${since}`;
-  const res = await fetch(url, {
-    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
-  });
+  const res = await fetch(url, { headers: await authHeaders() });
   if (!res.ok) return [];
   return res.json();
 }
@@ -796,7 +1240,7 @@ function fmt(n) {
   return Number(n).toLocaleString();
 }
 
-load();
+initAuth();
 </script>
 </body>
 </html>
