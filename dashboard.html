@@ -732,9 +732,16 @@ function readUrlError() {
 async function initAuth() {
   // Listen for state changes FIRST so the SDK-driven OAuth exchange
   // (PKCE ?code= or implicit #access_token=) is captured the moment it fires.
+  // The auth event is the source of truth — don't overwrite it from getSession.
   db.auth.onAuthStateChange((event, session) => {
     console.log('[auth] event:', event, session?.user?.email || '(no user)');
-    currentUser = session?.user ?? null;
+    // Ignore the spurious null sessions that can race with SIGNED_IN under
+    // the no-op lock override. Only update on real session changes.
+    if (event === 'SIGNED_OUT') {
+      currentUser = null;
+    } else if (session?.user) {
+      currentUser = session.user;
+    }
     renderAuthState(currentUser);
     if (isAdmin(currentUser)) load();
 
@@ -745,39 +752,9 @@ async function initAuth() {
     }
   });
 
-  // PKCE: explicit code exchange in case the SDK didn't auto-detect.
-  if (window.location.search.includes('code=')) {
-    const code = new URLSearchParams(window.location.search).get('code');
-    if (code) {
-      try {
-        const { error } = await db.auth.exchangeCodeForSession(window.location.href);
-        if (error) console.warn('[auth] exchangeCodeForSession error:', error.message);
-      } catch (e) {
-        console.warn('[auth] exchangeCodeForSession threw:', e.message);
-      }
-    }
-  }
-
-  // Implicit fallback: manual setSession from hash params.
-  if (window.location.hash.includes('access_token')) {
-    const params = new URLSearchParams(window.location.hash.replace(/^#+/, ''));
-    const access_token  = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
-    if (access_token && refresh_token) {
-      try { await db.auth.setSession({ access_token, refresh_token }); } catch (e) {
-        console.warn('[auth] setSession failed:', e.message);
-      }
-    }
-  }
-
-  // Initial render based on whatever session exists right now.
-  const { data: { session } } = await db.auth.getSession();
-  currentUser = session?.user ?? null;
-  console.log('[auth] initial session user:', currentUser?.email || '(none)');
-
-  // If the URL came back with an OAuth error, surface it on the gate.
+  // If the URL came back with an OAuth error, surface it on the gate immediately.
   const urlErr = readUrlError();
-  if (urlErr && !currentUser) {
+  if (urlErr) {
     const gate     = document.getElementById('auth-gate');
     const shell    = document.getElementById('dashboard-shell');
     const title    = document.getElementById('auth-title');
@@ -785,7 +762,7 @@ async function initAuth() {
     const actions  = document.getElementById('auth-actions');
     gate.hidden  = false;
     shell.hidden = true;
-    title.textContent   = 'Sign-in failed';
+    title.textContent = 'Sign-in failed';
     message.innerHTML = `
       Discord returned an error: <strong style="color:#e84393">${urlErr.code}</strong><br/>
       <span style="font-family:var(--mono);font-size:0.7rem;color:var(--muted)">${urlErr.desc || ''}</span><br/><br/>
@@ -801,8 +778,19 @@ async function initAuth() {
     return;
   }
 
-  renderAuthState(currentUser);
-  if (isAdmin(currentUser)) load();
+  // Bootstrap from any pre-existing session (e.g. returning visitor with a
+  // valid token in localStorage). The SDK's URL detection will fire SIGNED_IN
+  // shortly after createClient() for fresh OAuth callbacks — the listener
+  // above takes care of those.
+  const { data: { session } } = await db.auth.getSession();
+  console.log('[auth] initial session user:', session?.user?.email || '(none)');
+  if (session?.user) {
+    currentUser = session.user;
+    renderAuthState(currentUser);
+    if (isAdmin(currentUser)) load();
+  } else if (!currentUser) {
+    renderAuthState(null);
+  }
 
   if (window.location.hash.includes('access_token') || window.location.search.includes('code=')) {
     history.replaceState(null, '', window.location.pathname);
