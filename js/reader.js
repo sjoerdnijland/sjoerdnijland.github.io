@@ -2164,6 +2164,14 @@ async function initAuth() {
 
     // Auto-join Discord server on sign-in
     if (_event === 'SIGNED_IN' && session?.provider_token) {
+      // Count new Discord registrations: fire an analytics event only the
+      // first time we see this account (created within the last 5 minutes).
+      const createdAt = session.user?.created_at ? new Date(session.user.created_at).getTime() : 0;
+      const isFreshAccount = createdAt > 0 && (Date.now() - createdAt) < 5 * 60 * 1000;
+      if (isFreshAccount && typeof window._track === 'function') {
+        window._track('discord_signup', { provider: 'discord' });
+      }
+
       try {
         await fetch('https://sscpikfblqtmcefegrpv.supabase.co/functions/v1/discord-join', {
           method: 'POST',

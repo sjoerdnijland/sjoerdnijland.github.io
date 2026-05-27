@@ -269,6 +269,9 @@
   @keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
 
   /* ── Auth gate ── */
+  /* The HTML [hidden] attribute is fighting the explicit `display: flex` below
+     (same specificity, our rule wins on order). Force it to hide. */
+  [hidden] { display: none !important; }
   .auth-gate {
     min-height: 100vh;
     display: flex;
@@ -832,12 +835,13 @@ async function loadOKRs() {
     };
 
     const [
-      pageViews, readClicks, buys, discordClicks, purchases, readerReviews
+      pageViews, readClicks, buys, discordClicks, discordSignups, purchases, readerReviews
     ] = await Promise.all([
       fetchEv('page_view'),
       fetchEv('click_read_chapter'),
       fetchEv('click_buy'),
       fetchEv('click_discord'),
+      fetchEv('discord_signup'),
       fetchEv('purchase_completed'),
       fetchReviews(),
     ]);
@@ -869,12 +873,12 @@ async function loadOKRs() {
       },
       {
         id: 'KR3',
-        title: 'Gain 100 Discord followers.',
-        current: OKR_MANUAL.discordFollowers,
-        target:  100,
-        format:  v => fmt(Math.round(v)),
-        source:  'manual',
-        note:    `Pulled manually from the Discord admin panel. <strong>${fmt(discordClicks.length)}</strong> click-throughs to Discord recorded in site analytics.`,
+        title: 'Gain 50 Discord registrations.',
+        current: discordSignups.length,
+        target:  50,
+        format:  v => fmt(v),
+        source:  'live',
+        note:    `<strong>${fmt(discordSignups.length)}</strong> new Discord sign-ups via the site (counted from the <code>discord_signup</code> event, fired when a fresh account auto-joins the server). ${fmt(discordClicks.length)} click-throughs to Discord recorded for context.`,
       },
       {
         id: 'KR4',
@@ -956,8 +960,6 @@ async function loadOKRs() {
 const OKR_MANUAL = {
   // KR1: active subscribers (opened ≥1 email in 30d OR clicked ≥1 link in 60d)
   activeSubscribers: 0,
-  // KR3: Discord server members (look up from the Discord admin panel)
-  discordFollowers: 0,
   // KR2 — external review platforms (Amazon + StoryGraph). On-site reviews
   // are added on top automatically from Supabase. Track only 4-5★ counts.
   externalReviews: { fourPlusStar: 0 },
