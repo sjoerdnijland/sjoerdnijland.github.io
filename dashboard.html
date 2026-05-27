@@ -713,32 +713,100 @@ function renderAuthState(user) {
   }
 }
 
+// Surface OAuth errors that come back in the URL (e.g. unauthorized redirect)
+function readUrlError() {
+  const sources = [window.location.hash.replace(/^#+/, ''), window.location.search.replace(/^\?+/, '')];
+  for (const s of sources) {
+    if (!s) continue;
+    const p = new URLSearchParams(s);
+    if (p.get('error')) {
+      return {
+        code: p.get('error'),
+        desc: p.get('error_description') || p.get('error_code') || '',
+      };
+    }
+  }
+  return null;
+}
+
 async function initAuth() {
-  // OAuth redirect: Supabase parses the hash automatically on createClient,
-  // but if the session hasn't materialized yet, fall back to setSession.
-  const { data: { session: s1 } } = await db.auth.getSession();
-  if (!s1 && window.location.hash.includes('access_token')) {
+  // Listen for state changes FIRST so the SDK-driven OAuth exchange
+  // (PKCE ?code= or implicit #access_token=) is captured the moment it fires.
+  db.auth.onAuthStateChange((event, session) => {
+    console.log('[auth] event:', event, session?.user?.email || '(no user)');
+    currentUser = session?.user ?? null;
+    renderAuthState(currentUser);
+    if (isAdmin(currentUser)) load();
+
+    // Clean URL once the callback succeeded.
+    if (event === 'SIGNED_IN' &&
+       (window.location.hash.includes('access_token') || window.location.search.includes('code='))) {
+      history.replaceState(null, '', window.location.pathname);
+    }
+  });
+
+  // PKCE: explicit code exchange in case the SDK didn't auto-detect.
+  if (window.location.search.includes('code=')) {
+    const code = new URLSearchParams(window.location.search).get('code');
+    if (code) {
+      try {
+        const { error } = await db.auth.exchangeCodeForSession(window.location.href);
+        if (error) console.warn('[auth] exchangeCodeForSession error:', error.message);
+      } catch (e) {
+        console.warn('[auth] exchangeCodeForSession threw:', e.message);
+      }
+    }
+  }
+
+  // Implicit fallback: manual setSession from hash params.
+  if (window.location.hash.includes('access_token')) {
     const params = new URLSearchParams(window.location.hash.replace(/^#+/, ''));
     const access_token  = params.get('access_token');
     const refresh_token = params.get('refresh_token');
     if (access_token && refresh_token) {
-      try { await db.auth.setSession({ access_token, refresh_token }); } catch {}
+      try { await db.auth.setSession({ access_token, refresh_token }); } catch (e) {
+        console.warn('[auth] setSession failed:', e.message);
+      }
     }
   }
-  if (window.location.hash.includes('access_token')) {
-    history.replaceState(null, '', window.location.pathname);
-  }
 
+  // Initial render based on whatever session exists right now.
   const { data: { session } } = await db.auth.getSession();
   currentUser = session?.user ?? null;
+  console.log('[auth] initial session user:', currentUser?.email || '(none)');
+
+  // If the URL came back with an OAuth error, surface it on the gate.
+  const urlErr = readUrlError();
+  if (urlErr && !currentUser) {
+    const gate     = document.getElementById('auth-gate');
+    const shell    = document.getElementById('dashboard-shell');
+    const title    = document.getElementById('auth-title');
+    const message  = document.getElementById('auth-message');
+    const actions  = document.getElementById('auth-actions');
+    gate.hidden  = false;
+    shell.hidden = true;
+    title.textContent   = 'Sign-in failed';
+    message.innerHTML = `
+      Discord returned an error: <strong style="color:#e84393">${urlErr.code}</strong><br/>
+      <span style="font-family:var(--mono);font-size:0.7rem;color:var(--muted)">${urlErr.desc || ''}</span><br/><br/>
+      <span style="font-family:var(--mono);font-size:0.6rem;letter-spacing:0.12em;color:var(--muted)">
+        If this says "redirect_uri" or "not allowed" — add this page's URL to Supabase
+        Authentication → URL Configuration → Redirect URLs.
+      </span>`;
+    actions.innerHTML = `
+      <button class="discord-btn" onclick="signIn()">
+        <span>◎</span><span>Try again</span>
+      </button>`;
+    history.replaceState(null, '', window.location.pathname);
+    return;
+  }
+
   renderAuthState(currentUser);
   if (isAdmin(currentUser)) load();
 
-  db.auth.onAuthStateChange((_event, session) => {
-    currentUser = session?.user ?? null;
-    renderAuthState(currentUser);
-    if (isAdmin(currentUser)) load();
-  });
+  if (window.location.hash.includes('access_token') || window.location.search.includes('code=')) {
+    history.replaceState(null, '', window.location.pathname);
+  }
 }
 
 // ── View switcher ───────────────────────────────────────────────────────
