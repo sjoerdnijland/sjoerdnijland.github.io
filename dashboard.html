@@ -333,6 +333,27 @@ async function query(event, extra = '') {
   return res.json();
 }
 
+async function fetchReaderReviews() {
+  const since = rangeDays > 0
+    ? `&created_at=gte.${new Date(Date.now() - rangeDays * 86400000).toISOString()}`
+    : '';
+  const url = `${SUPA_URL}/rest/v1/reviews?select=id,rating,source,created_at,body${since}`;
+  const res = await fetch(url, {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+  });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+async function fetchCriticalReviews() {
+  try {
+    const res = await fetch('data/critical-reviews.json', { cache: 'no-cache' });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch { return []; }
+}
+
 async function load() {
   document.getElementById('main').innerHTML = '<div class="loading"><span class="pulse">Loading…</span></div>';
 
@@ -340,7 +361,8 @@ async function load() {
     const [
       pageViews, readClicks, buys, discordClicks,
       chapterStarts, depths, narrationPlays, narrationStops, narrationCompletes,
-      paywallShown, paywallSigninClick, paywallCheckoutClick, purchaseCompleted, epubDownload
+      paywallShown, paywallSigninClick, paywallCheckoutClick, purchaseCompleted, epubDownload,
+      readerReviews, criticalReviews
     ] = await Promise.all([
       query('page_view'),
       query('click_read_chapter'),
@@ -356,6 +378,8 @@ async function load() {
       query('paywall_checkout_click'),
       query('purchase_completed'),
       query('epub_download'),
+      fetchReaderReviews(),
+      fetchCriticalReviews(),
     ]);
 
     const indexViews  = pageViews.filter(e => e.page === 'index' || e.page === '').length;
@@ -526,6 +550,135 @@ async function load() {
               </div>`).join('')}
           </div>
         </div>
+      </div>
+
+      <!-- ── REVIEWS ── -->
+      <div class="section-label" style="margin-top:8px">
+        <span class="dot" style="--accent:#f4ce74"></span>
+        Reviews
+      </div>
+      <div class="grid">
+        ${(() => {
+          const readers = (readerReviews || []).filter(r => r.rating != null);
+          const totalReaders = readers.length;
+          const sumRatings   = readers.reduce((s, r) => s + (Number(r.rating) || 0), 0);
+          const avgRating    = totalReaders > 0 ? (sumRatings / totalReaders) : 0;
+          const avgRatingStr = totalReaders > 0 ? avgRating.toFixed(2) : '—';
+
+          // Star distribution (1–5)
+          const starDist = { 1:0, 2:0, 3:0, 4:0, 5:0 };
+          readers.forEach(r => {
+            const n = Math.max(1, Math.min(5, Math.round(Number(r.rating) || 0)));
+            starDist[n]++;
+          });
+          const maxStar = Math.max(1, ...Object.values(starDist));
+
+          // Source breakdown for reader reviews
+          const sourceCounts = {};
+          readers.forEach(r => {
+            const s = r.source || 'site';
+            sourceCounts[s] = (sourceCounts[s] || 0) + 1;
+          });
+          const maxSource = Math.max(1, ...Object.values(sourceCounts));
+
+          // Critical reviews stats
+          const critical    = criticalReviews || [];
+          const critCount   = critical.length;
+          const critWithOvr = critical.filter(c => c.overall != null);
+          const critAvgOvr  = critWithOvr.length > 0
+            ? (critWithOvr.reduce((s, c) => s + Number(c.overall || 0), 0) / critWithOvr.length).toFixed(2)
+            : '—';
+
+          const starStr = n => '★'.repeat(n) + '<span style="color:rgba(255,255,255,0.15)">' + '★'.repeat(5-n) + '</span>';
+
+          return `
+            <div class="stat-card" style="--accent:#f4ce74">
+              <div class="stat-label">Reader reviews</div>
+              <div class="stat-value">${fmt(totalReaders)}</div>
+              <div class="stat-delta">${rangeDays > 0 ? `Last ${rangeDays} days` : 'All time'}</div>
+            </div>
+            <div class="stat-card" style="--accent:#f4ce74">
+              <div class="stat-label">Average rating</div>
+              <div class="stat-value">${avgRatingStr}<span style="font-size:1rem;color:var(--muted);margin-left:6px">/ 5</span></div>
+              <div class="stat-delta" style="color:#f4ce74;letter-spacing:0.18em">${totalReaders > 0 ? starStr(Math.round(avgRating)) : '—'}</div>
+            </div>
+            <div class="stat-card" style="--accent:#e8a47c">
+              <div class="stat-label">Critical reviews</div>
+              <div class="stat-value">${fmt(critCount)}</div>
+              <div class="stat-delta">Avg ${critAvgOvr}${critAvgOvr !== '—' ? ' / 5' : ''} overall</div>
+            </div>
+            <div class="stat-card" style="--accent:#e8a47c">
+              <div class="stat-label">Critical totals</div>
+              <div class="stat-value" style="font-size:1.4rem;font-family:var(--mono);letter-spacing:0.04em;line-height:1.3">
+                ${critCount === 0
+                  ? '<span style="color:var(--muted);font-size:0.7rem;letter-spacing:0.12em">No critical reviews</span>'
+                  : critical.map(c => `${fmt(c.total ?? '—')}/${fmt(c.max_total ?? '—')}`).join(' · ')}
+              </div>
+              <div class="stat-delta">Per source · total / max</div>
+            </div>
+
+            <!-- Star distribution -->
+            <div class="funnel-card">
+              <div class="funnel-title">Reader rating distribution</div>
+              ${[5,4,3,2,1].map(n => {
+                const c = starDist[n];
+                const pct = totalReaders > 0 ? Math.round((c / maxStar) * 100) : 0;
+                const share = totalReaders > 0 ? ((c / totalReaders) * 100).toFixed(1) : '0.0';
+                return `
+                  <div class="chapter-row">
+                    <div class="chapter-name" style="color:#f4ce74;letter-spacing:0.16em;font-family:var(--mono)">${n} ★</div>
+                    <div class="chapter-bar-wrap">
+                      <div class="chapter-bar" style="width:${pct}%;background:linear-gradient(90deg,#f4ce74,#e8a47c)"></div>
+                    </div>
+                    <div class="chapter-count">${fmt(c)} · <span style="color:var(--muted);font-size:0.58rem">${share}%</span></div>
+                  </div>`;
+              }).join('')}
+              ${totalReaders === 0 ? '<div style="color:var(--muted);font-size:0.62rem;letter-spacing:0.1em;text-align:center;padding:18px 0">No reader reviews in this range</div>' : ''}
+            </div>
+
+            <!-- Source breakdown -->
+            <div class="funnel-card">
+              <div class="funnel-title">Reader reviews — by source</div>
+              ${Object.keys(sourceCounts).length === 0
+                ? `<div style="color:var(--muted);font-size:0.62rem;letter-spacing:0.1em;text-align:center;padding:18px 0">No reader reviews in this range</div>`
+                : Object.entries(sourceCounts).sort((a,b) => b[1]-a[1]).map(([src, count]) => {
+                    const pct = Math.round((count/maxSource)*100);
+                    return `
+                      <div class="chapter-row">
+                        <div class="chapter-name" style="font-family:var(--mono);text-transform:uppercase;letter-spacing:0.12em">${src}</div>
+                        <div class="chapter-bar-wrap">
+                          <div class="chapter-bar" style="width:${pct}%;background:linear-gradient(90deg,#f4ce74,var(--teal))"></div>
+                        </div>
+                        <div class="chapter-count">${fmt(count)}</div>
+                      </div>`;
+                  }).join('')}
+            </div>
+
+            <!-- Critical reviews list -->
+            <div class="funnel-card">
+              <div class="funnel-title">Critical reviews — totals &amp; ratings</div>
+              ${critCount === 0
+                ? `<div style="color:var(--muted);font-size:0.62rem;letter-spacing:0.1em;text-align:center;padding:18px 0">No critical reviews yet</div>`
+                : critical.map(c => {
+                    const overallVal = c.overall != null ? Number(c.overall) : null;
+                    const overallHtml = overallVal != null
+                      ? `<span style="color:#f4ce74;letter-spacing:0.16em">${starStr(Math.round(overallVal))}</span>`
+                      : '<span style="color:var(--muted)">—</span>';
+                    const totalLabel = c.total != null && c.max_total != null
+                      ? `${fmt(c.total)} / ${fmt(c.max_total)}`
+                      : '—';
+                    return `
+                      <div class="chapter-row" style="grid-template-columns: 1fr 100px 90px;gap:14px">
+                        <div class="chapter-name" style="font-family:var(--serif);font-size:0.8rem;color:var(--ivory);letter-spacing:0.02em;text-transform:none">
+                          ${c.reviewer || '—'} <span style="color:var(--muted);font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;margin-left:6px">${c.source || ''}</span>
+                        </div>
+                        <div class="chapter-count" style="text-align:left;font-size:0.62rem;color:var(--ivory)">${totalLabel}</div>
+                        <div class="chapter-count" style="text-align:right">${overallHtml}</div>
+                      </div>`;
+                  }).join('')}
+            </div>
+          `;
+        })()}
       </div>
 
       <!-- ── PAYWALL FUNNEL ── -->
