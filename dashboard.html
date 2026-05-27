@@ -832,38 +832,20 @@ async function loadOKRs() {
     };
 
     const [
-      pageViews, readClicks, buys, checkoutClicks, purchases, readerReviews
+      pageViews, readClicks, buys, discordClicks, purchases, readerReviews
     ] = await Promise.all([
       fetchEv('page_view'),
       fetchEv('click_read_chapter'),
       fetchEv('click_buy'),
-      fetchEv('paywall_checkout_click'),
+      fetchEv('click_discord'),
       fetchEv('purchase_completed'),
       fetchReviews(),
     ]);
 
-    // ── KR3 — Reviews (combined: Supabase reader reviews + external manual count)
-    const onSiteCount      = readerReviews.length;
-    const onSiteFourPlus   = readerReviews.filter(r => Number(r.rating) >= 4).length;
-    const totalReviews     = onSiteCount + (OKR_MANUAL.externalReviews.total || 0);
-    const totalFourPlus    = onSiteFourPlus + (OKR_MANUAL.externalReviews.fourPlusStar || 0);
-
-    // ── KR4 — Landing-page → email-signup conversion
-    const landingViews = (() => {
-      if (!OKR_MANUAL.landingPageSlug) return pageViews.length;
-      return pageViews.filter(e => (e.page || '') === OKR_MANUAL.landingPageSlug).length;
-    })();
-    const signups = Number(OKR_MANUAL.landingPageSignups || 0);
-    const signupRate = landingViews > 0 ? (signups / landingViews) * 100 : 0;
-
-    // ── KR5a — Reader page → Buy CTA click
-    const readerViews = pageViews.filter(e => (e.page || '') === 'reader').length;
-    const buyClickRate = readerViews > 0 ? (buys.length / readerViews) * 100 : 0;
-
-    // ── KR5b — Checkout click → purchase
-    const purchaseRate = checkoutClicks.length > 0
-      ? (purchases.length / checkoutClicks.length) * 100
-      : 0;
+    // ── Reviews: only 4-5★ count toward the KR
+    const onSiteCount    = readerReviews.length;
+    const onSiteFourPlus = readerReviews.filter(r => Number(r.rating) >= 4).length;
+    const totalFourPlus  = onSiteFourPlus + (OKR_MANUAL.externalReviews.fourPlusStar || 0);
 
     // KR specs — current / target / formatter / source / note
     const krs = [
@@ -878,103 +860,59 @@ async function loadOKRs() {
       },
       {
         id: 'KR2',
-        title: 'Maintain a rolling 12-week open rate of 40%+ on regular transmissions.',
-        current: OKR_MANUAL.openRate12wk,
-        target:  40,
-        format:  v => `${(Number(v) || 0).toFixed(1)}%`,
-        source:  'manual',
-        note:    'Excludes the welcome sequence — those run higher and would otherwise inflate the metric.',
-      },
-      {
-        id: 'KR3',
-        title: 'Earn 100+ authentic public reviews across Amazon, Goodreads, and StoryGraph — with at least 30 at 4★ or higher.',
-        current: totalReviews,
+        title: 'Earn 100+ authentic public reviews across Amazon, Goodreads, and StoryGraph — with 4 or 5 ★.',
+        current: totalFourPlus,
         target:  100,
         format:  v => fmt(v),
         source:  'live+manual',
-        note:    `<strong>${totalFourPlus} at 4★+</strong> (target ≥ 30). On-site: ${onSiteCount} (${onSiteFourPlus} at 4★+). External: ${OKR_MANUAL.externalReviews.total} (${OKR_MANUAL.externalReviews.fourPlusStar} at 4★+) — update <code>OKR_MANUAL.externalReviews</code> manually.`,
-        secondaryFloor: { current: totalFourPlus, target: 30, label: '4★+ floor' },
+        note:    `On-site: <strong>${onSiteFourPlus}</strong> of ${onSiteCount} reader reviews are 4★+. External (Amazon + StoryGraph): <strong>${OKR_MANUAL.externalReviews.fourPlusStar}</strong> — update <code>OKR_MANUAL.externalReviews.fourPlusStar</code> manually.`,
+      },
+      {
+        id: 'KR3',
+        title: 'Gain 100 Discord followers.',
+        current: OKR_MANUAL.discordFollowers,
+        target:  100,
+        format:  v => fmt(Math.round(v)),
+        source:  'manual',
+        note:    `Pulled manually from the Discord admin panel. <strong>${fmt(discordClicks.length)}</strong> click-throughs to Discord recorded in site analytics.`,
       },
       {
         id: 'KR4',
-        title: 'Convert 10%+ of unique landing-page visitors into email subscribers.',
-        current: signupRate,
-        target:  10,
-        format:  v => `${(Number(v) || 0).toFixed(1)}%`,
-        source:  'live+manual',
-        note:    `${fmt(signups)} signups over ${fmt(landingViews)} ${OKR_MANUAL.landingPageSlug ? `page=${OKR_MANUAL.landingPageSlug}` : 'page'} views. Measured at the dedicated landing page, not the homepage — the homepage shouldn't drag this around.`,
-      },
-      {
-        id: 'KR5a',
-        title: 'Achieve 30%+ click-through from the free chapter page to the purchase CTA.',
-        current: buyClickRate,
-        target:  30,
-        format:  v => `${(Number(v) || 0).toFixed(1)}%`,
+        title: 'Gain direct purchases (Stripe).',
+        current: purchases.length,
+        target:  100,
+        format:  v => fmt(v),
         source:  'live',
-        note:    `${fmt(buys.length)} buy clicks over ${fmt(readerViews)} reader-page visits. Persuasion and pacing inside the sample.`,
-      },
-      {
-        id: 'KR5b',
-        title: 'Achieve 8%+ purchase conversion from CTA click to confirmed order.',
-        current: purchaseRate,
-        target:  8,
-        format:  v => `${(Number(v) || 0).toFixed(1)}%`,
-        source:  'live',
-        note:    `${fmt(purchases.length)} purchases over ${fmt(checkoutClicks.length)} checkout clicks. Price, store friction, and external trust.`,
-      },
-      {
-        id: 'KR6',
-        title: '20%+ of active subscribers reply, vote in a poll, or otherwise interact with at least one transmission per quarter.',
-        current: OKR_MANUAL.interactionRateQuarterly,
-        target:  20,
-        format:  v => `${(Number(v) || 0).toFixed(1)}%`,
-        source:  'manual',
-        note:    'Open rates measure habit. Replies measure relationship. The KR that actually puts teeth on the objective.',
+        note:    `<strong>${fmt(purchases.length)}</strong> purchases recorded via the <code>purchase_completed</code> analytics event.`,
       },
     ];
 
     const card = (kr) => {
       const pct = Math.min(100, Math.max(0, (kr.current / kr.target) * 100));
-      const onTrack = kr.current >= kr.target;
-      const statusClass = kr.source === 'manual' && (!kr.current || kr.current === 0)
-        ? 'kr-status--manual'
-        : (onTrack ? 'kr-status--on' : 'kr-status--off');
-      const statusLabel = kr.source === 'manual' && (!kr.current || kr.current === 0)
-        ? 'Data needed'
-        : (onTrack ? 'On target' : 'Below target');
-      const barClass = kr.source === 'manual' && (!kr.current || kr.current === 0)
-        ? 'kr-bar--manual'
-        : (onTrack ? '' : 'kr-bar--off');
+      const onTarget = kr.current >= kr.target;
+      const needsData = kr.source === 'manual' && (!kr.current || kr.current === 0);
+
+      // Only show a status pill for positive states — no "Below target" shame.
+      let statusHtml = '';
+      if (onTarget) {
+        statusHtml = '<div class="kr-status kr-status--on">On target</div>';
+      } else if (needsData) {
+        statusHtml = '<div class="kr-status kr-status--manual">Data needed</div>';
+      }
+
+      const barClass = needsData ? 'kr-bar--manual' : '';
       const sourceBadge = ({
         'live':        '<span class="kr-source kr-source--live">◉ live</span>',
         'manual':      '<span class="kr-source kr-source--manual">◐ manual</span>',
         'live+manual': '<span class="kr-source kr-source--live">◉ live</span><span class="kr-source kr-source--manual">◐ manual</span>',
       })[kr.source] || '';
-      const secondaryHtml = kr.secondaryFloor
-        ? (() => {
-            const f = kr.secondaryFloor;
-            const fPct = Math.min(100, Math.max(0, (f.current / f.target) * 100));
-            const fOnTrack = f.current >= f.target;
-            return `
-              <div class="kr-progress-row" style="margin-top:14px">
-                <div class="kr-bar-wrap">
-                  <div class="kr-bar ${fOnTrack ? '' : 'kr-bar--off'}" style="width:${fPct}%"></div>
-                </div>
-                <div class="kr-numbers">
-                  <div class="now" style="font-size:1.2rem">${fmt(f.current)}<span style="font-size:0.7rem;color:var(--muted);margin-left:6px">/ ${fmt(f.target)}</span></div>
-                  <div class="target">${f.label}</div>
-                  <div class="pct ${fOnTrack ? '' : 'pct--off'}">${fPct.toFixed(0)}%</div>
-                </div>
-              </div>`;
-          })()
-        : '';
 
       return `
         <div class="kr-card">
           <div class="kr-head">
             <div class="kr-badge">${kr.id}</div>
             <div class="kr-title">${kr.title}</div>
-            <div class="kr-status ${statusClass}">${statusLabel}</div>
+            ${statusHtml}
           </div>
           <div class="kr-progress-row">
             <div class="kr-bar-wrap">
@@ -983,10 +921,9 @@ async function loadOKRs() {
             <div class="kr-numbers">
               <div class="now">${kr.format(kr.current)}<span style="font-size:0.8rem;color:var(--muted);margin-left:6px">/ ${kr.format(kr.target)}</span></div>
               <div class="target">target</div>
-              <div class="pct ${onTrack ? '' : 'pct--off'}">${pct.toFixed(0)}% of target</div>
+              <div class="pct">${pct.toFixed(0)}% of target</div>
             </div>
           </div>
-          ${secondaryHtml}
           <div class="kr-note">${sourceBadge}${kr.note}</div>
         </div>`;
     };
@@ -1013,27 +950,18 @@ async function loadOKRs() {
 }
 
 // ── Manually-tracked OKR inputs ─────────────────────────────────────────
-// These KRs depend on the email platform (Mailchimp / ConvertKit / etc.)
-// or external review platforms (Amazon / StoryGraph) that aren't wired into
-// Supabase yet. Edit these numbers from the email platform dashboard
-// — they'll flow straight into the OKR view.
+// These KRs depend on platforms not wired into Supabase yet (email platform,
+// Discord member count, external review sites). Edit these numbers from the
+// respective dashboards — they'll flow straight into the OKR view.
 const OKR_MANUAL = {
   // KR1: active subscribers (opened ≥1 email in 30d OR clicked ≥1 link in 60d)
   activeSubscribers: 0,
-  // KR2: rolling 12-week open rate on regular transmissions (% — e.g. 38.5)
-  openRate12wk: 0,
-  // KR4: signups counted at the dedicated landing page (the conversion rate
-  // is computed live: signups / unique landing-page visitors)
-  landingPageSignups: 0,
-  // KR6: % of active subscribers who interacted in the last quarter (reply / poll / etc.)
-  interactionRateQuarterly: 0,
-  // KR3 — external review platforms (Amazon + StoryGraph). Goodreads + on-site
-  // reviews come from Supabase automatically and are added on top of these.
-  externalReviews:        { total: 0, fourPlusStar: 0 },
-  // KR4 landing-page slug used to filter page_view events. Set to '' to use
-  // all page_views as the denominator while the dedicated landing page ships.
-  landingPageSlug: 'landing',
-  // Last time the manual fields above were synced from the email platform
+  // KR3: Discord server members (look up from the Discord admin panel)
+  discordFollowers: 0,
+  // KR2 — external review platforms (Amazon + StoryGraph). On-site reviews
+  // are added on top automatically from Supabase. Track only 4-5★ counts.
+  externalReviews: { fourPlusStar: 0 },
+  // Last time the manual fields above were synced
   lastManualSync: '—',
 };
 
