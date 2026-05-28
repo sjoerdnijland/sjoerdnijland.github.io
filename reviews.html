@@ -576,53 +576,10 @@
 
   const container = document.getElementById('rv-content');
 
-  // Pull reviews from the DB + editorial Instagram associations from JSON in parallel.
-  // The Instagram link is a curatorial overlay (we link a reader's review to their
-  // public Instagram post about the book) — not data the reader submitted, so it
-  // lives in data/review-instagram.json keyed by display_name.
-
-  // Normalize a name so "@AnnaliseReads", "annalise reads", "annalisereads"
-  // all collapse to the same lookup key.
-  function igKey(name) {
-    return String(name || '')
-      .trim()
-      .toLowerCase()
-      .replace(/^@+/, '')
-      .replace(/[\s_-]+/g, '');
-  }
-
-  async function loadInstagramOverlay() {
-    try {
-      const res = await fetch('data/review-instagram.json', { cache: 'no-cache' });
-      if (!res.ok) {
-        console.warn('[ig-overlay] fetch failed:', res.status);
-        return new Map();
-      }
-      const list = await res.json();
-      const map = new Map();
-      (Array.isArray(list) ? list : []).forEach(entry => {
-        const key = igKey(entry.display_name);
-        if (!key) return;
-        map.set(key, {
-          instagram_url:    entry.instagram_url,
-          instagram_handle: entry.instagram_handle,
-          instagram_embed:  !!entry.instagram_embed,
-        });
-      });
-      console.log('[ig-overlay] loaded keys:', Array.from(map.keys()));
-      return map;
-    } catch (e) {
-      console.warn('[ig-overlay] parse error:', e.message);
-      return new Map();
-    }
-  }
-
-  const [{ data, error }, igOverlay] = await Promise.all([
-    db.from('reviews')
-      .select('id, rating, body, goodreads_url, display_name, avatar_url, source, created_at')
-      .order('created_at', { ascending: false }),
-    loadInstagramOverlay(),
-  ]);
+  const { data, error } = await db
+    .from('reviews')
+    .select('id, rating, body, goodreads_url, display_name, avatar_url, source, created_at')
+    .order('created_at', { ascending: false });
 
   if (error) {
     container.innerHTML = `<div class="rv-empty"><em>Couldn't load reviews right now.</em><br/>${error.message || ''}</div>`;
@@ -637,19 +594,6 @@
       </div>`;
     return;
   }
-
-  // Merge the editorial Instagram overlay onto each DB review by display_name.
-  console.log('[ig-overlay] DB review names:', data.map(r => r.display_name));
-  data.forEach(r => {
-    const key = igKey(r.display_name);
-    const ig  = igOverlay.get(key);
-    if (ig) {
-      r.instagram_url    = ig.instagram_url;
-      r.instagram_handle = ig.instagram_handle;
-      r.instagram_embed  = ig.instagram_embed;
-      console.log('[ig-overlay] matched review:', r.display_name, '→', ig.instagram_url);
-    }
-  });
 
   function stars(rating) {
     const r = rating || 0;
@@ -684,39 +628,6 @@
     }[c]));
   }
 
-  // Same renderer as in the critical-reviews block — duplicated here because
-  // each <script> block is its own IIFE scope.
-  function instagramHtml(r) {
-    const url = r.instagram_url;
-    if (!url) return '';
-    const m = String(url).match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
-    const code = m ? m[1] : null;
-
-    // Embed only works if we can extract the post code from the URL.
-    if (r.instagram_embed && code) {
-      const embedSrc = `https://www.instagram.com/p/${escapeHtml(code)}/embed/`;
-      return `
-        <div class="rv-ig-embed">
-          <iframe
-            src="${embedSrc}"
-            height="620"
-            loading="lazy"
-            scrolling="no"
-            allowtransparency="true"
-            title="Instagram post"
-          ></iframe>
-        </div>`;
-    }
-
-    // Link card — works for any non-empty URL, even if the regex didn't match.
-    const handle = r.instagram_handle ? `@${escapeHtml(r.instagram_handle)}` : 'View on Instagram';
-    return `
-      <a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="rv-ig-link">
-        <span class="rv-ig-icon"></span>
-        <span>${handle}</span>
-      </a>`;
-  }
-
   // Show the sticky button once the user has scrolled past the top CTA
   (function setupStickyToggle() {
     const sticky = document.getElementById('rv-sticky');
@@ -746,7 +657,6 @@
     const grLink = r.goodreads_url
       ? `<a class="rv-link" href="${escapeHtml(r.goodreads_url)}" target="_blank" rel="noopener">Read on Goodreads →</a>`
       : '';
-    const igHtml = instagramHtml(r);
     return `
       <div class="rv-card">
         <div class="rv-card-head">
@@ -762,7 +672,6 @@
         </div>
         ${bodyHtml}
         ${grLink}
-        ${igHtml}
       </div>`;
   }).join('') + `</div>`;
 })();
