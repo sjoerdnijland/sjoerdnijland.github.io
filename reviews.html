@@ -576,10 +576,37 @@
 
   const container = document.getElementById('rv-content');
 
-  const { data, error } = await db
-    .from('reviews')
-    .select('id, rating, body, goodreads_url, display_name, avatar_url, source, created_at, instagram_url, instagram_handle, instagram_embed')
-    .order('created_at', { ascending: false });
+  // Pull reviews from the DB + editorial Instagram associations from JSON in parallel.
+  // The Instagram link is a curatorial overlay (we link a reader's review to their
+  // public Instagram post about the book) — not data the reader submitted, so it
+  // lives in data/review-instagram.json keyed by display_name.
+  async function loadInstagramOverlay() {
+    try {
+      const res = await fetch('data/review-instagram.json', { cache: 'no-cache' });
+      if (!res.ok) return new Map();
+      const list = await res.json();
+      const map = new Map();
+      (Array.isArray(list) ? list : []).forEach(entry => {
+        const key = String(entry.display_name || '').trim().toLowerCase();
+        if (!key) return;
+        map.set(key, {
+          instagram_url:    entry.instagram_url,
+          instagram_handle: entry.instagram_handle,
+          instagram_embed:  !!entry.instagram_embed,
+        });
+      });
+      return map;
+    } catch {
+      return new Map();
+    }
+  }
+
+  const [{ data, error }, igOverlay] = await Promise.all([
+    db.from('reviews')
+      .select('id, rating, body, goodreads_url, display_name, avatar_url, source, created_at')
+      .order('created_at', { ascending: false }),
+    loadInstagramOverlay(),
+  ]);
 
   if (error) {
     container.innerHTML = `<div class="rv-empty"><em>Couldn't load reviews right now.</em><br/>${error.message || ''}</div>`;
@@ -594,6 +621,17 @@
       </div>`;
     return;
   }
+
+  // Merge the editorial Instagram overlay onto each DB review by display_name.
+  data.forEach(r => {
+    const key = String(r.display_name || '').trim().toLowerCase();
+    const ig  = igOverlay.get(key);
+    if (ig) {
+      r.instagram_url    = ig.instagram_url;
+      r.instagram_handle = ig.instagram_handle;
+      r.instagram_embed  = ig.instagram_embed;
+    }
+  });
 
   function stars(rating) {
     const r = rating || 0;
