@@ -240,7 +240,7 @@ function Buy() {
           <a href="https://www.instagram.com/theunfoldingbook" className="bl-social-btn" target="_blank" rel="noopener" title="Instagram @theunfoldingbook">
             <img src="meta/insta.png" width="22" height="22" alt="Instagram" style={{borderRadius:'4px'}} />
           </a>
-          <a href="https://discord.gg/45bwdn8J" className="bl-social-btn" target="_blank" rel="noopener" title="Join our Discord">
+          <a href="https://discord.gg/8CMVWNwMwF" className="bl-social-btn" target="_blank" rel="noopener" title="Join our Discord">
             <img src="meta/discord.png" width="22" height="22" alt="Discord" />
           </a>
         </div>

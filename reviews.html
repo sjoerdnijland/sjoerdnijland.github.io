@@ -243,6 +243,59 @@
   }
   .rv-link:hover { opacity: 0.75; }
 
+  /* Instagram link card — used when instagram_url is set but no embed */
+  .rv-ig-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 14px;
+    margin-right: 14px;
+    padding: 7px 12px;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #e1306c;
+    text-decoration: none;
+    border: 1px solid rgba(225,48,108,0.35);
+    border-radius: 2px;
+    background: rgba(225,48,108,0.04);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .rv-ig-link:hover {
+    background: rgba(225,48,108,0.1);
+    border-color: rgba(225,48,108,0.55);
+  }
+  .rv-ig-icon {
+    width: 14px; height: 14px;
+    display: inline-block;
+    background: linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+    border-radius: 3px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .rv-ig-icon::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1.5px solid white;
+    border-radius: 50%;
+  }
+
+  /* Instagram iframe embed — opt-in via instagram_embed: true */
+  .rv-ig-embed {
+    margin-top: 16px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.02);
+    max-width: 540px;
+  }
+  .rv-ig-embed iframe {
+    display: block;
+    width: 100%;
+    border: 0;
+    background: transparent;
+  }
+
   .rv-cta {
     margin-top: 64px;
     padding: 32px 26px;
@@ -444,6 +497,7 @@
       : `<span class="rv-source rv-source--rf">${esc(r.source)}</span>`;
 
     const bodyHtml = (r.body || []).map(p => `<p class="rv-body">${sanitizeInline(p)}</p>`).join('');
+    const igHtml = instagramHtml(r);
 
     return `
       <div class="rv-card rv-card--critical">
@@ -460,7 +514,42 @@
         </div>
         ${scoresHtml}
         ${bodyHtml}
+        ${igHtml}
       </div>`;
+  }
+
+  // Shared Instagram renderer — same for critical and reader reviews.
+  // - instagram_url: required (the public post URL)
+  // - instagram_embed: optional bool — true renders the iframe instead of the link card
+  function instagramHtml(r) {
+    const url = r.instagram_url;
+    if (!url) return '';
+    // Pull out the post shortcode from /p/<code>/ or /reel/<code>/
+    const m = String(url).match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
+    if (!m) return ''; // not a valid IG post URL
+    const code = m[1];
+
+    if (r.instagram_embed) {
+      const embedSrc = `https://www.instagram.com/p/${esc(code)}/embed/`;
+      return `
+        <div class="rv-ig-embed">
+          <iframe
+            src="${embedSrc}"
+            height="620"
+            loading="lazy"
+            scrolling="no"
+            allowtransparency="true"
+            title="Instagram post by ${esc(r.display_name || r.reviewer || 'reader')}"
+          ></iframe>
+        </div>`;
+    }
+
+    const handle = r.instagram_handle ? `@${esc(r.instagram_handle)}` : 'View on Instagram';
+    return `
+      <a href="${esc(url)}" target="_blank" rel="noopener" class="rv-ig-link">
+        <span class="rv-ig-icon"></span>
+        <span>${handle}</span>
+      </a>`;
   }
 
   try {
@@ -490,7 +579,7 @@
 
   const { data, error } = await db
     .from('reviews')
-    .select('id, rating, body, goodreads_url, display_name, avatar_url, source, created_at')
+    .select('id, rating, body, goodreads_url, display_name, avatar_url, source, created_at, instagram_url, instagram_handle, instagram_embed')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -540,6 +629,37 @@
     }[c]));
   }
 
+  // Same renderer as in the critical-reviews block — duplicated here because
+  // each <script> block is its own IIFE scope.
+  function instagramHtml(r) {
+    const url = r.instagram_url;
+    if (!url) return '';
+    const m = String(url).match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
+    if (!m) return '';
+    const code = m[1];
+
+    if (r.instagram_embed) {
+      const embedSrc = `https://www.instagram.com/p/${escapeHtml(code)}/embed/`;
+      return `
+        <div class="rv-ig-embed">
+          <iframe
+            src="${embedSrc}"
+            height="620"
+            loading="lazy"
+            scrolling="no"
+            allowtransparency="true"
+            title="Instagram post"
+          ></iframe>
+        </div>`;
+    }
+    const handle = r.instagram_handle ? `@${escapeHtml(r.instagram_handle)}` : 'View on Instagram';
+    return `
+      <a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="rv-ig-link">
+        <span class="rv-ig-icon"></span>
+        <span>${handle}</span>
+      </a>`;
+  }
+
   // Show the sticky button once the user has scrolled past the top CTA
   (function setupStickyToggle() {
     const sticky = document.getElementById('rv-sticky');
@@ -569,6 +689,7 @@
     const grLink = r.goodreads_url
       ? `<a class="rv-link" href="${escapeHtml(r.goodreads_url)}" target="_blank" rel="noopener">Read on Goodreads →</a>`
       : '';
+    const igHtml = instagramHtml(r);
     return `
       <div class="rv-card">
         <div class="rv-card-head">
@@ -584,6 +705,7 @@
         </div>
         ${bodyHtml}
         ${grLink}
+        ${igHtml}
       </div>`;
   }).join('') + `</div>`;
 })();

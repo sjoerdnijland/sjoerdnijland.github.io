@@ -26,7 +26,7 @@
           <div>
             <h4>Community</h4>
             <a href="wiki.html">Wiki</a>
-            <a href="https://discord.gg/MWejqk8a" target="_blank" rel="noopener">Discord</a>
+            <a href="https://discord.gg/8CMVWNwMwF" target="_blank" rel="noopener">Discord</a>
           </div>
         </div>
         <div class="footer-bottom">
