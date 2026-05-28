@@ -48,7 +48,7 @@
     successEl.innerHTML = `
       <div class="mr-eyebrow">◈ Uplink · Intake confirmed</div>
       <h1 class="mr-success-confirm">
-        Citizen credentials issued. <em>Uplink Transmission inbound.</em>
+        Citizen credentials issued.
       </h1>
 
       <div class="mr-id-card">
