@@ -8,14 +8,17 @@
 
   const SECTOR_COPY = {
     'G3': {
+      tag:   'Homestead',
       label: 'Sector G3 — the Sickle.',
       body:  'The basin between the mountains where the new arrivals are housed. The mountains glow at the summits, green and phosphorescent. Nobody has yet bothered to ask why.',
     },
     'A7': {
+      tag:   'The Leaf',
       label: 'Sector A7 — the Delta.',
       body:  'The Leaf, on the survey maps. The colony’s foothold in the jungle. A scar in the forest, ringed with turrets. The forest is patient. The turrets are not.',
     },
     'B2': {
+      tag:   'Ivaldi',
       label: 'Sector B2 — the Plateau.',
       body:  'Ivaldi Base. The cold rock, the thin air, the radiation, the temple in the basement. We assigned you here because the Plateau is where the older hands live.',
     },
@@ -57,7 +60,7 @@
       </div>
 
       <p class="mr-sector">
-        <span class="mr-sector-tag">Homestead ◈</span>
+        <span class="mr-sector-tag">${esc(s.tag)} ◈</span>
         <strong style="font-style:normal;color:var(--ivory)">${esc(s.label)}</strong> ${esc(s.body)}
       </p>
 
