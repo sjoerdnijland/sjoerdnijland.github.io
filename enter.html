@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Enter Mairee — The Unfolding</title>
+<meta name="description" content="Mairee colony intake. Become a Citizen of The Unfolding. Approximately one transmission every two weeks."/>
+<link rel="icon" href="favicon.ico" sizes="any"/>
+<link rel="icon" href="favicon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="favicon-180.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css"/>
+<style>
+  .mr-wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 80px 28px 100px;
+    color: var(--ivory);
+  }
+  .mr-back {
+    display: inline-flex; gap: 8px; align-items: center;
+    font-family: var(--mono); font-size: 0.66rem;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    margin-bottom: 40px;
+    transition: color 0.2s;
+  }
+  .mr-back:hover { color: var(--ivory); }
+
+  .mr-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 14px;
+  }
+  .mr-title {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(2.4rem, 5vw, 3.4rem);
+    line-height: 1.05;
+    color: var(--ivory);
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .mr-title em { color: var(--rose); font-style: italic; }
+  .mr-lede {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--muted);
+    font-size: 1.1rem;
+    line-height: 1.55;
+    margin: 0 0 48px;
+    max-width: 540px;
+  }
+
+  /* ── Form ── */
+  .mr-form {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 36px 32px;
+    background: rgba(11,34,39,0.5);
+  }
+  .mr-field { margin-bottom: 24px; }
+  .mr-field:last-of-type { margin-bottom: 0; }
+
+  .mr-label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .mr-label .req { color: var(--rose); margin-left: 4px; }
+  .mr-hint {
+    display: block;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.45;
+  }
+
+  .mr-input {
+    width: 100%;
+    background: rgba(6,22,25,0.6);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 12px 14px;
+    color: var(--ivory);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.4;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .mr-input:hover { border-color: var(--line-strong); }
+  .mr-input:focus {
+    outline: none;
+    border-color: var(--rose);
+    background: rgba(6,22,25,0.85);
+    box-shadow: 0 0 0 3px rgba(233,74,124,0.08);
+  }
+  .mr-input::placeholder { color: rgba(122,144,151,0.55); }
+  .mr-input:invalid:not(:placeholder-shown) { border-color: rgba(233,74,124,0.55); }
+
+  /* ── Reader state radio group ── */
+  .mr-fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+  .mr-legend {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    padding: 0;
+  }
+  .mr-legend .req { color: var(--rose); margin-left: 4px; }
+
+  .mr-options { display: flex; flex-direction: column; gap: 8px; }
+  .mr-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    background: rgba(6,22,25,0.4);
+  }
+  .mr-option:hover { border-color: var(--line-strong); background: rgba(6,22,25,0.7); }
+  .mr-option input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--muted);
+    border-radius: 50%;
+    margin: 0;
+    flex-shrink: 0;
+    position: relative;
+    transition: border-color 0.15s;
+    cursor: pointer;
+  }
+  .mr-option input[type="radio"]:checked {
+    border-color: var(--rose);
+  }
+  .mr-option input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    background: var(--rose);
+    border-radius: 50%;
+  }
+  .mr-option input[type="radio"]:focus-visible {
+    outline: 2px solid var(--rose);
+    outline-offset: 3px;
+  }
+  .mr-option:has(input:checked) {
+    border-color: rgba(233,74,124,0.55);
+    background: rgba(233,74,124,0.05);
+  }
+  .mr-option-label {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    color: var(--ivory);
+    line-height: 1.3;
+  }
+
+  /* ── Submit + status ── */
+  .mr-submit {
+    width: 100%;
+    margin-top: 8px;
+    padding: 14px 22px;
+    background: var(--rose);
+    border: 1px solid var(--rose);
+    color: #2a0814;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    font-weight: 500;
+  }
+  .mr-submit:hover { background: var(--rose-deep); border-color: var(--rose-deep); }
+  .mr-submit:active { transform: translateY(1px); }
+  .mr-submit:focus-visible {
+    outline: 2px solid var(--rose);
+    outline-offset: 3px;
+  }
+  .mr-submit[disabled] {
+    background: rgba(233,74,124,0.25);
+    border-color: rgba(233,74,124,0.25);
+    color: rgba(244,234,217,0.6);
+    cursor: not-allowed;
+  }
+
+  .mr-status {
+    min-height: 24px;
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .mr-status[data-tone="loading"] { color: var(--rose-soft); }
+  .mr-status[data-tone="error"]   { color: var(--rose); }
+  .mr-status[data-tone="success"] { color: #7fb289; }
+
+  .mr-frequency {
+    margin: 28px 0 0;
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.92rem;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .mr-privacy {
+    margin: 18px 0 0;
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+  }
+  .mr-privacy a { color: var(--muted); text-decoration: underline; text-decoration-color: var(--line); }
+  .mr-privacy a:hover { color: var(--ivory); }
+
+  /* ── Success state ── */
+  .mr-success {
+    animation: mr-fade-in 0.7s cubic-bezier(0.22,1,0.36,1);
+  }
+  @keyframes mr-fade-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .mr-success-confirm {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+    line-height: 1.2;
+    color: var(--ivory);
+    margin: 0 0 28px;
+  }
+  .mr-success-confirm em { color: var(--rose); font-style: italic; }
+
+  .mr-id-card {
+    border: 1px solid rgba(233,74,124,0.4);
+    border-radius: 4px;
+    padding: 26px 24px;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(233,74,124,0.10), transparent 70%),
+      rgba(11,34,39,0.55);
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .mr-id-label {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .mr-id {
+    font-family: var(--mono);
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--ivory);
+    word-break: break-word;
+  }
+
+  .mr-sector {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--ivory-2);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin: 0 0 36px;
+    padding: 0 4px;
+  }
+
+  .mr-block {
+    border-top: 1px solid var(--line);
+    padding: 22px 4px;
+  }
+  .mr-block:last-of-type { border-bottom: 1px solid var(--line); }
+  .mr-block-title {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin: 0 0 8px;
+  }
+  .mr-block-body {
+    font-family: var(--serif);
+    color: var(--ivory);
+    font-size: 1rem;
+    line-height: 1.55;
+    margin: 0 0 12px;
+  }
+  .mr-block-body em { color: var(--rose-soft); font-style: italic; }
+  .mr-block-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--rose);
+    text-decoration: none;
+    transition: gap 0.2s, opacity 0.2s;
+  }
+  .mr-block-cta:hover { opacity: 0.8; gap: 12px; }
+
+  .mr-closing {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--ivory-2);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 36px 0 6px;
+  }
+  .mr-signoff {
+    font-family: var(--serif);
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  @media (max-width: 520px) {
+    .mr-wrap { padding: 60px 18px 80px; }
+    .mr-form { padding: 26px 20px; }
+    .mr-option-label { font-size: 0.98rem; }
+  }
+
+  /* Keyboard focus-visible defaults for any interactive element we didn't style above */
+  :focus-visible { outline-offset: 3px; }
+</style>
+</head>
+<body class="grain">
+
+<nav class="nav" id="nav">
+  <a href="index.html" class="nav-logo">
+    <span class="dot"></span>
+    <span>THE UNFOLDING</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html" class="nav-back-link">
+      <span class="nav-back-arrow">←</span> Back to the book
+    </a>
+  </div>
+</nav>
+
+<main class="mr-wrap">
+  <a href="index.html" class="mr-back">← Back to the book</a>
+
+  <!-- ── Form view ── -->
+  <section id="mr-form-view">
+    <div class="mr-eyebrow">◈ Colony intake · Mairee</div>
+    <h1 class="mr-title">Enter <em>Mairee</em>.</h1>
+    <p class="mr-lede">
+      The colony keeps a register. New arrivals are issued a designation and a sector.
+      Citizens receive periodic transmissions from the Uplink — story dispatches,
+      colony news, early-access drops. Step into the intake desk.
+    </p>
+
+    <form class="mr-form" id="mr-form" novalidate>
+      <div class="mr-field">
+        <label class="mr-label" for="mr-email">
+          Comm channel<span class="req" aria-hidden="true">*</span>
+        </label>
+        <input
+          class="mr-input"
+          id="mr-email"
+          name="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          required
+          placeholder="your@email"
+          aria-required="true"
+        />
+        <span class="mr-hint">Where the Uplink reaches you.</span>
+      </div>
+
+      <div class="mr-field">
+        <label class="mr-label" for="mr-name">
+          Citizen designation<span class="req" aria-hidden="true">*</span>
+        </label>
+        <input
+          class="mr-input"
+          id="mr-name"
+          name="name"
+          type="text"
+          autocomplete="given-name"
+          required
+          maxlength="80"
+          placeholder="First name"
+          aria-required="true"
+        />
+        <span class="mr-hint">What the colony will call you. First name only.</span>
+      </div>
+
+      <div class="mr-field">
+        <fieldset class="mr-fieldset">
+          <legend class="mr-legend">
+            Where are you with The Unfolding?<span class="req" aria-hidden="true">*</span>
+          </legend>
+          <div class="mr-options">
+            <label class="mr-option">
+              <input type="radio" name="reader_state" value="Just arriving" required/>
+              <span class="mr-option-label">Just arriving</span>
+            </label>
+            <label class="mr-option">
+              <input type="radio" name="reader_state" value="Currently reading"/>
+              <span class="mr-option-label">Currently reading</span>
+            </label>
+            <label class="mr-option">
+              <input type="radio" name="reader_state" value="I've read Part 1"/>
+              <span class="mr-option-label">I've read Part 1</span>
+            </label>
+          </div>
+        </fieldset>
+      </div>
+
+      <button type="submit" class="mr-submit" id="mr-submit">
+        Request entry
+      </button>
+
+      <div class="mr-status" id="mr-status" role="status" aria-live="polite"></div>
+    </form>
+
+    <p class="mr-frequency">Approximately one transmission every two weeks.</p>
+    <p class="mr-privacy">
+      No sharing, no tracking pixels. <a href="legal.html#privacy">Read the privacy notes</a>.
+    </p>
+  </section>
+
+  <!-- ── Success view (rendered after submission) ── -->
+  <section id="mr-success-view" class="mr-success" hidden aria-live="polite">
+    <!-- filled in by JS -->
+  </section>
+</main>
+
+<div id="site-footer"></div>
+<script src="js/footer.js"></script>
+
+<script>
+(function () {
+  const ENDPOINT = 'https://sscpikfblqtmcefegrpv.supabase.co/functions/v1/enter';
+
+  const SECTOR_COPY = {
+    'G3': {
+      label: 'Sector G3 — the Sickle.',
+      body:  'The basin between the mountains where the new arrivals are housed. The mountains glow at the summits, green and phosphorescent. Nobody has yet bothered to ask why.',
+    },
+    'A7': {
+      label: 'Sector A7 — the Delta.',
+      body:  'The Leaf, on the survey maps. The colony’s foothold in the jungle. A scar in the forest, ringed with turrets. The forest is patient. The turrets are not.',
+    },
+    'B2': {
+      label: 'Sector B2 — the Plateau.',
+      body:  'Ivaldi Base. The cold rock, the thin air, the radiation, the temple in the basement. We assigned you here because the Plateau is where the older hands live.',
+    },
+  };
+
+  const form    = document.getElementById('mr-form');
+  const status  = document.getElementById('mr-status');
+  const submit  = document.getElementById('mr-submit');
+  const formEl  = document.getElementById('mr-form-view');
+  const successEl = document.getElementById('mr-success-view');
+
+  function setStatus(msg, tone) {
+    status.textContent = msg || '';
+    if (tone) status.setAttribute('data-tone', tone);
+    else      status.removeAttribute('data-tone');
+  }
+
+  function emailValid(s) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  function renderSuccess(citizen_id, sector) {
+    const s = SECTOR_COPY[sector] || SECTOR_COPY['G3'];
+    successEl.innerHTML = `
+      <div class="mr-eyebrow">◈ Uplink · Intake confirmed</div>
+      <h1 class="mr-success-confirm">
+        Citizen credentials issued. <em>Uplink Transmission inbound.</em>
+      </h1>
+
+      <div class="mr-id-card">
+        <div class="mr-id-label">Citizen designation</div>
+        <div class="mr-id" aria-label="Citizen ID ${esc(citizen_id)}">${esc(citizen_id)}</div>
+      </div>
+
+      <p class="mr-sector"><strong style="font-style:normal;color:var(--ivory)">${esc(s.label)}</strong> ${esc(s.body)}</p>
+
+      <div class="mr-block">
+        <h3 class="mr-block-title">The Discord</h3>
+        <p class="mr-block-body">Join other citizens on the colony channel.</p>
+        <a class="mr-block-cta" href="https://discord.gg/8CMVWNwMwF" target="_blank" rel="noopener">
+          Join the colony channel <span aria-hidden="true">→</span>
+        </a>
+      </div>
+
+      <div class="mr-block">
+        <h3 class="mr-block-title">The Commissary</h3>
+        <p class="mr-block-body">
+          Citizen privilege: 25% off the colony commissary. Code <em>CITIZEN25</em> is applied automatically through this link.
+        </p>
+        <a class="mr-block-cta" href="https://nyland-shop.fourthwall.com/promo/CITIZEN25" target="_blank" rel="noopener">
+          Visit the commissary <span aria-hidden="true">→</span>
+        </a>
+      </div>
+
+      <div class="mr-block">
+        <h3 class="mr-block-title">Part Two — early access</h3>
+        <p class="mr-block-body">
+          You are now in line for Part Two proofread copies. Citizens are first. We will be in touch.
+        </p>
+      </div>
+
+      <p class="mr-closing">
+        Your first transmission is on its way to your inbox. Approximately one transmission every two weeks.
+        The pulse continues.
+      </p>
+      <p class="mr-signoff">—Uplink</p>
+    `;
+    formEl.hidden = true;
+    successEl.hidden = false;
+    // Focus the success heading so screen readers announce the transition.
+    const h = successEl.querySelector('.mr-success-confirm');
+    if (h) {
+      h.setAttribute('tabindex', '-1');
+      h.focus({ preventScroll: true });
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setStatus('', null);
+
+    const email = document.getElementById('mr-email').value.trim();
+    const name  = document.getElementById('mr-name').value.trim();
+    const radio = form.querySelector('input[name="reader_state"]:checked');
+    const reader_state = radio ? radio.value : '';
+
+    // Client-side validation — server still validates too.
+    if (!emailValid(email)) {
+      setStatus('Comm channel address looks malformed.', 'error');
+      document.getElementById('mr-email').focus();
+      return;
+    }
+    if (!name) {
+      setStatus('Citizen designation is required.', 'error');
+      document.getElementById('mr-name').focus();
+      return;
+    }
+    if (!reader_state) {
+      setStatus('Select where you are with The Unfolding.', 'error');
+      const firstRadio = form.querySelector('input[name="reader_state"]');
+      if (firstRadio) firstRadio.focus();
+      return;
+    }
+
+    submit.disabled = true;
+    const originalLabel = submit.textContent;
+    submit.textContent = 'Routing…';
+    setStatus('Routing your designation to the colony…', 'loading');
+
+    try {
+      const res = await fetch(ENDPOINT, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, name, reader_state }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data && data.ok && data.citizen_id) {
+        setStatus('Confirmed.', 'success');
+        renderSuccess(data.citizen_id, data.sector);
+        return;
+      }
+
+      const msg = (data && data.error)
+        || 'The signal did not reach the colony. Try again in a moment.';
+      setStatus(msg, 'error');
+    } catch (err) {
+      setStatus('The signal did not reach the colony. Try again in a moment.', 'error');
+    } finally {
+      submit.disabled = false;
+      submit.textContent = originalLabel;
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
