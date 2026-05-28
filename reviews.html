@@ -580,14 +580,28 @@
   // The Instagram link is a curatorial overlay (we link a reader's review to their
   // public Instagram post about the book) — not data the reader submitted, so it
   // lives in data/review-instagram.json keyed by display_name.
+
+  // Normalize a name so "@AnnaliseReads", "annalise reads", "annalisereads"
+  // all collapse to the same lookup key.
+  function igKey(name) {
+    return String(name || '')
+      .trim()
+      .toLowerCase()
+      .replace(/^@+/, '')
+      .replace(/[\s_-]+/g, '');
+  }
+
   async function loadInstagramOverlay() {
     try {
       const res = await fetch('data/review-instagram.json', { cache: 'no-cache' });
-      if (!res.ok) return new Map();
+      if (!res.ok) {
+        console.warn('[ig-overlay] fetch failed:', res.status);
+        return new Map();
+      }
       const list = await res.json();
       const map = new Map();
       (Array.isArray(list) ? list : []).forEach(entry => {
-        const key = String(entry.display_name || '').trim().toLowerCase();
+        const key = igKey(entry.display_name);
         if (!key) return;
         map.set(key, {
           instagram_url:    entry.instagram_url,
@@ -595,8 +609,10 @@
           instagram_embed:  !!entry.instagram_embed,
         });
       });
+      console.log('[ig-overlay] loaded keys:', Array.from(map.keys()));
       return map;
-    } catch {
+    } catch (e) {
+      console.warn('[ig-overlay] parse error:', e.message);
       return new Map();
     }
   }
@@ -623,13 +639,15 @@
   }
 
   // Merge the editorial Instagram overlay onto each DB review by display_name.
+  console.log('[ig-overlay] DB review names:', data.map(r => r.display_name));
   data.forEach(r => {
-    const key = String(r.display_name || '').trim().toLowerCase();
+    const key = igKey(r.display_name);
     const ig  = igOverlay.get(key);
     if (ig) {
       r.instagram_url    = ig.instagram_url;
       r.instagram_handle = ig.instagram_handle;
       r.instagram_embed  = ig.instagram_embed;
+      console.log('[ig-overlay] matched review:', r.display_name, '→', ig.instagram_url);
     }
   });
 
