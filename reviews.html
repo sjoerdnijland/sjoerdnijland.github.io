@@ -519,17 +519,16 @@
   }
 
   // Shared Instagram renderer — same for critical and reader reviews.
-  // - instagram_url: required (the public post URL)
-  // - instagram_embed: optional bool — true renders the iframe instead of the link card
+  // - instagram_url: required (any URL counts — the link card always works)
+  // - instagram_embed: optional bool — true renders the iframe IF the post
+  //   shortcode can be parsed from the URL; otherwise falls back to the link.
   function instagramHtml(r) {
     const url = r.instagram_url;
     if (!url) return '';
-    // Pull out the post shortcode from /p/<code>/ or /reel/<code>/
     const m = String(url).match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
-    if (!m) return ''; // not a valid IG post URL
-    const code = m[1];
+    const code = m ? m[1] : null;
 
-    if (r.instagram_embed) {
+    if (r.instagram_embed && code) {
       const embedSrc = `https://www.instagram.com/p/${esc(code)}/embed/`;
       return `
         <div class="rv-ig-embed">
@@ -635,10 +634,10 @@
     const url = r.instagram_url;
     if (!url) return '';
     const m = String(url).match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
-    if (!m) return '';
-    const code = m[1];
+    const code = m ? m[1] : null;
 
-    if (r.instagram_embed) {
+    // Embed only works if we can extract the post code from the URL.
+    if (r.instagram_embed && code) {
       const embedSrc = `https://www.instagram.com/p/${escapeHtml(code)}/embed/`;
       return `
         <div class="rv-ig-embed">
@@ -652,6 +651,8 @@
           ></iframe>
         </div>`;
     }
+
+    // Link card — works for any non-empty URL, even if the regex didn't match.
     const handle = r.instagram_handle ? `@${escapeHtml(r.instagram_handle)}` : 'View on Instagram';
     return `
       <a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="rv-ig-link">
