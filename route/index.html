@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Channel update — The Unfolding</title>
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background-color: #ece6d8;
+            font-family: Georgia, "Times New Roman", serif;
+            color: #1a1a1a;
+            line-height: 1.65;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+        }
+        .container {
+            max-width: 520px;
+            width: 100%;
+            background-color: #f4efe1;
+            padding: 48px 44px;
+            border-top: 2px solid #1a1a1a;
+            border-bottom: 2px solid #1a1a1a;
+            text-align: center;
+        }
+        .masthead {
+            font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            color: #6b6358;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            padding-bottom: 14px;
+            border-bottom: 1px dashed #b8ad94;
+        }
+        .glyph { color: #8b3a2f; padding-right: 6px; font-size: 13px; }
+        .meta {
+            color: #8a826f;
+            font-size: 10px;
+            letter-spacing: 0.14em;
+            margin-top: 4px;
+        }
+        .confirmation {
+            font-size: 26px;
+            font-style: italic;
+            color: #2d2820;
+            margin: 36px 0 24px 0;
+            line-height: 1.3;
+        }
+        .detail {
+            font-size: 17px;
+            color: #1a1a1a;
+            margin: 22px 0;
+        }
+        .return {
+            margin-top: 36px;
+            font-family: ui-monospace, monospace;
+            font-size: 12px;
+            letter-spacing: 0.06em;
+        }
+        .return a {
+            color: #1a1a1a;
+            text-decoration: none;
+            border: 1px solid #1a1a1a;
+            padding: 10px 22px;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+        .signoff {
+            font-family: ui-monospace, monospace;
+            font-size: 12px;
+            letter-spacing: 0.06em;
+            color: #6b6358;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px dashed #b8ad94;
+        }
+        @media (prefers-color-scheme: dark) {
+            body { background-color: #0a0a0a; color: #e8e3d6; }
+            .container { background-color: #141210; border-color: #d97559; }
+            .masthead { color: #8f8676; border-bottom-color: #2a2620; }
+            .glyph { color: #d97559; }
+            .meta { color: #6b6358; }
+            .confirmation { color: #f0ead9; }
+            .detail { color: #e8e3d6; }
+            .return a { color: #f0ead9; border-color: #f0ead9; }
+            .signoff { color: #8f8676; border-top-color: #2a2620; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="masthead">
+        <span class="glyph">◈</span> RELAY · CHANNEL UPDATE
+        <div class="meta" id="meta">Routing…</div>
+    </div>
+
+    <div id="content"></div>
+
+    <div class="signoff">— UPLINK</div>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const to = params.get('to');
+    const content = document.getElementById('content');
+    const meta = document.getElementById('meta');
+
+    const routes = {
+        reading: {
+            meta: 'Origin: Newcomer · Destination: Reader',
+            confirmation: 'Channel switched.',
+            detail: 'The colony is routing your signal to the Delta. You are now logged with the Reader channel. The next transmission will arrive shortly. The Leaf is expecting you.'
+        },
+        finished: {
+            meta: 'Origin: Newcomer · Destination: Returned Reader',
+            confirmation: 'Channel switched.',
+            detail: 'The Plateau receives you. The Anchor is patient. Your designation has been updated. The next transmission will arrive shortly.'
+        }
+    };
+
+    const route = routes[to];
+    if (route) {
+        meta.textContent = route.meta;
+        content.innerHTML = `
+        <div class="confirmation">${route.confirmation}</div>
+        <div class="detail">${route.detail}</div>
+        <div class="return">
+          <a href="https://the-unfolding.net">Return to the colony</a>
+        </div>
+      `;
+    } else {
+        meta.textContent = 'Status: unrecognized route';
+        content.innerHTML = `
+        <div class="confirmation">The relay did not recognize the route.</div>
+        <div class="detail">This may be a static page that has reached you out of context. No channel change has been applied. Return to the colony for orientation.</div>
+        <div class="return">
+          <a href="https://the-unfolding.net">Return to the colony</a>
+        </div>
+      `;
+    }
+</script>
+</body>
+</html>
