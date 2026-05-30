@@ -19,6 +19,11 @@
       confirmation: 'Channel switched.',
       detail:       'The Plateau receives you. The Anchor is patient. Your designation has been updated. The next transmission will arrive shortly.',
     },
+    arc: {
+      meta:         'Application: ARC cohort · Part Two proofreader',
+      confirmation: 'Application registered.',
+      detail:       'Your designation has been added to the proofreader shortlist. When reading copies are ready, the colony will route the cohort briefing to your inbox. We do not promise selection. We do promise that every citizen on the list is read by the author.',
+    },
   };
 
   const route = routes[to];
@@ -28,7 +33,7 @@
       <div class="confirmation">${route.confirmation}</div>
       <div class="detail">${route.detail}</div>
       <div class="return">
-        <a href="https://the-unfolding.net">ACK</a>
+        <a href="https://the-unfolding.net">Return to the colony</a>
       </div>
     `;
   } else {
