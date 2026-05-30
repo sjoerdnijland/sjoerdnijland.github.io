@@ -2009,6 +2009,10 @@ let CHAPTER_COUNT     = _partCfg.chapterCount;
 let CHAPTER_FILE_DIR  = _partCfg.chapterDir;
 let chapterNames      = _partCfg.names;
 
+// Email gate — Part 1 chapters 4+ require a subscribed citizen.
+// (Part 2 is the secret preview; the URL itself is the gate.)
+const EMAIL_GATE_LIMIT = (CURRENT_PART === 1) ? 3 : Infinity;
+
 // Reflect the part in the document title without rewriting the rest of the page.
 if (CURRENT_PART !== 1) {
   document.title = `Read — The Unfolding: ${_partCfg.bookTitle}`;
@@ -2020,6 +2024,12 @@ async function loadChapter(n) {
   cacheClear();
   renderChapterPills();
   closeSidebar();
+
+  // Email gate — chapters past EMAIL_GATE_LIMIT require a subscribed citizen.
+  if (n > EMAIL_GATE_LIMIT && window.FoldGate && !window.FoldGate.isSubscribed()) {
+    renderEmailGateChapter(n);
+    return;
+  }
 
   // Paywall gate — chapters 9+ require a paid purchase
   if (n > FREE_CHAPTERS_LIMIT) {
@@ -2574,6 +2584,42 @@ async function handlePaymentSuccessRedirect() {
     <button style="background:transparent;border:1px solid #0a1f15;color:#0a1f15;padding:6px 12px;font-family:inherit;font-size:0.66rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;border-radius:2px" onclick="downloadEpub(event)">📖 EPUB</button>`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 8000);
+}
+
+// Email-subscription gate (chapters 4–EMAIL_GATE_LIMIT…FREE_CHAPTERS_LIMIT).
+// Stops short of the paid paywall — passing this gate doesn't unlock 9+.
+function renderEmailGateChapter(n) {
+  const el = document.getElementById('chapter-content');
+  if (!el) return;
+  const title = chapterNames[n] || '';
+  if (window._track) window._track('email_gate_shown', { source: 'reader_chapter', chapter: n });
+  el.innerHTML = `
+    <div class="ch-hero">
+      <div class="ch-eyebrow">Chapter ${n}</div>
+      <h1 class="ch-title" style="opacity:0.35">${title}</h1>
+    </div>
+    <div class="fg-lock">
+      <div class="fg-lock-eyebrow">◈ Citizen credentials required</div>
+      <h2 class="fg-lock-heading">The colony only transmits past chapter ${EMAIL_GATE_LIMIT} to citizens.</h2>
+      <p class="fg-lock-body">
+        Sign in your designation and the rest of the cycle continues — chapters ${EMAIL_GATE_LIMIT + 1} through ${FREE_CHAPTERS_LIMIT} unlock immediately. The full archive (${FREE_CHAPTERS_LIMIT + 1}–${CHAPTER_COUNT}) follows on purchase.
+      </p>
+      <button type="button" class="fg-lock-cta" id="fg-lock-open-${n}">
+        Sign in my designation <span aria-hidden="true">→</span>
+      </button>
+    </div>`;
+  const btn = document.getElementById(`fg-lock-open-${n}`);
+  if (btn) {
+    btn.addEventListener('click', () => {
+      if (!window.FoldGate) return;
+      if (window._track) window._track('email_gate_open', { source: 'reader_chapter', chapter: n });
+      window.FoldGate.show({
+        context: 'reader',
+        readerState: 'Currently reading',
+        onSuccess: () => loadChapter(n),
+      }).catch(() => { /* dismissed */ });
+    });
+  }
 }
 
 function renderLockedChapter(n) {

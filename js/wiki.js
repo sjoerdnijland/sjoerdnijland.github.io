@@ -68,6 +68,16 @@ function isSpoiler(item) {
   return itemChapter > readerChapter;
 }
 
+// Entries that first appear past chapter 2 are gated behind a citizen
+// designation. The spoiler bar still gates by reading progress; this is
+// an independent lock on top of that for non-subscribers.
+const WIKI_EMAIL_GATE_LIMIT = 2;
+function isLockedForEmail(item) {
+  if (!window.FoldGate || window.FoldGate.isSubscribed()) return false;
+  const itemChapter = item.chapter ?? 1;
+  return itemChapter > WIKI_EMAIL_GATE_LIMIT;
+}
+
 // ── Boot ──────────────────────────────────────────────────
 async function init() {
   loadChapterPref();
@@ -405,8 +415,51 @@ function emptyState() {
 }
 
 // ── Modal ─────────────────────────────────────────────────
+function renderEmailGateModal(item) {
+  const content = document.getElementById('modal-content');
+  if (!content) return;
+  const label = item.name ?? item.title ?? 'this entry';
+  if (window._track) window._track('email_gate_shown', { source: 'wiki_modal', entry: item.id || label });
+  content.innerHTML = `
+    <div class="modal-body">
+      <div class="fg-lock" style="margin:0;max-width:none;background:rgba(6,22,25,0.35);">
+        <div class="fg-lock-eyebrow">◈ Citizen credentials required</div>
+        <h2 class="fg-lock-heading">The archive is selective.</h2>
+        <p class="fg-lock-body">
+          "${String(label).replace(/[<>]/g, '')}" sits past the open dispatch.
+          Entries from later in the cycle are released to citizens only.
+          Sign in your designation and the colony opens up.
+        </p>
+        <button type="button" class="fg-lock-cta" id="fg-wiki-cta">
+          Sign in my designation <span aria-hidden="true">→</span>
+        </button>
+      </div>
+    </div>`;
+  document.getElementById('detail-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  const btn = document.getElementById('fg-wiki-cta');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      if (!window.FoldGate) return;
+      if (window._track) window._track('email_gate_open', { source: 'wiki_modal', entry: item.id || label });
+      window.FoldGate.show({
+        context: 'wiki',
+        readerState: 'Currently reading',
+        onSuccess: () => openModal(item),
+      }).catch(() => {});
+    });
+  }
+}
+
 function openModal(item) {
   if (isSpoiler(item)) return;
+
+  // Email gate — render the citizen-credentials prompt inside the modal
+  // for entries the visitor isn't yet entitled to read.
+  if (isLockedForEmail(item)) {
+    renderEmailGateModal(item);
+    return;
+  }
 
   const content = document.getElementById('modal-content');
   const imgHtml = (item.image && imagesOn)

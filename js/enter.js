@@ -147,6 +147,13 @@
       const data = await res.json().catch(() => ({}));
 
       if (res.ok && data && data.ok && data.citizen_id) {
+        // Persist citizen id so all gated pages (reader past ch 3, wiki past
+        // ch 2, the map) unlock immediately on the next visit.
+        try {
+          localStorage.setItem('mairee_citizen_id', data.citizen_id);
+          localStorage.setItem('mairee_subscribed_at', new Date().toISOString());
+        } catch (_) {}
+
         setStatus('Confirmed.', 'success');
         renderSuccess(data.citizen_id, data.sector);
         return;

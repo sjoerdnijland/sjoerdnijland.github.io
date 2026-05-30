@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/fold-gate.css"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -171,6 +172,8 @@ body::after{content:'';position:fixed;inset:0;z-index:9998;pointer-events:none;o
     <a href="index.html" class="back">← Back</a>
   </div>
 </header>
+
+<script src="js/fold-gate.js"></script>
 
 <div class="page">
 
@@ -937,6 +940,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const id = a.dataset.wikiId;
     a.href = wikiUrl(id);
   });
+
+  // ── Email-gate the entire map for non-citizens ──
+  // Hide the survey, drop a citizen-credentials card in its place.
+  if (window.FoldGate && !window.FoldGate.isSubscribed()) {
+    const pageEl = document.querySelector('.page');
+    if (pageEl) pageEl.style.display = 'none';
+
+    const gate = document.createElement('div');
+    gate.style.cssText = 'min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:40px 20px;background:var(--ink)';
+    gate.innerHTML = `
+      <div class="fg-lock" style="max-width:560px;">
+        <div class="fg-lock-eyebrow">◈ Cartography · Restricted</div>
+        <h2 class="fg-lock-heading">The colony's survey is for citizens.</h2>
+        <p class="fg-lock-body">
+          We don't show the relays, the homesteads, or the Fold residue to passersby.
+          Sign in your designation and the map unrolls.
+        </p>
+        <button type="button" class="fg-lock-cta" id="fg-map-cta">
+          Sign in my designation <span aria-hidden="true">→</span>
+        </button>
+      </div>
+    `;
+    document.body.appendChild(gate);
+
+    if (window._track) window._track('email_gate_shown', { source: 'map' });
+
+    document.getElementById('fg-map-cta').addEventListener('click', () => {
+      if (!window.FoldGate) return;
+      if (window._track) window._track('email_gate_open', { source: 'map' });
+      window.FoldGate.show({
+        context: 'map',
+        readerState: 'Currently reading',
+        onSuccess: () => window.location.reload(),
+      }).catch(() => {});
+    });
+  }
 });
 </script>
 </body>
