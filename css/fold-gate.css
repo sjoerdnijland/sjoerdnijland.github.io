@@ -281,9 +281,17 @@ body.fg-open { overflow: hidden; }
 .fg-status[data-tone="error"]   { color: #c72f63; }
 .fg-status[data-tone="success"] { color: #4f7f57; }
 
+/* Escape row — sits below the form. Two subtle links:
+   "Skip" (soft-gate opt-out) and "Not now" (close without granting access). */
+.fg-escape {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+.fg-skip,
 .fg-dismiss {
-  display: block;
-  margin: 20px auto 0;
   background: none;
   border: none;
   font-family: ui-monospace, monospace;
@@ -294,8 +302,11 @@ body.fg-open { overflow: hidden; }
   cursor: pointer;
   text-decoration: underline;
   text-decoration-color: rgba(138,130,111,0.4);
+  padding: 4px 6px;
 }
+.fg-skip:hover,
 .fg-dismiss:hover { color: #1a1a1a; }
+.fg-skip { color: #6b6358; }   /* a touch dimmer than dismiss — secondary */
 
 .fg-frequency {
   font-family: Georgia, serif;
@@ -438,8 +449,8 @@ body.fg-open { overflow: hidden; }
   .fg-submit { background: #d97559; border-color: #d97559; color: #1a1815; }
   .fg-submit:hover { background: #c25c43; border-color: #c25c43; }
   .fg-id-card { background: #14110f; }
-  .fg-id-label, .fg-dismiss, .fg-frequency { color: #8f8676; }
-  .fg-dismiss:hover { color: #f0ead9; }
+  .fg-id-label, .fg-dismiss, .fg-skip, .fg-frequency { color: #8f8676; }
+  .fg-dismiss:hover, .fg-skip:hover { color: #f0ead9; }
   .fg-id { color: #f0ead9; }
 }
 

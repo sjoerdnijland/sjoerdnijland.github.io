@@ -2622,16 +2622,40 @@ function renderEmailGateChapter(n) {
   }
 }
 
+// Anonymous direct-buy from the locked-chapter paywall.
+// Opens the FoldGate, then redirects into Stripe with the new citizen ID
+// as client_reference_id so the webhook can link the purchase.
+function joinFoldThenBuyChapter(n) {
+  if (window._track) window._track('paywall_signin_click', { source: 'locked_chapter_join_fold', chapter: n });
+  const nextUrlTemplate = `${STRIPE_PAYMENT_LINK}?client_reference_id={citizen_id}&prefilled_email={email}`;
+
+  if (window.FoldGate && window.FoldGate.isSubscribed()) {
+    const cid = window.FoldGate.getCitizenId();
+    window.location.href = `${STRIPE_PAYMENT_LINK}?client_reference_id=${encodeURIComponent(cid)}`;
+    return;
+  }
+  if (window.FoldGate) {
+    window.FoldGate.show({
+      context:         'default',
+      readerState:     'Currently reading',
+      afterSuccess:    'redirect',
+      nextUrlTemplate,
+    }).catch(() => {});
+  } else {
+    window.location.href = 'enter.html';
+  }
+}
+
 function renderLockedChapter(n) {
   const el = document.getElementById('chapter-content');
   if (!el) return;
   const title = chapterNames[n] || '';
   const ctaHtml = currentUser
     ? `<a href="${buyLinkForUser()}" class="cec-btn continue" onclick="window._track&&window._track('paywall_checkout_click',{source:'locked_chapter',chapter:${n},user_id:currentUser?.id||null})">Continue — €12.50</a>`
-    : `<button class="cec-btn continue" onclick="window._track&&window._track('paywall_signin_click',{source:'locked_chapter',chapter:${n}});signIn()">◎ Sign in with Discord to continue</button>`;
+    : `<button class="cec-btn continue" onclick="joinFoldThenBuyChapter(${n})">Join the Fold to continue</button>`;
   const subNote = currentUser
     ? `<span class="sub">Buying direct supports the author — same price, no retailer cut.</span>`
-    : `<span class="sub">Sign in first so we can link the purchase to your account.</span>`;
+    : `<span class="sub">Citizens get 25% off the commissary and early access. The purchase will be linked to your designation.</span>`;
   if (window._track) window._track('paywall_shown', { variant: currentUser ? 'locked_chapter_signed_in' : 'locked_chapter_anonymous', chapter: n });
   el.innerHTML = `
     <div class="ch-hero">

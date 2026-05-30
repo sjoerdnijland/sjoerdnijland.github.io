@@ -22,6 +22,7 @@
   const SUPA_URL  = 'https://sscpikfblqtmcefegrpv.supabase.co';
   const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzY3Bpa2ZibHF0bWNlZmVncnB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNzUzMzgsImV4cCI6MjA5Mjk1MTMzOH0.I9qzVnzmiYxwZ6RPLV7KWva8P9L0Q1MHFqgmlmr3g0g';
   const LS_KEY    = 'mairee_citizen_id';
+  const LS_SKIP   = 'mairee_gate_skipped'; // soft-gate opt-out flag ("I am already a citizen — skip")
   const SS_PEND   = 'fg_discord_pending';  // sessionStorage flag set before OAuth redirect
 
   // Pre-baked copy per context, so each page only needs to call show({context}).
@@ -54,17 +55,32 @@
   let resolveOpen = null;
   let rejectOpen  = null;
 
+  // Soft gate: a real citizen ID OR the "skip" flag both grant access.
+  // The Stripe direct-buy flow uses getCitizenId() (real IDs only) so
+  // skipped users still see the gate when they try to purchase.
   function isSubscribed() {
-    return !!localStorage.getItem(LS_KEY);
+    return !!localStorage.getItem(LS_KEY)
+        || localStorage.getItem(LS_SKIP) === '1';
   }
   function getCitizenId() {
     return localStorage.getItem(LS_KEY);
+  }
+  function hasSkipped() {
+    return localStorage.getItem(LS_SKIP) === '1';
   }
 
   function escapeHtml(s) {
     return String(s || '').replace(/[&<>"']/g, c => ({
       '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
     }[c]));
+  }
+
+  // Expand {placeholder} tokens in a URL template (used to build the
+  // Stripe checkout link after a successful Fold signup).
+  function expandTemplate(tpl, vars) {
+    return String(tpl || '').replace(/\{(\w+)\}/g, (_, k) =>
+      encodeURIComponent(vars[k] != null ? String(vars[k]) : '')
+    );
   }
 
   function build(opts) {
@@ -119,9 +135,16 @@
           <div class="fg-status" id="fg-status" role="status" aria-live="polite"></div>
         </form>
 
-        <button type="button" class="fg-dismiss" data-fg-dismiss>
-          Not now — return to the surface
-        </button>
+        <div class="fg-escape">
+          ${o.afterSuccess === 'redirect' ? '' : `
+            <button type="button" class="fg-skip" data-fg-skip>
+              I am already a citizen — skip
+            </button>
+          `}
+          <button type="button" class="fg-dismiss" data-fg-dismiss>
+            Not now — return to the surface
+          </button>
+        </div>
 
         <p class="fg-frequency">You will receive transmissions in your inbox.</p>
       </div>
@@ -142,6 +165,20 @@
     // Dismiss handlers
     el.querySelectorAll('[data-fg-dismiss]').forEach(node => {
       node.addEventListener('click', () => dismiss());
+    });
+    // Skip — "I am already a citizen". Soft gate opt-out: sets a flag so
+    // the gate doesn't show again on this browser, fires the onSuccess
+    // callback so the host page unlocks, and dismisses.
+    el.querySelectorAll('[data-fg-skip]').forEach(node => {
+      node.addEventListener('click', () => {
+        try { localStorage.setItem(LS_SKIP, '1'); } catch (_) {}
+        if (window._track) window._track('email_gate_skipped', { context: o.context || null });
+        if (typeof onSuccessCb === 'function') {
+          try { onSuccessCb(null); } catch (err) { console.warn(err); }
+        }
+        dismiss(true);
+        if (resolveOpen) resolveOpen({ skipped: true });
+      });
     });
     // ESC to dismiss
     el.addEventListener('keydown', (e) => {
@@ -204,7 +241,18 @@
         try { localStorage.setItem('mairee_subscribed_at', new Date().toISOString()); } catch {}
 
         renderSuccess(el, data.citizen_id);
-        // Resolve after the celebration has a moment to land.
+
+        // Redirect-to-Stripe path (used by the direct-buy flow).
+        if (opts.afterSuccess === 'redirect' && opts.nextUrlTemplate) {
+          const url = expandTemplate(opts.nextUrlTemplate, {
+            citizen_id: data.citizen_id,
+            email,
+          });
+          setTimeout(() => { window.location.href = url; }, 1800);
+          return;
+        }
+
+        // Default: fire the onSuccess callback and dismiss the overlay.
         setTimeout(() => {
           if (typeof onSuccessCb === 'function') {
             try { onSuccessCb(data.citizen_id); } catch (err) { console.warn(err); }
@@ -315,7 +363,11 @@
       // Discord — falls back to the context's default if no radio was touched.
       const stateEl = el.querySelector('input[name="reader_state"]:checked');
       const reader_state = stateEl ? stateEl.value : (opts.readerState || 'Just arriving');
-      sessionStorage.setItem(SS_PEND, JSON.stringify({ readerState: reader_state }));
+      sessionStorage.setItem(SS_PEND, JSON.stringify({
+        readerState:     reader_state,
+        afterSuccess:    opts.afterSuccess    || null,
+        nextUrlTemplate: opts.nextUrlTemplate || null,
+      }));
       const db = await getDb();
       await db.auth.signInWithOAuth({
         provider: 'discord',
@@ -406,10 +458,20 @@
       // Clean the hash off the URL so a refresh doesn't re-trigger this.
       history.replaceState(null, '', window.location.pathname + window.location.search);
 
-      // Show the credential card briefly, then reload so the page sees its
-      // gates unlocked. Reload is the simplest way to handle the wide variety
-      // of host-page contexts (reader / wiki / map / index).
+      // Show the credential card briefly.
       showDiscordSuccess(data.citizen_id);
+
+      // Redirect-to-Stripe path (initiated by the direct-buy flow).
+      if (pending.afterSuccess === 'redirect' && pending.nextUrlTemplate) {
+        const url = expandTemplate(pending.nextUrlTemplate, {
+          citizen_id: data.citizen_id,
+          email:      user.email,
+        });
+        setTimeout(() => { window.location.href = url; }, 1800);
+        return;
+      }
+
+      // Default: reload so the host page sees its gates unlocked.
       setTimeout(() => { window.location.reload(); }, 2400);
     } catch (err) {
       console.warn('[fold-gate] Discord callback error:', err);
@@ -461,6 +523,13 @@
   window.FoldGate = {
     isSubscribed,
     getCitizenId,
+    hasSkipped,
+    skip: () => {
+      try { localStorage.setItem(LS_SKIP, '1'); } catch (_) {}
+    },
+    unskip: () => {
+      try { localStorage.removeItem(LS_SKIP); } catch (_) {}
+    },
     show,
     dismiss,
     signInWithDiscord: () => {

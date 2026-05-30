@@ -69,6 +69,34 @@ function DirectBuyItem() {
     return `${STRIPE_PAYMENT_LINK}?${params}`;
   }
 
+  // Anonymous direct-buy flow: open the FoldGate first (capture email +
+  // state), then redirect into Stripe with the new citizen ID as the
+  // client_reference_id so the webhook can link the purchase back.
+  function joinFoldThenBuy(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (window._track) window._track('paywall_signin_click', { source: 'homepage_buy_join_fold' });
+    const nextUrlTemplate = `${STRIPE_PAYMENT_LINK}?client_reference_id={citizen_id}&prefilled_email={email}`;
+
+    // Already a citizen? Skip the gate and go straight to checkout.
+    if (window.FoldGate && window.FoldGate.isSubscribed()) {
+      const cid = window.FoldGate.getCitizenId();
+      window.location.href = `${STRIPE_PAYMENT_LINK}?client_reference_id=${encodeURIComponent(cid)}`;
+      return;
+    }
+
+    if (window.FoldGate) {
+      window.FoldGate.show({
+        context:         'default',
+        readerState:     'Just arriving',
+        afterSuccess:    'redirect',
+        nextUrlTemplate,
+      }).catch(() => {});
+    } else {
+      // Last-resort fallback if fold-gate.js didn't load.
+      window.location.href = 'enter.html';
+    }
+  }
+
   function trackCheckoutClick() {
     if (window._track) window._track('paywall_checkout_click', { source: 'homepage_buy', user_id: user?.id || null });
   }
@@ -112,9 +140,9 @@ function DirectBuyItem() {
 
   // ── State: anonymous ──
   return (
-    <button type="button" onClick={() => signIn('discord')} className="bl-store-btn bl-store-direct bl-store-featured">
+    <button type="button" onClick={joinFoldThenBuy} className="bl-store-btn bl-store-direct bl-store-featured">
       <span className="bl-store-arrow">→</span>
-      Direct — Sign in with Discord <span className="bl-store-note">author's best margin · no retailer cut</span>
+      Direct — Join the Fold <span className="bl-store-note">author's best margin · no retailer cut</span>
     </button>
   );
 }

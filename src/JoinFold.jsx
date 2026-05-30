@@ -54,7 +54,7 @@ function JoinFold() {
             </button>
 
             <p className="jf-note">
-              You will receive transmissions in your inbox. About one every two weeks.
+              You will receive transmissions in your inbox.
             </p>
           </div>
         </div>
