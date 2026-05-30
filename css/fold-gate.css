@@ -77,6 +77,82 @@ body.fg-open { overflow: hidden; }
   margin: 0 0 24px;
 }
 
+/* ── Discord button (preferred path) ── */
+.fg-discord-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 20px;
+  background: #5865F2;
+  border: 1px solid #5865F2;
+  color: #fff;
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.fg-discord-btn:hover  { background: #4752c4; border-color: #4752c4; }
+.fg-discord-btn:active { transform: translateY(1px); }
+.fg-discord-btn:focus-visible { outline: 2px solid #5865F2; outline-offset: 3px; }
+.fg-discord-icon {
+  font-size: 1rem;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+.fg-or {
+  position: relative;
+  text-align: center;
+  margin: 22px 0 6px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8a826f;
+}
+.fg-or::before, .fg-or::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 36%;
+  height: 1px;
+  background: rgba(45,40,32,0.18);
+}
+.fg-or::before { left: 0; }
+.fg-or::after  { right: 0; }
+.fg-or span { background: transparent; padding: 0 6px; }
+@media (prefers-color-scheme: dark) {
+  .fg-or::before, .fg-or::after { background: rgba(232,227,214,0.16); }
+}
+
+/* ── Discord callback banner (visible during the round-trip) ── */
+.fg-discord-banner {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translate(-50%, -12px);
+  z-index: 10001;
+  padding: 12px 22px;
+  background: #5865F2;
+  color: #fff;
+  font-family: ui-monospace, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-radius: 30px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.fg-discord-banner.fg-discord-banner--in { opacity: 1; transform: translate(-50%, 0); }
+.fg-discord-banner.fg-discord-banner--error { background: #c72f63; }
+
 /* ── Form ── */
 .fg-form { display: flex; flex-direction: column; gap: 4px; }
 .fg-label {
@@ -250,10 +326,13 @@ body.fg-open { overflow: hidden; }
 .fg-lock-body {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-style: italic;
-  color: #e8dcc5;
-  font-size: 1.05rem;
-  line-height: 1.55;
-  margin: 0 0 24px;
+  color: #f4ead9;
+  font-size: 1.25rem;
+  line-height: 1.6;
+  margin: 0 0 28px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .fg-lock-cta {
   display: inline-flex;
@@ -302,6 +381,7 @@ body.fg-open { overflow: hidden; }
   .fg-submit:hover { background: #c25c43; border-color: #c25c43; }
   .fg-id-card { background: #14110f; }
   .fg-id-label, .fg-dismiss, .fg-frequency { color: #8f8676; }
+  .fg-dismiss:hover { color: #f0ead9; }
   .fg-id { color: #f0ead9; }
 }
 
