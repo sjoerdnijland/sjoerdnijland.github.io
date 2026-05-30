@@ -1978,11 +1978,41 @@ let wikiIndex        = {};   // name/alias → entry
 let wikiById         = {};   // id → entry  (for speaker tag lookups)
 let commentCounts    = {};   // paragraphId → count
 
-// ── Chapters — loaded from data/chapters/chapter-N.json ──
-const CHAPTER_COUNT = 24;
+// ── Chapters — loaded from <CHAPTER_FILE_DIR>/chapter-N.json ──
+// Part 1 is the default. `?part=2` switches to the Undergrowth preview
+// (single chapter, no paywall, separate JSON dir). Add more parts here
+// as they ship by extending PART_CONFIGS below.
 window.V3_WORD_MODE = 'estimate'; // default: word-by-word for v3 voices
 
-const chapterNames  = { 1:'Assembly', 2:'The Startend', 3:'Doubt and Certainty', 4:'The Grid', 5:'Two Courses', 6:'Levers of Command', 7:'Scrapper vs. Juggernaut', 8:'Through the Vurnshaft', 9:'The Bris', 10:'Rebound', 11:'A New Science', 12:'The Walls have Ears', 13:'Ex Nihilo', 14:'The Jester', 15:'Wings', 16:'Undercurrents', 17:'It’s Raining Below', 18:'Song that Silence Mothers', 19:'Portamus Futurum', 20:'At the Edge of Everything', 21:'Full Reverse', 22:'The Bridge', 23:'The Endstart', 24:'Next' }; // increment as you add files
+const PART_CONFIGS = {
+  1: {
+    bookTitle: 'Mairee',
+    chapterCount: 24,
+    chapterDir: 'data/chapters',
+    freeLimit: 8,
+    names: { 1:'Assembly', 2:'The Startend', 3:'Doubt and Certainty', 4:'The Grid', 5:'Two Courses', 6:'Levers of Command', 7:'Scrapper vs. Juggernaut', 8:'Through the Vurnshaft', 9:'The Bris', 10:'Rebound', 11:'A New Science', 12:'The Walls have Ears', 13:'Ex Nihilo', 14:'The Jester', 15:'Wings', 16:'Undercurrents', 17:'It’s Raining Below', 18:'Song that Silence Mothers', 19:'Portamus Futurum', 20:'At the Edge of Everything', 21:'Full Reverse', 22:'The Bridge', 23:'The Endstart', 24:'Next' },
+  },
+  2: {
+    bookTitle: 'Undergrowth',
+    chapterCount: 1,           // secret preview — chapter 1 only for now
+    chapterDir: 'data/chapters/p2',
+    freeLimit: 1,              // no paywall on the preview
+    names: { 1: 'Revoked' },
+  },
+};
+
+const _readerParams = new URLSearchParams(window.location.search);
+const CURRENT_PART  = PART_CONFIGS[_readerParams.get('part')] ? Number(_readerParams.get('part')) : 1;
+const _partCfg      = PART_CONFIGS[CURRENT_PART];
+
+let CHAPTER_COUNT     = _partCfg.chapterCount;
+let CHAPTER_FILE_DIR  = _partCfg.chapterDir;
+let chapterNames      = _partCfg.names;
+
+// Reflect the part in the document title without rewriting the rest of the page.
+if (CURRENT_PART !== 1) {
+  document.title = `Read — The Unfolding: ${_partCfg.bookTitle}`;
+}
 
 async function loadChapter(n) {
   currentChapter = n;
@@ -2005,7 +2035,7 @@ async function loadChapter(n) {
 
   let ch;
   try {
-    const res = await fetch(`data/chapters/chapter-${n}.json`);
+    const res = await fetch(`${CHAPTER_FILE_DIR}/chapter-${n}.json`);
     ch = await res.json();
   } catch(e) {
     el.innerHTML = `<div style="text-align:center;padding:80px;font-family:var(--serif);font-style:italic;color:var(--muted)">Chapter not found.</div>`;
@@ -2240,7 +2270,8 @@ async function signOut() {
 }
 
 // ── Paywall ──────────────────────────────────────────────
-const FREE_CHAPTERS_LIMIT = 8;
+// Per-part. Part 1 = 8 free chapters; Part 2 preview = all (1) free.
+const FREE_CHAPTERS_LIMIT = _partCfg.freeLimit;
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/3cIdRagb87TygHedtP4ko0B';
 let paidCache = null;
 
