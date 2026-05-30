@@ -227,6 +227,39 @@ body.transit-page::before {
   text-transform: none;
 }
 
+/* Channel-switch acknowledgement — same surface as /route/?to=reading.
+   Sits below the closing log line so the page is both the transit scene
+   and the moment the colony logs the citizen against the Reader channel. */
+.transit-channel-switch {
+  margin-top: 28px;
+  padding: 16px 18px;
+  border: 1px solid var(--line-dashed);
+  border-left: 2px solid var(--ember);
+  background: rgba(139,58,47,0.04);
+  border-radius: 1px;
+  text-align: left;
+}
+.transit-channel-switch .cs-label {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ember);
+  margin-bottom: 6px;
+}
+.transit-channel-switch .cs-detail {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--ink-2);
+  line-height: 1.55;
+  letter-spacing: normal;
+  text-transform: none;
+}
+@media (prefers-color-scheme: dark) {
+  .transit-channel-switch { background: rgba(217,117,89,0.06); }
+}
+
 @media (max-width: 520px) {
   .transit-wrap { padding: 44px 18px 60px; }
   .transit-body { font-size: 1.04rem; }

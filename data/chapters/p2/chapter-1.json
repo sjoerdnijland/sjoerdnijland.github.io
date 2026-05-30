@@ -65,7 +65,7 @@
         "*Ttap. Ttap. Ttap.*",
         "Ionie's nail clicked against her front tooth.",
         "*But how can I bring resources I don't have to a station that isn't supposed to be manned, and do so without drawing eyes? With my own ship chained to anchor already halfway to scrap? Does Ben really understand what he was asking me to do? Impossible.*",
-        "And then she picked up Ben's voice in her thoughts. *Make the impossible possible.*",
+        { "text": "And then she picked up Ben's voice in her thoughts. *Make the impossible possible.*", "speaker": "benjamin-westhoff" },
         "Ben had taught her inversion. Think in the opposite direction.",
         "She couldn't take resources from Mairee to the station.",
         "She leaned back. The chair's recycled leather groaned. *Crr-eak.*",
