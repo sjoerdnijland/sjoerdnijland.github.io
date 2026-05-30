@@ -12,11 +12,17 @@ body.fg-open { overflow: hidden; }
   inset: 0;
   z-index: 10000;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 24px 16px;
+  padding: 40px 16px;
+  overflow-y: auto;
   opacity: 0;
   transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Center the card on tall viewports (when nothing scrolls), top-align on
+   short viewports so the form is always reachable. */
+@media (min-height: 760px) {
+  .fg-overlay { align-items: center; }
 }
 .fg-overlay.fg-in { opacity: 1; }
 
@@ -183,6 +189,58 @@ body.fg-open { overflow: hidden; }
   border-color: #8b3a2f;
   background: #fffdf6;
   box-shadow: 0 0 0 3px rgba(139,58,47,0.1);
+}
+
+/* ── Reader-state radio pills (matches /enter form structure) ── */
+.fg-state { border: none; padding: 0; margin: 10px 0 0; }
+.fg-state legend.fg-label { padding: 0; }
+.fg-state-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.fg-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid rgba(45,40,32,0.25);
+  border-radius: 2px;
+  background: #fbf8f2;
+  font-family: Georgia, serif;
+  font-size: 0.92rem;
+  color: #2d2820;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.fg-pill:hover { border-color: rgba(45,40,32,0.5); }
+.fg-pill input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px; height: 1px;
+  pointer-events: none;
+}
+.fg-pill:has(input:checked) {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+  color: #fbf8f2;
+}
+.fg-pill input:focus-visible + span {
+  outline: 2px solid #8b3a2f;
+  outline-offset: 3px;
+}
+@media (prefers-color-scheme: dark) {
+  .fg-pill {
+    background: #0f0d0b;
+    border-color: rgba(232,227,214,0.22);
+    color: #e8e3d6;
+  }
+  .fg-pill:hover { border-color: rgba(232,227,214,0.5); }
+  .fg-pill:has(input:checked) {
+    background: #d97559;
+    border-color: #d97559;
+    color: #1a1815;
+  }
 }
 
 .fg-submit {

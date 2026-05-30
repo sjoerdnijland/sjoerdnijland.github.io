@@ -99,6 +99,19 @@
                  autocomplete="given-name" required maxlength="80"
                  placeholder="First name" aria-required="true"/>
 
+          <fieldset class="fg-state">
+            <legend class="fg-label">Where are you with The Unfolding?<span class="req">*</span></legend>
+            <div class="fg-state-pills" role="radiogroup" aria-label="Where are you with The Unfolding?">
+              ${['Just arriving','Currently reading',"I've read Part 1"].map(opt => `
+                <label class="fg-pill">
+                  <input type="radio" name="reader_state" value="${opt.replace(/"/g,'&quot;')}"
+                         ${opt === (o.readerState || 'Just arriving') ? 'checked' : ''}/>
+                  <span>${opt}</span>
+                </label>
+              `).join('')}
+            </div>
+          </fieldset>
+
           <button type="submit" class="fg-submit" id="fg-submit">
             Sign in my designation
           </button>
@@ -151,9 +164,11 @@
     const emailEl = el.querySelector('#fg-email');
     const nameEl  = el.querySelector('#fg-name');
     const btn     = el.querySelector('#fg-submit');
+    const stateEl = el.querySelector('input[name="reader_state"]:checked');
 
-    const email = emailEl.value.trim();
-    const name  = nameEl.value.trim();
+    const email        = emailEl.value.trim();
+    const name         = nameEl.value.trim();
+    const reader_state = stateEl ? stateEl.value : (opts.readerState || 'Just arriving');
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setStatus(el, 'Comm channel address looks malformed.', 'error');
@@ -163,6 +178,10 @@
     if (!name) {
       setStatus(el, 'Citizen designation is required.', 'error');
       nameEl.focus();
+      return;
+    }
+    if (!reader_state) {
+      setStatus(el, 'Tell the colony where you are in the book.', 'error');
       return;
     }
 
@@ -175,11 +194,7 @@
       const res = await fetch(ENDPOINT, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          email,
-          name,
-          reader_state: opts.readerState || 'Currently reading',
-        }),
+        body:    JSON.stringify({ email, name, reader_state }),
       });
       const data = await res.json().catch(() => ({}));
 
@@ -296,9 +311,11 @@
   async function signInWithDiscord(el, opts) {
     setStatus(el, 'Opening Discord…', 'loading');
     try {
-      sessionStorage.setItem(SS_PEND, JSON.stringify({
-        readerState: opts.readerState || 'Currently reading',
-      }));
+      // Respect whatever state the user picked in the form before clicking
+      // Discord — falls back to the context's default if no radio was touched.
+      const stateEl = el.querySelector('input[name="reader_state"]:checked');
+      const reader_state = stateEl ? stateEl.value : (opts.readerState || 'Just arriving');
+      sessionStorage.setItem(SS_PEND, JSON.stringify({ readerState: reader_state }));
       const db = await getDb();
       await db.auth.signInWithOAuth({
         provider: 'discord',
