@@ -281,17 +281,41 @@ body.fg-open { overflow: hidden; }
 .fg-status[data-tone="error"]   { color: #c72f63; }
 .fg-status[data-tone="success"] { color: #4f7f57; }
 
-/* Escape row — sits below the form. Two subtle links:
-   "Skip" (soft-gate opt-out) and "Not now" (close without granting access). */
-.fg-escape {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  margin-top: 20px;
+/* Second OR separator — sits between the signup form and the skip option,
+   so the soft-gate escape has its own visual lane. */
+.fg-or--escape { margin: 26px 0 12px; }
+
+/* Skip — soft-gate opt-out. Bigger and clearer than the dismiss link
+   below it, so returning citizens don't feel like they have to type
+   their email again. Sentence-case serif for readability; ember on hover. */
+.fg-skip {
+  display: block;
+  margin: 0 auto 14px;
+  background: none;
+  border: none;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.96rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: #1a1a1a;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgba(26,26,26,0.5);
+  text-underline-offset: 3px;
+  padding: 6px 8px;
+  transition: color 0.15s, text-decoration-color 0.15s;
 }
-.fg-skip,
+.fg-skip:hover {
+  color: #8b3a2f;
+  text-decoration-color: #8b3a2f;
+}
+.fg-skip:focus-visible { outline: 2px solid #8b3a2f; outline-offset: 3px; }
+
+/* Dismiss — quieter than skip. "I want to leave" rather than "I'm already in". */
 .fg-dismiss {
+  display: block;
+  margin: 0 auto;
   background: none;
   border: none;
   font-family: ui-monospace, monospace;
@@ -304,9 +328,7 @@ body.fg-open { overflow: hidden; }
   text-decoration-color: rgba(138,130,111,0.4);
   padding: 4px 6px;
 }
-.fg-skip:hover,
 .fg-dismiss:hover { color: #1a1a1a; }
-.fg-skip { color: #6b6358; }   /* a touch dimmer than dismiss — secondary */
 
 .fg-frequency {
   font-family: Georgia, serif;
@@ -449,8 +471,18 @@ body.fg-open { overflow: hidden; }
   .fg-submit { background: #d97559; border-color: #d97559; color: #1a1815; }
   .fg-submit:hover { background: #c25c43; border-color: #c25c43; }
   .fg-id-card { background: #14110f; }
-  .fg-id-label, .fg-dismiss, .fg-skip, .fg-frequency { color: #8f8676; }
-  .fg-dismiss:hover, .fg-skip:hover { color: #f0ead9; }
+  .fg-id-label, .fg-dismiss, .fg-frequency { color: #8f8676; }
+  .fg-dismiss:hover { color: #f0ead9; }
+  /* Skip stays bright in dark mode so it doesn't lose the visual weight
+     we just added; ember tint on hover for consistency with light mode. */
+  .fg-skip {
+    color: #f0ead9;
+    text-decoration-color: rgba(240,234,217,0.5);
+  }
+  .fg-skip:hover {
+    color: #d97559;
+    text-decoration-color: #d97559;
+  }
   .fg-id { color: #f0ead9; }
 }
 

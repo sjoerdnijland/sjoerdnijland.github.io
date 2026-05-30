@@ -135,16 +135,16 @@
           <div class="fg-status" id="fg-status" role="status" aria-live="polite"></div>
         </form>
 
-        <div class="fg-escape">
-          ${o.afterSuccess === 'redirect' ? '' : `
-            <button type="button" class="fg-skip" data-fg-skip>
-              I am already a citizen — skip
-            </button>
-          `}
+        ${o.afterSuccess === 'redirect' ? '' : `
+          <div class="fg-or fg-or--escape"><span>or</span></div>
+          <button type="button" class="fg-skip" data-fg-skip>
+            I am already a citizen — skip
+          </button>
+
           <button type="button" class="fg-dismiss" data-fg-dismiss>
             Not now — return to the surface
           </button>
-        </div>
+        `}
 
         <p class="fg-frequency">You will receive transmissions in your inbox.</p>
       </div>
