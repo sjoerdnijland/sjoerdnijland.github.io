@@ -18,6 +18,12 @@
     "_note": ""
   },
   {
+    "id": "tinny",
+    "name": "Tinny",
+    "voice_id": "sg9CfOCltGxpfORQgrgL",
+    "_note": "Voice-only entry for the CIX aboard Yreus Station — Reed's clinical AI in the Viviflux module. First speaks in Part Two, Chapter 1 ('Revoked'): 'Cellular transition nominal,' 'Applying the muffle,' 'Visitor resisting the agent.' Tinny is intentionally thinner, scrapier, and more clipped than Gary on Orbital Three — the narration even describes the voice as 'a tinny scrape.' Distinct from any other CIX in the book."
+  },
+  {
     "id": "guardian",
     "name": "Guardian",
     "voice_id": "MbrxCIK2KCrGGqsm5dEq",

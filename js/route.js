@@ -22,7 +22,7 @@
     arc: {
       meta:         'Application: ARC cohort · Part Two proofreader',
       confirmation: 'Application registered.',
-      detail:       'Your designation has been added to the proofreader shortlist. When reading copies are ready, the colony will route the cohort briefing to your inbox. We do not promise selection. We do promise that every citizen on the list is read by the author.',
+      detail:       'Your designation has been added to the proofreader shortlist. When reading copies are ready, the colony will route the cohort briefing to your inbox. Stay tuned.',
     },
   };
 
@@ -33,7 +33,7 @@
       <div class="confirmation">${route.confirmation}</div>
       <div class="detail">${route.detail}</div>
       <div class="return">
-        <a href="https://the-unfolding.net">Return to the colony</a>
+        <a href="https://the-unfolding.net">Return to the fold</a>
       </div>
     `;
   } else {
