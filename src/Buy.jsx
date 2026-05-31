@@ -157,7 +157,8 @@ function Buy() {
   // Universal Kobo link — strips /nl/nl/ locale → works in 190+ countries
   const KOBO_UNIVERSAL = 'https://www.kobo.com/ww/en/ebook/the-unfolding-15';
   const BOL_NL = 'https://www.bol.com/nl/nl/p/the-unfolding/9300000279913241/';
-  const BOOKMUNDO = 'https://publishnl.bookmundo.com/books/22065296';
+  const BOOKMUNDO           = 'https://publishnl.bookmundo.com/books/22065296'; // eBook
+  const BOOKMUNDO_HARDCOVER = 'https://publishnl.bookmundo.com/books/22064998'; // hardcover
   const GOODREADS = 'https://www.goodreads.com/book/show/251501817-the-unfolding';
 
   // Amazon Kindle — region-aware via ASIN (same book ID across all Amazon TLDs)
@@ -208,7 +209,7 @@ function Buy() {
             The Unfolding<br/>
             <em>is out now.</em>
           </h2>
-          <p className="bl-sub">eBook available today · Hardcover arriving June 1st</p>
+          <p className="bl-sub">eBook and hardcover available now.</p>
         </div>
 
         <div className="bl-formats">
@@ -241,14 +242,27 @@ function Buy() {
             </div>
           </div>
 
-          {/* Hardcover card */}
-          <div className="bl-card bl-card--soon" style={{ animationDelay: '0.12s' }}>
+          {/* Hardcover card — available now via Bookmundo print-on-demand. */}
+          {/* TODO: confirm price on the Bookmundo listing and update below. */}
+          <div className="bl-card" style={{ animationDelay: '0.12s' }}>
             <div className="bl-card-top">
               <div className="bl-card-label">Hardcover</div>
-              <div className="bl-card-price">June 1st</div>
+              <div className="bl-card-price">€29.95</div>
             </div>
-            <p className="bl-card-note">First edition</p>
-            <div className="bl-soon-badge">Coming 1 June 2026</div>
+            <p className="bl-card-note">First edition · ships from the publisher</p>
+
+            <div className="bl-store-list">
+              <a
+                href={BOOKMUNDO_HARDCOVER}
+                className="bl-store-btn bl-store-direct bl-store-featured"
+                target="_blank"
+                rel="noopener"
+                onClick={() => window._track && window._track('click_buy', { dest: 'bookmundo_hardcover', format: 'hardcover' })}
+              >
+                <span className="bl-store-arrow">→</span>
+                Buy the hardcover <span className="bl-store-note">via Bookmundo</span>
+              </a>
+            </div>
           </div>
 
         </div>
