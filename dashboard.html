@@ -833,9 +833,18 @@ async function loadOKRs() {
       if (!res.ok) return [];
       return res.json();
     };
+    const fetchMailerLite = async () => {
+      try {
+        const res = await fetch(`${SUPA_URL}/functions/v1/mailerlite-stats`, { headers });
+        if (!res.ok) return null;
+        const json = await res.json();
+        return json?.ok ? json : null;
+      } catch { return null; }
+    };
 
     const [
-      pageViews, readClicks, buys, discordClicks, discordSignups, purchases, readerReviews
+      pageViews, readClicks, buys, discordClicks, discordSignups, purchases,
+      readerReviews, criticalReviews, mailerStats
     ] = await Promise.all([
       fetchEv('page_view'),
       fetchEv('click_read_chapter'),
@@ -844,23 +853,34 @@ async function loadOKRs() {
       fetchEv('discord_signup'),
       fetchEv('purchase_completed'),
       fetchReviews(),
+      fetchCriticalReviews(),
+      fetchMailerLite(),
     ]);
 
     // ── Reviews: only 4-5★ count toward the KR
-    const onSiteCount    = readerReviews.length;
-    const onSiteFourPlus = readerReviews.filter(r => Number(r.rating) >= 4).length;
-    const totalFourPlus  = onSiteFourPlus + (OKR_MANUAL.externalReviews.fourPlusStar || 0);
+    const onSiteCount      = readerReviews.length;
+    const onSiteFourPlus   = readerReviews.filter(r => Number(r.rating) >= 4).length;
+    const criticalCount    = (criticalReviews || []).length;
+    const criticalFourPlus = (criticalReviews || []).filter(c => Number(c.overall) >= 4).length;
+    const totalFourPlus    = onSiteFourPlus + criticalFourPlus + (OKR_MANUAL.externalReviews.fourPlusStar || 0);
+
+    // ── KR1 subscribers: prefer live MailerLite count, fall back to manual.
+    const subscribersLive   = mailerStats ? Number(mailerStats.active || 0) : null;
+    const subscribersValue  = subscribersLive ?? (OKR_MANUAL.activeSubscribers || 0);
+    const subscribersSource = subscribersLive != null ? 'live' : 'manual';
 
     // KR specs — current / target / formatter / source / note
     const krs = [
       {
         id: 'KR1',
         title: 'Grow the owned email list to 1,500 active subscribers.',
-        current: OKR_MANUAL.activeSubscribers,
+        current: subscribersValue,
         target:  1500,
         format:  v => fmt(Math.round(v)),
-        source:  'manual',
-        note:    '<strong>"Active"</strong> = opened at least one email in the last 30 days, or clicked at least one link in the last 60. Defining engagement up front matters more than the number.',
+        source:  subscribersSource,
+        note:    subscribersLive != null
+          ? `<strong>${fmt(subscribersValue)}</strong> active MailerLite subscribers in the Citizens group (live from MailerLite). The OKR's <strong>"active"</strong> definition (opened ≥1 email in 30d, or clicked ≥1 link in 60d) is stricter than MailerLite's <code>active_count</code> — refine when engagement data is wired in.`
+          : `<strong>"Active"</strong> = opened at least one email in the last 30 days, or clicked at least one link in the last 60. <em>Live MailerLite stats unavailable</em> — falling back to <code>OKR_MANUAL.activeSubscribers</code>. Deploy the <code>mailerlite-stats</code> edge function to enable live counts.`,
       },
       {
         id: 'KR2',
@@ -869,7 +889,7 @@ async function loadOKRs() {
         target:  100,
         format:  v => fmt(v),
         source:  'live+manual',
-        note:    `On-site: <strong>${onSiteFourPlus}</strong> of ${onSiteCount} reader reviews are 4★+. External (Amazon + StoryGraph): <strong>${OKR_MANUAL.externalReviews.fourPlusStar}</strong> — update <code>OKR_MANUAL.externalReviews.fourPlusStar</code> manually.`,
+        note:    `On-site: <strong>${onSiteFourPlus}</strong> of ${onSiteCount} reader reviews are 4★+. Editorial: <strong>${criticalFourPlus}</strong> of ${criticalCount} critical reviews are 4★+. External (Amazon + StoryGraph): <strong>${OKR_MANUAL.externalReviews.fourPlusStar}</strong> — update <code>OKR_MANUAL.externalReviews.fourPlusStar</code> manually.`,
       },
       {
         id: 'KR3',
@@ -958,10 +978,13 @@ async function loadOKRs() {
 // Discord member count, external review sites). Edit these numbers from the
 // respective dashboards — they'll flow straight into the OKR view.
 const OKR_MANUAL = {
-  // KR1: active subscribers (opened ≥1 email in 30d OR clicked ≥1 link in 60d)
+  // KR1 fallback only — live count comes from the `mailerlite-stats` edge
+  // function (Citizens-group active_count). This value is used if the
+  // function is undeployed or the call fails.
   activeSubscribers: 0,
-  // KR2 — external review platforms (Amazon + StoryGraph). On-site reviews
-  // are added on top automatically from Supabase. Track only 4-5★ counts.
+  // KR2 — external review platforms (Amazon + StoryGraph). On-site reader
+  // reviews and editorial critical reviews (data/critical-reviews.json) are
+  // added on top automatically. Track only 4-5★ counts.
   externalReviews: { fourPlusStar: 0 },
   // Last time the manual fields above were synced
   lastManualSync: '—',
