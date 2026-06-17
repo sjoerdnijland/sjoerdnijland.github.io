@@ -132,6 +132,7 @@
   .rv-source--curated   { color: var(--muted); }
   .rv-source--site      { color: #7fb289;  border-color: rgba(127,178,137,0.35); }
   .rv-source--rf        { color: #e8a47c;  border-color: rgba(232,164,124,0.45); }
+  .rv-source--amazon    { color: #ff9f43;  border-color: rgba(255,159,67,0.4); }
 
   /* Section dividers between critical and reader reviews */
   .rv-section-heading {
@@ -581,17 +582,46 @@
 
   const container = document.getElementById('rv-content');
 
-  const { data, error } = await db
-    .from('reviews')
-    .select('id, rating, body, goodreads_url, display_name, avatar_url, source, created_at')
-    .order('created_at', { ascending: false });
+  async function fetchCuratedReaderReviews() {
+    try {
+      const res = await fetch('data/reader-reviews.json', { cache: 'no-cache' });
+      if (!res.ok) return [];
+      const arr = await res.json();
+      return Array.isArray(arr) ? arr : [];
+    } catch {
+      return [];
+    }
+  }
 
-  if (error) {
+  const [supabaseRes, curated] = await Promise.all([
+    db.from('reviews')
+      .select('id, rating, body, goodreads_url, display_name, avatar_url, source, created_at')
+      .order('created_at', { ascending: false }),
+    fetchCuratedReaderReviews(),
+  ]);
+
+  const { data: dbData, error } = supabaseRes;
+
+  if (error && curated.length === 0) {
     container.innerHTML = `<div class="rv-empty"><em>Couldn't load reviews right now.</em><br/>${error.message || ''}</div>`;
     return;
   }
 
-  if (!data || data.length === 0) {
+  const dbRows = (dbData || []).map(r => ({
+    ...r,
+    external_url: r.goodreads_url || null,
+  }));
+  const curatedRows = curated.map(r => ({
+    ...r,
+    external_url: r.source_url || null,
+  }));
+  const data = [...curatedRows, ...dbRows].sort((a, b) => {
+    const da = new Date(a.created_at || 0).getTime();
+    const db = new Date(b.created_at || 0).getTime();
+    return db - da;
+  });
+
+  if (data.length === 0) {
     container.innerHTML = `
       <div class="rv-empty">
         <em>Reviews coming soon.</em><br/>
