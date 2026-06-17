@@ -173,10 +173,10 @@
   ]
 },{
   "id": "indiereader-staff",
-  "reviewer": "IR Staff",
+  "reviewer": "INDIEREADER",
   "source": "IndieReader",
   "source_slug": "ir",
-  "source_url": "https://indiereader.com/",
+  "source_url": "https://indiereader.com/book_review/the-unfolding-mairee/",
   "badge": "",
   "date": "2026-06",
   "featured": true,
@@ -186,7 +186,7 @@
   "max_total": 5,
   "overall": 5,
   "body": [
-    "<mark>Meticulous worldbuilding, extraterrestrial anxieties and a philosophical investigation of the idea of belonging and identity</mark>—S. Nyland’s <em>The Unfolding: Mairee</em> offers it all within the length of one book! As readers navigate both a complex interstellar worldbuilding and multiple character arcs stretched across the universe, they will be surprised by the author’s philosophical reflections which demand the readers to confront and question themselves. Following in the footsteps of pioneer sci-fi writers yet concocting something unique and memorable, Nyland builds a cast of strange characters, <mark>sweet intimacies in the face of inevitable doom</mark>, a surprising ending and a distinct language for his sci-fi."
+    "<mark>Meticulous worldbuilding, extraterrestrial anxieties and a philosophical investigation of the idea of belonging and identity</mark>\nS. Nyland’s <em>The Unfolding: Mairee</em> offers it all within the length of one book! As readers navigate both a complex interstellar worldbuilding and multiple character arcs stretched across the universe, they will be surprised by the author’s philosophical reflections which demand the readers to confront and question themselves. Following in the footsteps of pioneer sci-fi writers yet concocting something unique and memorable, Nyland builds a cast of strange characters, <mark>sweet intimacies in the face of inevitable doom</mark>, a surprising ending and a distinct language for his sci-fi."
   ]
 }
 ]
