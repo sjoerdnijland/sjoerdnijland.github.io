@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+<pre id="out"></pre>
+<script>
+fetch('https://sscpikfblqtmcefegrpv.supabase.co/functions/v1/metrics-export', {
+  headers: { 'Authorization': 'Bearer REPLACE_WITH_METRICS_SECRET' }
+})
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('out').textContent = JSON.stringify(d, null, 2);
+  })
+  .catch(e => {
+    document.getElementById('out').textContent = JSON.stringify({ error: e.message });
+  });
+</script>
+</body>
+</html>
