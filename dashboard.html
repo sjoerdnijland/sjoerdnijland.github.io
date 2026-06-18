@@ -833,6 +833,14 @@ async function loadOKRs() {
       if (!res.ok) return [];
       return res.json();
     };
+    const fetchJsonReaderReviewsOKR = async () => {
+      try {
+        const res = await fetch('data/reader-reviews.json', { cache: 'no-cache' });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch { return []; }
+    };
     const fetchMailerLite = async () => {
       try {
         const res = await fetch(`${SUPA_URL}/functions/v1/mailerlite-stats`, { headers });
@@ -844,7 +852,7 @@ async function loadOKRs() {
 
     const [
       pageViews, readClicks, buys, discordClicks, discordSignups, purchases,
-      readerReviews, criticalReviews, mailerStats
+      readerReviewsDB, jsonReaderReviews, criticalReviews, mailerStats
     ] = await Promise.all([
       fetchEv('page_view'),
       fetchEv('click_read_chapter'),
@@ -853,9 +861,13 @@ async function loadOKRs() {
       fetchEv('discord_signup'),
       fetchEv('purchase_completed'),
       fetchReviews(),
+      fetchJsonReaderReviewsOKR(),
       fetchCriticalReviews(),
       fetchMailerLite(),
     ]);
+
+    // Merge Supabase + JSON reader reviews (all-time for OKR)
+    const readerReviews = [...(readerReviewsDB || []), ...(jsonReaderReviews || [])];
 
     // ── Reviews: only 4-5★ count toward the KR
     const onSiteCount      = readerReviews.length;
@@ -878,9 +890,9 @@ async function loadOKRs() {
         target:  1500,
         format:  v => fmt(Math.round(v)),
         source:  subscribersSource,
-        note:    subscribersLive != null
-          ? `<strong>${fmt(subscribersValue)}</strong> active MailerLite subscribers in the Citizens group (live from MailerLite). The OKR's <strong>"active"</strong> definition (opened ≥1 email in 30d, or clicked ≥1 link in 60d) is stricter than MailerLite's <code>active_count</code> — refine when engagement data is wired in.`
-          : `<strong>"Active"</strong> = opened at least one email in the last 30 days, or clicked at least one link in the last 60. <em>Live MailerLite stats unavailable</em> — falling back to <code>OKR_MANUAL.activeSubscribers</code>. Deploy the <code>mailerlite-stats</code> edge function to enable live counts.`,
+        note:    subscribersLive == null
+          ? `<em>Live MailerLite stats unavailable</em> — falling back to <code>OKR_MANUAL.activeSubscribers</code>. Deploy the <code>mailerlite-stats</code> edge function to enable live counts.`
+          : null,
       },
       {
         id: 'KR2',
@@ -948,7 +960,7 @@ async function loadOKRs() {
               <div class="pct">${pct.toFixed(0)}% of target</div>
             </div>
           </div>
-          <div class="kr-note">${sourceBadge}${kr.note}</div>
+          ${kr.note != null ? `<div class="kr-note">${sourceBadge}${kr.note}</div>` : (sourceBadge ? `<div class="kr-note">${sourceBadge}</div>` : '')}
         </div>`;
     };
 
@@ -1047,6 +1059,25 @@ async function fetchCriticalReviews() {
   } catch { return []; }
 }
 
+async function fetchJsonReaderReviews() {
+  try {
+    const res = await fetch('data/reader-reviews.json', { cache: 'no-cache' });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch { return []; }
+}
+
+function filterReviewsByDays(reviews, days) {
+  if (!days || days <= 0) return reviews;
+  const since = Date.now() - days * 86400000;
+  return reviews.filter(r => {
+    if (!r.created_at) return false;
+    const t = new Date(r.created_at).getTime();
+    return Number.isFinite(t) && t >= since;
+  });
+}
+
 async function load() {
   document.getElementById('main').innerHTML = '<div class="loading"><span class="pulse">Loading…</span></div>';
 
@@ -1055,7 +1086,7 @@ async function load() {
       pageViews, readClicks, buys, discordClicks,
       chapterStarts, depths, narrationPlays, narrationStops, narrationCompletes,
       paywallShown, paywallSigninClick, paywallCheckoutClick, purchaseCompleted, epubDownload,
-      readerReviews, criticalReviews
+      readerReviewsLive, jsonReaderReviews, criticalReviews
     ] = await Promise.all([
       query('page_view'),
       query('click_read_chapter'),
@@ -1072,8 +1103,16 @@ async function load() {
       query('purchase_completed'),
       query('epub_download'),
       fetchReaderReviews(),
+      fetchJsonReaderReviews(),
       fetchCriticalReviews(),
     ]);
+
+    // Combine on-site (Supabase) reader reviews with JSON-tracked external ones
+    // (e.g. Amazon reviews the author has transcribed into data/reader-reviews.json).
+    const readerReviews = [
+      ...(readerReviewsLive || []),
+      ...filterReviewsByDays(jsonReaderReviews || [], rangeDays),
+    ];
 
     const indexViews  = pageViews.filter(e => e.page === 'index' || e.page === '').length;
     const readerViews = pageViews.filter(e => e.page === 'reader').length;
