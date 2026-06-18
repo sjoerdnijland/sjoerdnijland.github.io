@@ -50,15 +50,22 @@ async function countEvents(filter: string): Promise<number> {
 }
 
 async function reviewStats(): Promise<{ avg: number; count: number }> {
-  const res = await fetch(`${SUPA_URL}/rest/v1/reviews?select=rating`, {
-    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` },
-  });
-  if (!res.ok) return { avg: 0, count: 0 };
-  const rows: { rating: number | null }[] = await res.json();
+  const [supaRes, critRes] = await Promise.all([
+    fetch(`${SUPA_URL}/rest/v1/reviews?select=rating`, {
+      headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` },
+    }),
+    fetch('https://the-unfolding.net/data/critical-reviews.json').catch(() => null),
+  ]);
+
+  const rows: { rating: number | null }[] = supaRes.ok ? await supaRes.json() : [];
+  const critical: { overall?: number | null }[] =
+    critRes?.ok ? await critRes.json().catch(() => []) : [];
+
   const rated = rows.filter(r => r.rating != null);
-  if (!rated.length) return { avg: 0, count: rows.length };
-  const sum = rated.reduce((s, r) => s + Number(r.rating), 0);
-  return { avg: Math.round((sum / rated.length) * 100) / 100, count: rows.length };
+  const sum   = rated.reduce((s, r) => s + Number(r.rating), 0);
+  const avg   = rated.length > 0 ? Math.round((sum / rated.length) * 100) / 100 : 0;
+
+  return { avg, count: rows.length + critical.length };
 }
 
 async function monthlyRevenue(): Promise<number | null> {

@@ -121,6 +121,7 @@
         var origStart = window.startNarration;
         window.startNarration = function() {
           track('narration_play', { chapter: getCurrentChapter() });
+          track('feature_use', { feature: 'narration' });
           return origStart.apply(this, arguments);
         };
         window.startNarration._tracked = true;

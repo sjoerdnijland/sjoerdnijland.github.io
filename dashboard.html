@@ -1072,7 +1072,7 @@ function filterReviewsByDays(reviews, days) {
   if (!days || days <= 0) return reviews;
   const since = Date.now() - days * 86400000;
   return reviews.filter(r => {
-    if (!r.created_at) return false;
+    if (!r.created_at) return true; // undated entries (manual JSON) always included
     const t = new Date(r.created_at).getTime();
     return Number.isFinite(t) && t >= since;
   });
