@@ -901,7 +901,7 @@ async function loadOKRs() {
         target:  100,
         format:  v => fmt(v),
         source:  'live+manual',
-        note:    `On-site: <strong>${onSiteFourPlus}</strong> of ${onSiteCount} reader reviews are 4★+. Editorial: <strong>${criticalFourPlus}</strong> of ${criticalCount} critical reviews are 4★+. External (Amazon + StoryGraph): <strong>${OKR_MANUAL.externalReviews.fourPlusStar}</strong> — update <code>OKR_MANUAL.externalReviews.fourPlusStar</code> manually.`,
+        note:    `On-site: <strong>${onSiteFourPlus}</strong> / ${onSiteCount}. Editorial: <strong>${criticalFourPlus}</strong> / ${criticalCount}. External: <strong>${OKR_MANUAL.externalReviews.fourPlusStar}</strong> (update <code>OKR_MANUAL</code> manually).`,
       },
       {
         id: 'KR3',
@@ -910,7 +910,7 @@ async function loadOKRs() {
         target:  50,
         format:  v => fmt(v),
         source:  'live',
-        note:    `<strong>${fmt(discordSignups.length)}</strong> new Discord sign-ups via the site (counted from the <code>discord_signup</code> event, fired when a fresh account auto-joins the server). ${fmt(discordClicks.length)} click-throughs to Discord recorded for context.`,
+        note:    null,
       },
       {
         id: 'KR4',
@@ -919,7 +919,7 @@ async function loadOKRs() {
         target:  100,
         format:  v => fmt(v),
         source:  'live',
-        note:    `<strong>${fmt(purchases.length)}</strong> purchases recorded via the <code>purchase_completed</code> analytics event.`,
+        note:    null,
       },
     ];
 
