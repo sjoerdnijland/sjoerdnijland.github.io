@@ -42,6 +42,7 @@ function Nav({ onOpenTweaks, tweaksOn }) {
         <a href="map.html" target="unfolding-map" rel="noopener">Map</a>
         <a href="index.html#author">Author</a>
         <a href="index.html#buy" className="nav-buy-btn always-show">Buy Now</a>
+        <a href="enter.html" className="nav-join-btn always-show">Join</a>
       </div>
       <style>{`
         .nav-scrolled {
@@ -110,6 +111,24 @@ function Nav({ onOpenTweaks, tweaksOn }) {
         }
         .nav-buy-btn:hover {
           background: var(--rose);
+          color: #060810 !important;
+        }
+        .nav-join-btn {
+          padding: 6px 16px;
+          border: 1px solid var(--teal, #4ecdc4);
+          background: transparent;
+          color: var(--teal, #4ecdc4) !important;
+          font-family: var(--mono);
+          font-size: 0.68rem;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          text-decoration: none;
+          border-radius: 2px;
+          transition: background 0.2s, color 0.2s;
+          white-space: nowrap;
+        }
+        .nav-join-btn:hover {
+          background: var(--teal, #4ecdc4);
           color: #060810 !important;
         }
       `}</style>
