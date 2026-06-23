@@ -3,44 +3,79 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Open Graph / Social preview -->
-  <meta property="og:type"        content="website"/>
-  <meta property="og:title"       content="The Unfolding"/>
-  <meta property="og:description" content="A psychedelic space opera by S. Nyland."/>
-  <meta property="og:image"       content="https://the-unfolding.net/meta/releasefriday.jpg"/>
-  <meta property="og:image:width" content="1500"/>
-  <meta property="og:image:height" content="500"/>
-  <meta property="og:url"         content="ttps://the-unfolding.net"/>
+<meta name="description" content="The Unfolding — a psychedelic space opera by S. Nyland. Read the first chapters free online, with character narration, wiki, and interactive map." />
+<!-- Open Graph / Social preview -->
+<meta property="og:type"        content="website"/>
+<meta property="og:title"       content="The Unfolding"/>
+<meta property="og:description" content="A psychedelic space opera by S. Nyland."/>
+<meta property="og:image"       content="https://the-unfolding.net/meta/releasefriday.jpg"/>
+<meta property="og:image:width" content="1500"/>
+<meta property="og:image:height" content="500"/>
+<meta property="og:url"         content="https://the-unfolding.net"/>
 
-  <title>The Unfolding — a novel by S. Nyland</title>
+<title>The Unfolding — a novel by S. Nyland</title>
 <link rel="icon" href="favicon.ico" sizes="any"/>
 <link rel="icon" href="favicon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="favicon-180.png"/>
+
+<!-- Preconnect for fonts — must come before font CSS -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- Google Fonts: load async via media trick to avoid render-blocking -->
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@400;500;600&display=swap"
+      media="print" onload="this.media='all'"/>
+<noscript>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@400;500;600&display=swap"/>
+</noscript>
+
 <link rel="stylesheet" href="css/styles.css" />
 <link rel="stylesheet" href="css/fold-gate.css" />
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<!-- Critical inline style to prevent FOUT while fonts load -->
+<style>
+  body { font-family: Georgia, serif; }
+  .grain::before { opacity: 0.08; }
+</style>
+
+<!-- React 18 PRODUCTION builds (minified, no DevTools overhead) -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
+        crossorigin="anonymous"
+        integrity="sha384-Htz/FzQXGMJyAaFEDALFM0UIhiDPpWPJRjWdSEgTJADPPqNwjSqkHSJgdEhOFGT"
+        onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js'"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
+        crossorigin="anonymous"
+        integrity="sha384-0uUGSHXuBJxFpxzX8+ZBiuBMxGZ8J1Sry0yz2YXsKHfVvAUMTgNuMBXoZj8GZPa"
+        onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js'"></script>
+
+<!-- Babel standalone: still needed for in-browser JSX; defer it so it
+     doesn't block first paint. The React scripts above are small enough
+     to stay synchronous so JSX transform is available when babel runs. -->
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+        defer
+        integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+        crossorigin="anonymous"></script>
+
+<!-- Supabase: only needed for fold-gate / auth, load async -->
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js" async></script>
 </head>
 <body class="grain" id="top">
   <div id="root"></div>
 
-  <script type="text/babel" src="src/Nav.jsx"></script>
-  <script type="text/babel" src="src/Hero.jsx"></script>
-  <script type="text/babel" src="src/Synopsis.jsx"></script>
-  <script type="text/babel" src="src/Excerpt.jsx"></script>
-  <script type="text/babel" src="src/Reviews.jsx"></script>
-  <script type="text/babel" src="src/JoinFold.jsx"></script>
-  <script type="text/babel" src="src/Buy.jsx"></script>
-  <script type="text/babel" src="src/CodexInvite.jsx"></script>
-  <script type="text/babel" src="src/Portal.jsx"></script>
-  <script type="text/babel" src="src/Author.jsx"></script>
+  <script type="text/babel" src="src/Nav.jsx" defer></script>
+  <script type="text/babel" src="src/Hero.jsx" defer></script>
+  <script type="text/babel" src="src/Synopsis.jsx" defer></script>
+  <script type="text/babel" src="src/Excerpt.jsx" defer></script>
+  <script type="text/babel" src="src/Reviews.jsx" defer></script>
+  <script type="text/babel" src="src/JoinFold.jsx" defer></script>
+  <script type="text/babel" src="src/Buy.jsx" defer></script>
+  <script type="text/babel" src="src/CodexInvite.jsx" defer></script>
+  <script type="text/babel" src="src/Portal.jsx" defer></script>
+  <script type="text/babel" src="src/Author.jsx" defer></script>
 
-  <script type="text/babel" data-presets="env,react">
+  <script type="text/babel" data-presets="env,react" defer>
     const { useState, useEffect } = React;
 
     const ACCENTS = {
@@ -110,7 +145,9 @@
     }
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
-<script src="js/analytics.js"></script>
-<script src="js/fold-gate.js"></script>
+
+<!-- Analytics and fold-gate: non-critical, defer both -->
+<script src="js/analytics.js" defer></script>
+<script src="js/fold-gate.js" defer></script>
 </body>
 </html>
