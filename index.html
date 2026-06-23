@@ -18,9 +18,10 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="favicon-180.png"/>
 
-<!-- Preconnect for fonts — must come before font CSS -->
+<!-- Preconnect for fonts and CDN -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
 
 <!-- Google Fonts: load async via media trick to avoid render-blocking -->
 <link rel="stylesheet"
@@ -34,32 +35,28 @@
 <link rel="stylesheet" href="css/styles.css" />
 <link rel="stylesheet" href="css/fold-gate.css" />
 
-<!-- Critical inline style to prevent FOUT while fonts load -->
+<!-- Critical inline style: prevent FOUT and CLS while fonts/JS load -->
 <style>
   body { font-family: Georgia, serif; }
   .grain::before { opacity: 0.08; }
+  #root { min-height: 100vh; }
 </style>
 
-<!-- React 18 PRODUCTION builds (minified, no DevTools overhead) -->
-<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
-        crossorigin="anonymous"
-        integrity="sha384-Htz/FzQXGMJyAaFEDALFM0UIhiDPpWPJRjWdSEgTJADPPqNwjSqkHSJgdEhOFGT"
-        onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js'"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
-        crossorigin="anonymous"
-        integrity="sha384-0uUGSHXuBJxFpxzX8+ZBiuBMxGZ8J1Sry0yz2YXsKHfVvAUMTgNuMBXoZj8GZPa"
-        onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js'"></script>
+<!-- React 18 production builds — synchronous so JSX components can reference
+     React/ReactDOM immediately when Babel processes them after defer fires. -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
 
-<!-- Babel standalone: still needed for in-browser JSX; defer it so it
-     doesn't block first paint. The React scripts above are small enough
-     to stay synchronous so JSX transform is available when babel runs. -->
+<!-- Babel standalone: deferred so it doesn't block first paint.
+     React is already on window by the time defer scripts execute. -->
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
         defer
-        integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
         crossorigin="anonymous"></script>
 
-<!-- Supabase: only needed for fold-gate / auth, load async -->
-<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js" async></script>
+<!-- Supabase: only needed for fold-gate / auth after interaction -->
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"
+        defer
+        crossorigin="anonymous"></script>
 </head>
 <body class="grain" id="top">
   <div id="root"></div>
@@ -146,7 +143,7 @@
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
 
-<!-- Analytics and fold-gate: non-critical, defer both -->
+<!-- Analytics and fold-gate: non-critical, always deferred -->
 <script src="js/analytics.js" defer></script>
 <script src="js/fold-gate.js" defer></script>
 </body>
