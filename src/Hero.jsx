@@ -15,7 +15,7 @@ function Hero({ onBuy }) {
     <section className="hero">
       {/* Cinematic backdrop */}
       <div className="hero-cinema" style={{ opacity: fade }}>
-        <img src="assets/still-mairee.png" alt="" className="cinema-img" />
+        <img src="assets/still-mairee.png" alt="" className="cinema-img" width="1638" height="1638" />
         <div className="cinema-veil" />
       </div>
 
@@ -69,7 +69,7 @@ function Hero({ onBuy }) {
 
         <div className="hero-right" style={{ transform: `translateY(${parallax * 0.1}px) rotate(${-2 + scrollY * 0.005}deg)` }}>
           <div className="cover-wrap">
-            <img src="assets/cover.png" alt="The Unfolding — Part I: Mairee, by S. Nyland" className="cover-img" />
+            <img src="assets/cover.png" alt="The Unfolding — Part I: Mairee, by S. Nyland" className="cover-img" width="1500" height="2400" />
             <div className="cover-shadow" />
           </div>
           <div className="cover-caption">

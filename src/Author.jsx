@@ -6,7 +6,7 @@ function Author() {
         <div className="author-grid">
           <div className="author-portrait">
             <div className="portrait-frame">
-              <img src="assets/author-nyland.png" alt="Stuart Nyland" className="portrait-img" />
+              <img src="assets/author-nyland.png" alt="Stuart Nyland" className="portrait-img" width="500" height="500" loading="lazy" />
               <span className="pp-caption">Stuart Nyland</span>
             </div>
           </div>

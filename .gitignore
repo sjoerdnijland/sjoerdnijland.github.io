@@ -14,6 +14,9 @@ Thumbs.db
 .idea/
 .claude/
 
+# Node
+node_modules/
+
 # Local-only working area
 uploads/
 assets/mp3/

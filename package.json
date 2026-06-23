@@ -1,0 +1,16 @@
+{
+  "name": "unfolding",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "check": "node scripts/check-console.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "playwright": "^1.61.0",
+    "serve": "^14.2.6"
+  }
+}
