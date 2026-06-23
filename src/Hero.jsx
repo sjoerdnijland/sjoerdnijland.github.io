@@ -122,7 +122,7 @@ function Hero({ onBuy }) {
 
         .hero-right { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; transition: transform 0.1s ease-out; }
         .cover-wrap { position: relative; max-width: 420px; width: 100%; }
-        .cover-img { width: 100%; display: block; box-shadow: 0 40px 80px rgba(0,0,0,0.7), 0 0 60px rgba(233,74,124,0.25), inset 0 0 0 1px rgba(255,255,255,0.08); border-radius: 2px; }
+        .cover-img { width: 100%; height: auto; display: block; box-shadow: 0 40px 80px rgba(0,0,0,0.7), 0 0 60px rgba(233,74,124,0.25), inset 0 0 0 1px rgba(255,255,255,0.08); border-radius: 2px; }
         .cover-shadow { position: absolute; inset: -20px; background: radial-gradient(ellipse at center, rgba(233,74,124,0.25), transparent 70%); filter: blur(40px); z-index: -1; }
         .cover-caption { text-align: center; }
 
