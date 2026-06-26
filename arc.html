@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Advance Review Copies — The Unfolding</title>
+<meta name="description" content="Become an advance reader of The Unfolding, a psychedelic space opera by S. Nyland. A small, hand-picked group of book bloggers and early readers receive a free digital copy ahead of release in exchange for an honest public review."/>
+
+<!-- Open Graph / Social preview -->
+<meta property="og:type"        content="website"/>
+<meta property="og:title"       content="Advance Review Copies — The Unfolding"/>
+<meta property="og:description" content="A small, hand-picked intake of book bloggers and early readers. Read The Unfolding before anyone else — in exchange for one honest review."/>
+<meta property="og:image"       content="https://the-unfolding.net/meta/releasefriday.jpg"/>
+<meta property="og:url"         content="https://the-unfolding.net/arc.html"/>
+
+<link rel="icon" href="favicon.ico" sizes="any"/>
+<meta name="theme-color" content="#061619"/>
+<link rel="icon" href="favicon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="favicon-180.png"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      media="print" onload="this.media='all'"/>
+<noscript>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"/>
+</noscript>
+
+<link rel="stylesheet" href="css/styles.css"/>
+<style>
+  .arc-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 64px 22px 120px;
+    color: var(--ivory);
+  }
+  .arc-back {
+    display: inline-flex; gap: 8px; align-items: center;
+    font-family: var(--mono); font-size: 0.66rem;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    margin-bottom: 36px;
+    transition: color 0.2s;
+  }
+  .arc-back:hover { color: var(--ivory); }
+
+  /* ── Hero / hook ── */
+  .arc-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .arc-eyebrow::before {
+    content: ''; display: inline-block;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--rose); box-shadow: 0 0 8px var(--rose);
+  }
+  .arc-title {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    line-height: 1.04;
+    color: var(--ivory);
+    margin: 0 0 14px;
+  }
+  .arc-title em { color: var(--rose); font-style: italic; }
+  .arc-lede {
+    font-family: var(--serif);
+    font-size: clamp(1.1rem, 2.6vw, 1.3rem);
+    line-height: 1.6;
+    color: var(--ivory-2, var(--ivory));
+    margin: 0 0 24px;
+  }
+  .arc-lede strong { color: var(--ivory); font-weight: 500; }
+
+  /* ── Mood / premise ── */
+  .arc-mood {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 24px 0;
+    margin: 8px 0 48px;
+  }
+  .arc-mood p {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.08rem;
+    line-height: 1.75;
+    color: var(--muted);
+    margin: 0 0 0.8em;
+  }
+  .arc-mood p:last-child { margin-bottom: 0; color: var(--ivory-2, var(--ivory)); font-style: normal; }
+
+  .arc-section-label {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 18px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .arc-section-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+  /* ── Why you ── */
+  .arc-why {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 48px;
+  }
+  .arc-why-card {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 20px 22px;
+    background: rgba(6,22,25,0.45);
+  }
+  .arc-why-card h3 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 1.2rem;
+    color: var(--ivory);
+    margin: 0 0 6px;
+  }
+  .arc-why-card p {
+    font-family: var(--serif);
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* ── Expectations ── */
+  .arc-expect {
+    border: 1px solid rgba(127,178,137,0.25);
+    background: rgba(127,178,137,0.04);
+    border-radius: 4px;
+    padding: 24px 24px 22px;
+    margin-bottom: 56px;
+  }
+  .arc-expect-title {
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #7fb289;
+    margin: 0 0 16px;
+  }
+  .arc-expect ul { list-style: none; margin: 0; padding: 0; }
+  .arc-expect li {
+    display: flex; gap: 12px; align-items: flex-start;
+    font-family: var(--serif);
+    font-size: 1.04rem;
+    line-height: 1.5;
+    color: var(--ivory-2, var(--ivory));
+    padding: 8px 0;
+  }
+  .arc-expect li + li { border-top: 1px solid rgba(127,178,137,0.12); }
+  .arc-expect li .chk {
+    flex-shrink: 0;
+    color: #7fb289;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  /* ── Form ── */
+  .arc-form { display: grid; gap: 26px; }
+  .arc-field { display: grid; gap: 8px; }
+  .arc-label {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ivory-2, var(--ivory));
+  }
+  .arc-label .req { color: var(--rose); margin-left: 3px; }
+  .arc-hint {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.92rem;
+    color: var(--muted);
+  }
+  .arc-input, .arc-select {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    color: var(--ivory);
+    font-family: var(--mono);
+    font-size: 0.92rem;
+    padding: 13px 14px;
+    transition: border-color 0.18s, background 0.18s;
+  }
+  .arc-input::placeholder { color: var(--muted); opacity: 0.65; }
+  .arc-input:focus, .arc-select:focus {
+    outline: none;
+    border-color: var(--rose);
+    background: rgba(255,255,255,0.05);
+  }
+  .arc-select { cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%235a7a82' stroke-width='1.4' fill='none'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  /* Platform chips (multi-select) */
+  .arc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .arc-chip { position: relative; }
+  .arc-chip input {
+    position: absolute; opacity: 0; width: 0; height: 0;
+  }
+  .arc-chip span {
+    display: inline-block;
+    padding: 9px 15px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .arc-chip input:checked + span {
+    border-color: var(--rose);
+    color: var(--rose);
+    background: rgba(233,74,124,0.08);
+  }
+  .arc-chip input:focus-visible + span {
+    outline: 2px solid var(--rose);
+    outline-offset: 2px;
+  }
+
+  .arc-submit {
+    width: 100%;
+    padding: 16px 24px;
+    background: var(--rose);
+    border: 1px solid var(--rose);
+    color: var(--ink, #061619);
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s;
+  }
+  .arc-submit:hover { background: #c72f63; border-color: #c72f63; }
+  .arc-submit:active { transform: translateY(1px); }
+
+  .arc-privacy {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 4px;
+    line-height: 1.6;
+  }
+  .arc-privacy a { color: var(--rose); }
+
+  /* ── Success view ── */
+  .arc-success {
+    text-align: center;
+    padding: 48px 24px;
+    border: 1px solid rgba(127,178,137,0.3);
+    background: rgba(127,178,137,0.05);
+    border-radius: 6px;
+  }
+  .arc-success-icon {
+    font-size: 2.4rem;
+    color: #7fb289;
+    margin-bottom: 14px;
+    line-height: 1;
+  }
+  .arc-success h2 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    color: var(--ivory);
+    margin: 0 0 14px;
+  }
+  .arc-success p {
+    font-family: var(--serif);
+    font-size: 1.08rem;
+    line-height: 1.65;
+    color: var(--ivory-2, var(--ivory));
+    margin: 0 auto 14px;
+    max-width: 460px;
+  }
+  .arc-success .arc-next {
+    list-style: none; margin: 22px auto 0; padding: 0; max-width: 420px; text-align: left;
+  }
+  .arc-success .arc-next li {
+    display: flex; gap: 12px; align-items: flex-start;
+    font-family: var(--serif); font-size: 1rem; line-height: 1.5;
+    color: var(--muted); padding: 8px 0;
+  }
+  .arc-success .arc-next li .n {
+    flex-shrink: 0;
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em;
+    color: #7fb289; padding-top: 2px;
+  }
+  .arc-success-back {
+    display: inline-block;
+    margin-top: 28px;
+    font-family: var(--mono); font-size: 0.66rem;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--rose); text-decoration: none;
+  }
+
+  @media (min-width: 640px) {
+    .arc-why { grid-template-columns: 1fr 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body class="grain">
+
+<nav class="nav" id="nav">
+  <a href="index.html" class="nav-logo">
+    <span class="dot"></span>
+    <span>THE UNFOLDING</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html" class="nav-back-link">
+      <span class="nav-back-arrow">←</span> Back to the book
+    </a>
+  </div>
+</nav>
+
+<div class="arc-wrap">
+  <a href="index.html" class="arc-back">← Back to the book</a>
+
+  <!-- ── FORM + CONTENT VIEW ── -->
+  <section id="arc-main-view">
+    <div class="arc-eyebrow">Advance Review Copies · Limited Intake</div>
+    <h1 class="arc-title">Read it first. <em>Tell the colony.</em></h1>
+    <p class="arc-lede">
+      We're handing a small, hand-picked group of book bloggers and dedicated early readers a
+      <strong>free digital advance copy of The Unfolding</strong> — a psychedelic space opera by
+      S. Nyland — before it reaches the wider world. In return, we ask for one thing: your honest
+      voice, in public.
+    </p>
+
+    <div class="arc-mood">
+      <p>
+        Humanity's first colony beyond the solar system. A severed Fold. A planet that may be alive
+        and may already know we're the infection. The Unfolding is strange, intimate, and built to
+        unsettle — a fractal, character-driven descent dressed as a survival story.
+      </p>
+      <p>
+        If you love sci-fi that trusts its reader, lingers in mood, and rewards close attention —
+        you're exactly who this is for.
+      </p>
+    </div>
+
+    <div class="arc-section-label">Why you</div>
+    <div class="arc-why">
+      <div class="arc-why-card">
+        <h3>You read closely</h3>
+        <p>You finish books, sit with them, and have opinions worth reading. That's the whole job.</p>
+      </div>
+      <div class="arc-why-card">
+        <h3>You have a platform</h3>
+        <p>A blog, Goodreads, StoryGraph, Bookstagram, BookTok — anywhere readers find their next book.</p>
+      </div>
+      <div class="arc-why-card">
+        <h3>You're early</h3>
+        <p>Your review lands before the crowd. The first voices shape how a book is discovered.</p>
+      </div>
+      <div class="arc-why-card">
+        <h3>It's exclusive</h3>
+        <p>The intake is intentionally small — up to ten readers — so each copy goes somewhere it matters.</p>
+      </div>
+    </div>
+
+    <div class="arc-expect">
+      <div class="arc-expect-title">What we ask · plainly</div>
+      <ul>
+        <li><span class="chk">◉</span><span>Post <strong>one honest review</strong> on a public platform — good, bad, or conflicted. Your opinion stays entirely yours.</span></li>
+        <li><span class="chk">◉</span><span>Aim to publish it <strong>within about four weeks</strong> of receiving your copy.</span></li>
+        <li><span class="chk">◉</span><span>The copy is <strong>free</strong>. No payment is exchanged in either direction, and a positive review is never a condition.</span></li>
+        <li><span class="chk">◉</span><span>It's a DRM-free digital edition for your personal reading — please don't redistribute the file.</span></li>
+      </ul>
+    </div>
+
+    <div class="arc-section-label">Apply for a copy</div>
+    <form class="arc-form" id="arc-form" novalidate>
+      <div class="arc-field">
+        <label class="arc-label" for="arc-name">Your name<span class="req" aria-hidden="true">*</span></label>
+        <input class="arc-input" id="arc-name" name="name" type="text" autocomplete="name"
+          required maxlength="100" placeholder="Name or reviewer handle" aria-required="true"/>
+      </div>
+
+      <div class="arc-field">
+        <label class="arc-label" for="arc-email">Email<span class="req" aria-hidden="true">*</span></label>
+        <input class="arc-input" id="arc-email" name="email" type="email" inputmode="email"
+          autocomplete="email" required placeholder="your@email" aria-required="true"/>
+        <span class="arc-hint">Where we'll send the copy if you're selected.</span>
+      </div>
+
+      <div class="arc-field">
+        <span class="arc-label">Preferred platform(s)<span class="req" aria-hidden="true">*</span></span>
+        <span class="arc-hint">Where you'd post your review. Pick all that apply.</span>
+        <div class="arc-chips" id="arc-platforms" role="group" aria-label="Preferred review platforms">
+          <label class="arc-chip"><input type="checkbox" name="platform" value="Goodreads"/><span>Goodreads</span></label>
+          <label class="arc-chip"><input type="checkbox" name="platform" value="Amazon"/><span>Amazon</span></label>
+          <label class="arc-chip"><input type="checkbox" name="platform" value="StoryGraph"/><span>StoryGraph</span></label>
+          <label class="arc-chip"><input type="checkbox" name="platform" value="Instagram"/><span>Bookstagram</span></label>
+          <label class="arc-chip"><input type="checkbox" name="platform" value="TikTok / YouTube"/><span>BookTok / YouTube</span></label>
+          <label class="arc-chip"><input type="checkbox" name="platform" value="Blog"/><span>Personal blog</span></label>
+          <label class="arc-chip"><input type="checkbox" name="platform" value="Other"/><span>Other</span></label>
+        </div>
+      </div>
+
+      <div class="arc-field">
+        <label class="arc-label" for="arc-reach">Follower / reach estimate<span class="req" aria-hidden="true">*</span></label>
+        <select class="arc-select" id="arc-reach" name="reach" required aria-required="true">
+          <option value="" disabled selected>Select a range…</option>
+          <option value="Under 100">Under 100</option>
+          <option value="100–500">100 – 500</option>
+          <option value="500–2,000">500 – 2,000</option>
+          <option value="2,000–10,000">2,000 – 10,000</option>
+          <option value="10,000–50,000">10,000 – 50,000</option>
+          <option value="50,000+">50,000+</option>
+        </select>
+        <span class="arc-hint">A rough total across your main platform. Reach isn't everything — enthusiasm counts too.</span>
+      </div>
+
+      <div class="arc-field">
+        <label class="arc-label" for="arc-link">A link to your reviews <span style="color:var(--muted)">(optional)</span></label>
+        <input class="arc-input" id="arc-link" name="link" type="url" inputmode="url"
+          placeholder="https://… your profile, blog, or a recent review"/>
+        <span class="arc-hint">Helps us see your style. Totally optional.</span>
+      </div>
+
+      <button type="submit" class="arc-submit" id="arc-submit">Apply for an advance copy</button>
+
+      <p class="arc-privacy">
+        No external login required. We store only what you enter here to consider your application.
+        See our <a href="legal.html#privacy">privacy notes</a>.
+      </p>
+    </form>
+  </section>
+
+  <!-- ── SUCCESS VIEW ── -->
+  <section id="arc-success-view" class="arc-success" hidden aria-live="polite">
+    <div class="arc-success-icon">◉</div>
+    <h2>Application received.</h2>
+    <p id="arc-success-name">Thank you — your interest is logged.</p>
+    <p>
+      The intake is small and reviewed by hand, so this isn't automatic. Here's what happens next:
+    </p>
+    <ul class="arc-next">
+      <li><span class="n">01</span><span>We read every application and choose up to ten advance readers.</span></li>
+      <li><span class="n">02</span><span>If you're selected, you'll hear from us by email with your copy and a few simple details.</span></li>
+      <li><span class="n">03</span><span>No spam, no list — we'll only email you about this advance copy.</span></li>
+    </ul>
+    <a href="index.html" class="arc-success-back">← Back to the book</a>
+  </section>
+</div>
+
+<div id="site-footer"></div>
+<script src="js/footer.js" defer></script>
+
+<script>
+(function () {
+  var form = document.getElementById('arc-form');
+  if (!form) return;
+
+  var ARC_CONTACT = 'nyland@agnc.cc';
+
+  function showError(input, on) {
+    input.style.borderColor = on ? '#e85454' : '';
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    var name  = document.getElementById('arc-name');
+    var email = document.getElementById('arc-email');
+    var reach = document.getElementById('arc-reach');
+    var platforms = Array.prototype.slice.call(
+      form.querySelectorAll('input[name="platform"]:checked')
+    ).map(function (c) { return c.value; });
+    var link  = document.getElementById('arc-link');
+
+    var valid = true;
+
+    if (!name.value.trim()) { showError(name, true); valid = false; } else { showError(name, false); }
+
+    var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim());
+    if (!emailOk) { showError(email, true); valid = false; } else { showError(email, false); }
+
+    if (!reach.value) { showError(reach, true); valid = false; } else { showError(reach, false); }
+
+    // Require at least one platform
+    var chipGroup = document.getElementById('arc-platforms');
+    if (platforms.length === 0) {
+      chipGroup.style.outline = '1px dashed #e85454';
+      chipGroup.style.outlineOffset = '6px';
+      valid = false;
+    } else {
+      chipGroup.style.outline = '';
+    }
+
+    if (!valid) {
+      var firstBad = form.querySelector('[style*="e85454"]') || chipGroup;
+      if (firstBad && firstBad.scrollIntoView) {
+        firstBad.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
+    // Build a mailto fallback so no application is lost before the
+    // fulfilment/automation backend (separate PBI) is in place.
+    var subject = 'ARC application — ' + name.value.trim();
+    var bodyLines = [
+      'Name: ' + name.value.trim(),
+      'Email: ' + email.value.trim(),
+      'Platforms: ' + platforms.join(', '),
+      'Reach: ' + reach.value,
+      'Link: ' + (link.value.trim() || '—'),
+    ];
+    var mailto = 'mailto:' + ARC_CONTACT +
+      '?subject=' + encodeURIComponent(subject) +
+      '&body=' + encodeURIComponent(bodyLines.join('\n'));
+
+    // Swap to the success view and set expectations.
+    document.getElementById('arc-main-view').hidden = true;
+    var success = document.getElementById('arc-success-view');
+    success.hidden = false;
+
+    var nameNote = document.getElementById('arc-success-name');
+    nameNote.innerHTML = 'Thank you, ' + escapeHtml(name.value.trim().split(' ')[0]) +
+      ' — your interest is logged. If your mail client didn\'t open, you can ' +
+      '<a href="' + mailto + '" style="color:var(--rose)">send it directly here</a>.';
+
+    // Open the user's mail client as the delivery mechanism for now.
+    try { window.location.href = mailto; } catch (err) { /* no-op */ }
+
+    success.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
