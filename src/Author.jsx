@@ -45,14 +45,14 @@ function Author() {
         .author { padding: 140px 0 0; }
         .author-grid {
           display: grid;
-          grid-template-columns: 260px 1fr;
+          grid-template-columns: 130px 1fr;
           gap: 72px;
           align-items: start;
           margin-bottom: 100px;
         }
         .portrait-frame {
           aspect-ratio: 3/4;
-          max-width: 240px;
+          max-width: 120px;
           border: 1px solid var(--line-strong);
           position: relative;
           overflow: hidden;
@@ -152,7 +152,7 @@ function Author() {
         @media (max-width: 820px) {
           .author-grid { grid-template-columns: 1fr; gap: 32px; }
           .newsletter { grid-template-columns: 1fr; gap: 24px; padding: 28px; }
-          .portrait-frame { max-width: 280px; }
+          .portrait-frame { max-width: 140px; }
         }
       `}</style>
     </section>
