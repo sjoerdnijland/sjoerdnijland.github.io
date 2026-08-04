@@ -148,7 +148,7 @@ function DirectBuyItem() {
 }
 
 // Buy section — Live launch with smart store routing
-function Buy() {
+function Buy({ id = 'buy' }) {
   const { useState: useState_B, useRef: useRef_B, useEffect: useEffect_B } = React;
   const [visible, setVisible] = useState_B(false);
   const [countryHint, setCountryHint] = useState_B(null);
@@ -200,7 +200,7 @@ function Buy() {
   // Pick primary store based on detected region
   const isNL = countryHint === 'NL' || countryHint === 'BE';
   return (
-    <section id="buy" className={`buy-live ${visible ? 'buy-visible' : ''}`} ref={ref}>
+    <section id={id} className={`buy-live ${visible ? 'buy-visible' : ''}`} ref={ref}>
       <div className="container">
 
         <div className="bl-head">
@@ -214,11 +214,34 @@ function Buy() {
 
         <div className="bl-formats">
 
-          {/* eBook card — direct + retailers */}
-          <div className="bl-card" style={{ animationDelay: '0s' }}>
+          {/* Hardcover card — primary CTA. Available now via Bookmundo print-on-demand. */}
+          <div className="bl-card bl-card--hero" style={{ animationDelay: '0s' }}>
+            <div className="bl-card-flag">First Edition</div>
             <div className="bl-card-top">
-              <div className="bl-card-label">eBook</div>
-              <div className="bl-card-price">€12.50</div>
+              <div className="bl-card-label bl-card-label--hero">Hardcover</div>
+              <div className="bl-card-price bl-card-price--hero">€32,50</div>
+            </div>
+            <p className="bl-card-note bl-card-note--hero">Ships from the publisher · signed &amp; numbered first edition</p>
+
+            <div className="bl-store-list">
+              <a
+                href={BOOKMUNDO_HARDCOVER}
+                className="bl-store-btn bl-store-hero"
+                target="_blank"
+                rel="noopener"
+                onClick={() => window._track && window._track('click_buy', { dest: 'bookmundo_hardcover', format: 'hardcover' })}
+              >
+                <span className="bl-store-arrow">→</span>
+                Buy the hardcover <span className="bl-store-note">via Bookmundo</span>
+              </a>
+            </div>
+          </div>
+
+          {/* eBook card — secondary, subdued */}
+          <div className="bl-card bl-card--muted" style={{ animationDelay: '0.12s' }}>
+            <div className="bl-card-top">
+              <div className="bl-card-label">Also available · eBook</div>
+              <div className="bl-card-price bl-card-price--muted">€12.50</div>
             </div>
 
             <div className="bl-store-list">
@@ -238,28 +261,6 @@ function Buy() {
               )}
               <a href={BOOKMUNDO} className="bl-store-btn" target="_blank" rel="noopener">
                 <span className="bl-store-arrow">→</span>Bookmundo
-              </a>
-            </div>
-          </div>
-
-          {/* Hardcover card — available now via Bookmundo print-on-demand. */}
-          <div className="bl-card" style={{ animationDelay: '0.12s' }}>
-            <div className="bl-card-top">
-              <div className="bl-card-label">Hardcover</div>
-              <div className="bl-card-price">€32,50</div>
-            </div>
-            <p className="bl-card-note">First edition · ships from the publisher</p>
-
-            <div className="bl-store-list">
-              <a
-                href={BOOKMUNDO_HARDCOVER}
-                className="bl-store-btn bl-store-direct bl-store-featured"
-                target="_blank"
-                rel="noopener"
-                onClick={() => window._track && window._track('click_buy', { dest: 'bookmundo_hardcover', format: 'hardcover' })}
-              >
-                <span className="bl-store-arrow">→</span>
-                Buy the hardcover <span className="bl-store-note">via Bookmundo</span>
               </a>
             </div>
           </div>
@@ -312,15 +313,59 @@ function Buy() {
         }
 
         .bl-formats {
-          display: grid; grid-template-columns: 1fr 1fr;
-          gap: 20px; max-width: 780px; margin: 0 auto 40px;
+          display: grid; grid-template-columns: 1.25fr 0.85fr;
+          gap: 24px; max-width: 860px; margin: 0 auto 40px;
+          align-items: start;
         }
         .bl-card {
+          position: relative;
           border: 1px solid var(--line-strong); padding: 28px 24px;
           display: flex; flex-direction: column; gap: 14px;
           background: rgba(6,22,25,0.5);
           transition: border-color 0.25s, box-shadow 0.25s;
           animation: blCardIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
+        }
+
+        /* Hardcover — primary/hero card */
+        .bl-card--hero {
+          padding: 40px 32px 34px;
+          border-color: rgba(233,74,124,0.55);
+          background:
+            linear-gradient(180deg, rgba(233,74,124,0.08), rgba(6,22,25,0.65) 60%);
+          box-shadow: 0 0 48px rgba(233,74,124,0.12), inset 0 0 0 1px rgba(233,74,124,0.06);
+        }
+        .bl-card--hero:hover {
+          border-color: rgba(233,74,124,0.9);
+          box-shadow: 0 0 60px rgba(233,74,124,0.22), inset 0 0 0 1px rgba(233,74,124,0.12);
+        }
+        .bl-card-flag {
+          position: absolute; top: -11px; left: 24px;
+          background: var(--rose); color: var(--ink);
+          font-family: var(--mono); font-size: 0.6rem;
+          letter-spacing: 0.22em; text-transform: uppercase;
+          padding: 5px 12px; border-radius: 2px;
+          box-shadow: 0 4px 16px rgba(233,74,124,0.35);
+        }
+        .bl-card-label--hero {
+          color: var(--rose); font-size: 0.7rem; letter-spacing: 0.3em;
+        }
+        .bl-card-price--hero {
+          font-size: 1.9rem; color: var(--ivory);
+        }
+        .bl-card-note--hero {
+          color: var(--ivory-2); font-size: 0.66rem; letter-spacing: 0.16em;
+          margin-top: -2px;
+        }
+
+        /* eBook — secondary/muted card */
+        .bl-card--muted {
+          border-color: var(--line);
+          background: rgba(6,22,25,0.35);
+          opacity: 0.92;
+        }
+        .bl-card--muted:hover { opacity: 1; border-color: var(--line-strong); }
+        .bl-card-price--muted {
+          font-size: 1.15rem; color: var(--ivory-2); opacity: 0.85;
         }
         @keyframes blCardIn {
           from { opacity: 0; transform: translateY(16px); }
@@ -465,9 +510,10 @@ function Buy() {
           background: rgba(255,255,255,0.08);
           transform: translateY(-2px);
         }
-        @media (max-width: 620px) {
+        @media (max-width: 720px) {
           .buy-live { padding: 80px 0 100px; }
-          .bl-formats { grid-template-columns: 1fr; max-width: 420px; }
+          .bl-formats { grid-template-columns: 1fr; max-width: 460px; gap: 20px; }
+          .bl-card--hero { padding: 32px 22px 28px; }
           .bl-actions { gap: 10px; }
           .bl-sep { display: none; }
         }
@@ -498,6 +544,28 @@ function Buy() {
           background: rgba(127,178,137,0.16);
           color: #cfe8d4;
         }
+
+        /* Hardcover primary buy button — filled, larger */
+        .bl-store-btn.bl-store-hero {
+          border-color: var(--rose);
+          background: var(--rose);
+          color: var(--ink);
+          font-size: 0.78rem;
+          padding: 16px 20px;
+          letter-spacing: 0.18em;
+        }
+        .bl-store-btn.bl-store-hero .bl-store-arrow { color: var(--ink); }
+        .bl-store-btn.bl-store-hero .bl-store-note {
+          color: rgba(6,22,25,0.72); font-style: normal; letter-spacing: 0.1em;
+        }
+        .bl-store-btn.bl-store-hero:hover {
+          background: var(--rose-deep);
+          border-color: var(--rose-deep);
+          color: var(--ivory);
+          padding-left: 24px;
+        }
+        .bl-store-btn.bl-store-hero:hover .bl-store-arrow { color: var(--ivory); }
+        .bl-store-btn.bl-store-hero:hover .bl-store-note { color: rgba(244,234,217,0.85); }
       `}</style>
     </section>
   );

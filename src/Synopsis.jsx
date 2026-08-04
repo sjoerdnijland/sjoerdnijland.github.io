@@ -53,28 +53,8 @@ function Synopsis() {
         </div>
       </div>
 
-      {/* Critical review — appears above the three themes */}
+      {/* Critical review */}
       <Reviews />
-
-      {/* Themes */}
-      <div className="container themes-wrap">
-        <div className="themes-grid">
-          <ThemeCard label="Theme I" title="Self-Transcendence"
-            body="Everyone eventually faces a moment where their world unfolds. A career ends, a relationship breaks, a belief system collapses. This book is a companion for the void." />
-          <ThemeCard label="Theme II" title="Mystery"
-            body="Things unfold. Slowly. Then all at once. What appears is never quite what you thought you were looking at. The reader is an accomplice." />
-          <ThemeCard label="Theme III" title="Intimacy"
-            body="Most sci-fi offers a big experience — explosions, empires. The Unfolding is small-large. A secret whispered in the dark. As vast as a supernova blowing through the universe." />
-        </div>
-      </div>
-
-      {/* Commander's oath */}
-      <div className="container-narrow oath">
-        <p className="oath-line">
-          <span className="hand oath-hand">"The void cannot claim what the heart holds."</span>
-        </p>
-        <p className="oath-attr">— Commander Astrid Vilde, Freya Homestead</p>
-      </div>
 
       <style>{`
         .synopsis { padding: 160px 0 80px; position: relative; }
@@ -100,41 +80,13 @@ function Synopsis() {
         .warn-2 em { color: var(--rose-soft); } .warn-3 { font-style: italic; }
         .rose-word { color: var(--rose); font-style: italic; }
 
-        .themes-wrap { margin-top: 100px; }
-        /* When the Reviews promo sits above the themes, the section's own
-           bottom padding already provides breathing room — don't stack it. */
-        .rv-promo + .themes-wrap { margin-top: 0; }
-        .themes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-
-        .oath { text-align: center; margin-top: 120px; }
-        .oath-line { margin: 0; }
-        .oath-hand { font-family: 'Chiller'; font-size: clamp(2.2rem, 4vw, 3.2rem); color: var(--ivory); font-style: italic; }
-        .oath-attr { font-family: var(--mono); font-size: 0.76rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-top: 18px; }
-
         @media (max-width: 820px) {
           .syn-grid { grid-template-columns: 1fr; gap: 32px; }
           .syn-aside { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 28px; flex-direction: row; flex-wrap: wrap; gap: 28px; }
           .aside-block { min-width: 140px; }
-          .themes-grid { grid-template-columns: 1fr; }
         }
       `}</style>
     </section>
-  );
-}
-
-function ThemeCard({ label, title, body }) {
-  return (
-    <div className="theme-card">
-      <span className="mono-label">{label}</span>
-      <h3>{title}</h3>
-      <p>{body}</p>
-      <style>{`
-        .theme-card { padding: 36px 28px; background: linear-gradient(180deg, rgba(45,91,102,0.15), rgba(45,91,102,0.03)); border: 1px solid var(--line); border-radius: 2px; transition: all 0.3s ease; }
-        .theme-card:hover { border-color: var(--rose); transform: translateY(-4px); }
-        .theme-card h3 { margin: 16px 0; color: var(--ivory); }
-        .theme-card p { font-size: 0.95rem; color: var(--muted); line-height: 1.6; margin: 0; }
-      `}</style>
-    </div>
   );
 }
 
