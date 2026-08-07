@@ -600,8 +600,10 @@ function buildSegments(plainText, charVoiceId, innerVoiceId) {
     if (!clean) return;
     const isQuote = /^[""\u201c\u201d]/.test(clean) && /[""\u201c\u201d]$/.test(clean);
     const isItalic = /^\*[^*]+\*$/.test(clean);
-    const INNER_RE = /\b(is|are|was|were|have|has|had|do|does|did|will|would|could|should|must|need|want|know|think|see|feel|hear|get|go|come|make|take|put|give|look|seem|appear)\b|[?!.]$/i;
-    const isInnerDialogue = isItalic && innerVoiceId && INNER_RE.test(clean);
+    const INNER_RE = /\b(is|are|was|were|have|has|had|do|does|did|will|would|could|should|must|need|want|know|think|see|feel|hear|get|go|come|make|take|put|give|look|seem|appear|said|shut)\b|[?!.,]$/i;
+    // Strip surrounding * before testing so the terminal-punctuation branch can match.
+    const italicInner = isItalic ? clean.slice(1, -1) : clean;
+    const isInnerDialogue = isItalic && innerVoiceId && INNER_RE.test(italicInner);
 
     let voice = null;
     if (isQuote && charVoiceId) voice = charVoiceId;
