@@ -112,7 +112,7 @@
         "The weighted doors remained shut. Then, the magnetic locks disengaged.",
         "*Groan.*",
 
-        { "text": "The sound reverberated through the frame as the doors parted without a touch. Inside, the atmosphere shifted. The air was filtered. Fresh. Sterile. Dry enough to itch the back of the throat. The Commander walked straight toward the central control room. Her gait was stiff but unbroken. Lysanne followed half a step behind. *The ghost is gone. The officer is back.*", , "inner-voice": "lysanne-sutherland" },
+        { "text": "The sound reverberated through the frame as the doors parted without a touch. Inside, the atmosphere shifted. The air was filtered. Fresh. Sterile. Dry enough to itch the back of the throat. The Commander walked straight toward the central control room. Her gait was stiff but unbroken. Lysanne followed half a step behind. *The ghost is gone. The officer is back.*", "inner-voice": "lysanne-sutherland" },
         "Astrid Vilde entered the sanctum. The operators stood half-up from their stations. They hovered in a state of kinetic indecision. Screens surrounding them displayed a mosaic of disaster: crumbled cranes at the docks, the crashed bridge, the *Brisinger's* wreckage rewriting the horizon. One showed the Eyewyn feed. One officer adjusted his collar. His fingers trembled. His pupils were wide, reflecting the blue light of the consoles. He flinched.",
         { "text": "\"Commander,\" he whispered. \"You're back.\"", "speaker": "fox-operator" },
         "Astrid stepped forward.",
