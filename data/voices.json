@@ -64,5 +64,15 @@
   "name": "Older Guardian",
   "voice_id": "oR4uRy4fHDUGGISL0Rev",
   "_note": "Voice-only entry for the older, predatory perimeter guardian who intercepts Lysanne and Oliver at the industrial loading gate in Chapter 21 ('Full Reverse'). A canyon of cynical wrinkles, leering, quoting the Centurion's 'every able body is a colony asset' doctrine. Lower, rougher, slower delivery than the standard 'guardian' voice — the menace of long service, casual cruelty earned from rank. Distinct from the cryo-bay guardian (kept on the default 'guardian' voice)."
+  },{
+  "id": "urael",
+  "name": "Uræl",
+  "voice_id": "ruirxsoakN0GWmGNIo04",
+  "_note": "Voice-only entry for Uræl — the extradimensional 'visitor' who seeps into Ulre Corbin during his ego death in Part Two, Chapter 1 ('Revoked'). Æzal's older sibling, of the same seiðr collective as Æzal and Gabræl (see factions.json → the-seiðr). Distinct from the 'ulre-corbin' character voice: ulre-corbin renders anything spoken through Ulre's physical vocal cords (post-possession dialogue like 'Stupid,' 'Sorry, little Colorsss,' 'Right, let's see' still uses ulre-corbin — the throat hasn't changed). This urael voice is reserved for interior/mental content clearly attributable to the guest — the thought-replies from inside the well ('*Stuff,* the thought replied. *From the wreck. Now shut up.*'), '*Fine.*', '*Æzal. Very impressive. Very — you.*', '*Uræl. Yes. That's right. That's me. A long time ago.*' — and for the spoken-in-mental-space dialogue with the entity in the well ('You've been here before,' 'Like you were wearing mine.'). Distinct from any Æzal voice; see the azal entry."
+  },{
+  "id": "azal",
+  "name": "Æzal",
+  "voice_id": "NwTfmofvvKEZRJsUayUt",
+  "_note": "Voice-only entry for Æzal — extradimensional visitor of the seiðr collective (see factions.json → the-seiðr), the colonizer twin to Gabræl. Reuses Rajendra Gupta's voice_id (see characters.json → rajendra-gupta) because Gupta is Æzal's host in-flesh — the two are audibly the same throat by the time of the Bris arc. First appears as a distinct tagged voice in Part Two, Chapter 1 ('Revoked'), on the cross-mind broadcast '*Uræl. Little brother. Is that you?*' — the entity reaching for its sibling now inhabiting Ulre Corbin. Keep this id in sync with rajendra-gupta.voice_id if that character's voice ever changes."
 }
 ]
