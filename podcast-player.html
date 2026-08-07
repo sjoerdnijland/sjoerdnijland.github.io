@@ -175,7 +175,8 @@ const VOICES   = { VERA: 'aRlmTYIQo6Tlg5SlulGC', MILO: 'ljX1ZrXuDIIRVcmiVSyR' };
 
 // Preset episodes — add entries as you save JSON files
 // Drop chapter-N-podcast.json files into data/podcast/
-const EPISODES = [
+// Part 2 uses the p2/ subdirectory and its own episodes list below.
+const EPISODES_PART1 = [
   { chapter: 1, title: 'Assembly',            file: 'data/podcast/chapter-1-podcast.json' },
   { chapter: 2, title: 'The Startend',         file: 'data/podcast/chapter-2-podcast.json' },
   { chapter: 3, title: 'Doubt and Certainty',  file: 'data/podcast/chapter-3-podcast.json' },
@@ -201,6 +202,15 @@ const EPISODES = [
   { chapter: 23, title: 'The Endstart',           file: 'data/podcast/chapter-23-podcast.json' },
   { chapter: 24, title: 'Next',                   file: 'data/podcast/chapter-24-podcast.json' },
 ];
+
+const EPISODES_PART2 = [
+  { chapter: 1, title: 'Revoked',             file: 'data/podcast/p2/chapter-1-podcast.json' },
+];
+
+// Resolve which episode list to use based on ?part= URL param (defaults to Part 1).
+const _partParam = parseInt(new URLSearchParams(window.location.search).get('part') || '1', 10);
+const CURRENT_PART = (_partParam === 2) ? 2 : 1;
+const EPISODES = (CURRENT_PART === 2) ? EPISODES_PART2 : EPISODES_PART1;
 
 let scriptLines  = [];
 let currentLine  = 0;

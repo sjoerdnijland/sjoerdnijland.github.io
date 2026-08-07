@@ -3420,8 +3420,10 @@ function toggleWikiHints() {
 function openPodcastPanel() {
   const panel  = document.getElementById('podcast-panel');
   const iframe = document.getElementById('podcast-iframe');
-  if (iframe.src === 'about:blank' || !iframe.src.includes(`chapter=${currentChapter}`)) {
-    iframe.src = `podcast-player.html?chapter=${currentChapter}`;
+  const partQuery = CURRENT_PART !== 1 ? `&part=${CURRENT_PART}` : '';
+  const wantSrc = `podcast-player.html?chapter=${currentChapter}${partQuery}`;
+  if (iframe.src === 'about:blank' || !iframe.src.endsWith(wantSrc)) {
+    iframe.src = wantSrc;
   }
   panel.classList.add('open');
   if (narrationActive && narrationAudio && !narrationAudio.paused) {
