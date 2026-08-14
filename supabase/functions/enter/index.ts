@@ -35,7 +35,7 @@ type ReaderState = keyof typeof READER_STATES;
 // back to the default so a stray/spoofed field can't pollute the data.
 const SIGNUP_SOURCES = new Set([
   'website-signup', // /enter.html + FoldGate (default)
-  'commons_muro',   // commons/muro landing page (PBI #43)
+  'commons_muro',   // join-muro.html Muro landing page (PBI #43)
 ]);
 const DEFAULT_SIGNUP_SOURCE = 'website-signup';
 
