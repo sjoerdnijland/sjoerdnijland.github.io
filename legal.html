@@ -155,6 +155,7 @@
     <h3>What we collect</h3>
     <ul>
       <li><strong>Account data</strong> — when you sign in with Discord, we store your Discord user ID, display name, avatar URL, and email address.</li>
+      <li><strong>Newsletter signup data</strong> — when you join the email list (via the intake desk, the story feeds, or a landing page), we store your email address, the name you provide, where you are with the book (your "reader state"), which page or campaign you signed up through ("signup source"), and a derived Citizen ID generated from your email.</li>
       <li><strong>Purchase data</strong> — when you buy the book, we store the Stripe checkout session ID, the amount, the timestamp, and a status flag (<em>paid</em> / <em>refunded</em>).</li>
       <li><strong>Comments</strong> — anything you post in a paragraph thread is stored under your account.</li>
       <li><strong>Anonymous usage analytics</strong> — page views, which chapters get started, how far people scroll, narration starts/completes. These events are not tied to your account or any personally identifying field.</li>
@@ -164,6 +165,7 @@
     <h3>Why we collect it</h3>
     <ul>
       <li>To authenticate you, unlock the chapters you've paid for, and let you download your EPUB.</li>
+      <li>To send you the newsletter you signed up for, and to tailor which welcome and update emails you receive based on your reader state.</li>
       <li>To attribute the comments you leave to you.</li>
       <li>To understand which parts of the book engage readers, anonymously, so the site can be improved.</li>
       <li>To fulfill record-keeping obligations under Dutch and EU law (purchase records retained for 7 years).</li>
@@ -172,7 +174,7 @@
     <h3>Legal basis (GDPR)</h3>
     <ul>
       <li><strong>Contract</strong> — purchase processing and book delivery.</li>
-      <li><strong>Consent</strong> — you sign in with Discord voluntarily; you can sign out and delete your account at any time.</li>
+      <li><strong>Consent</strong> — you sign in with Discord voluntarily and you join the newsletter voluntarily; you can sign out, delete your account, or unsubscribe at any time.</li>
       <li><strong>Legitimate interest</strong> — anonymous usage analytics.</li>
       <li><strong>Legal obligation</strong> — fiscal retention of purchase records.</li>
     </ul>
@@ -181,6 +183,7 @@
     <p>The following sub-processors are used. None receive more data than they need to do their job:</p>
     <ul>
       <li><strong>Supabase</strong> (Supabase Inc.) — database, authentication, and EPUB storage. Data is stored in the EU region.</li>
+      <li><strong>MailerLite</strong> (UAB "MailerLite", Lithuania) — newsletter delivery and subscriber management. When you sign up for the email list we send MailerLite your email address, the name you provide, your reader state, your signup source, and your derived Citizen ID. These are stored on your subscriber record and used solely to send you the newsletter and manage your subscription. You can unsubscribe from any email at any time.</li>
       <li><strong>Stripe</strong> (Stripe Payments Europe Ltd., Ireland) — payment processing.</li>
       <li><strong>Discord</strong> (Discord Inc.) — OAuth login provider. We receive your public Discord identity at sign-in; we do not access your servers or messages.</li>
       <li><strong>ElevenLabs</strong> (ElevenLabs Inc.) — text-to-speech for the narration feature. Only the chapter text is sent, never your account data.</li>
@@ -195,6 +198,7 @@
       <li>Ask us to delete your account and associated comments (purchase records may be retained for fiscal reasons).</li>
       <li>Object to or restrict processing.</li>
       <li>Withdraw your consent for Discord-linked sign-in at any time by signing out.</li>
+      <li>Unsubscribe from the newsletter at any time using the link in any email, or by emailing us.</li>
       <li>Lodge a complaint with the Dutch DPA (<a href="https://autoriteitpersoonsgegevens.nl/" target="_blank" rel="noopener">Autoriteit Persoonsgegevens</a>).</li>
     </ul>
     <p>To exercise any of these, email <a href="mailto:nyland@agnc.cc">nyland@agnc.cc</a>.</p>
@@ -256,7 +260,7 @@
   </section>
 
   <div class="legal-meta">
-    Last updated: 20 May 2026 &middot; The Unfolding by S. Nyland
+    Last updated: 24 May 2026 &middot; The Unfolding by S. Nyland
   </div>
 </div>
 
