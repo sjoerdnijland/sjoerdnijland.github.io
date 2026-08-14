@@ -3,11 +3,11 @@
 // /enter and the FoldGate overlay, so a reader who signs up here lands in
 // MailerLite with the same Citizen ID and welcome flow.
 //
-// Attribution: signups are tagged { source: 'commons_muro' } via the shared
-// _track() analytics helper (event: email_gate_signup) AND the signup_source
-// field is sent to the edge function so it is preserved on the MailerLite
-// subscriber. Together these let the Email List Size KVM be measured against
-// this page's traffic.
+// Attribution: the signup_source field ('commons_muro') is sent to the edge
+// function, which whitelists it and preserves it on the MailerLite subscriber
+// record — this is what lets the Email List Size KVM be attributed to this
+// page's traffic. A lightweight _track() analytics event is also fired for
+// funnel visibility.
 
 (function () {
   const ENDPOINT = 'https://sscpikfblqtmcefegrpv.supabase.co/functions/v1/enter';
@@ -16,6 +16,7 @@
 
   const form        = document.getElementById('jm-form');
   const emailEl     = document.getElementById('jm-email');
+  const nameEl      = document.getElementById('jm-name');
   const submit      = document.getElementById('jm-submit');
   const status      = document.getElementById('jm-status');
   const formView    = document.getElementById('jm-capture-form');
@@ -35,14 +36,6 @@
 
   function emailValid(s) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
-  }
-
-  function nameFromEmail(email) {
-    const local = (email || '').split('@')[0] || 'Citizen';
-    // Turn "jane.doe" / "jane_doe" into a tidy first name.
-    const first = local.replace(/[._-].*$/, '');
-    if (!first) return 'Citizen';
-    return first.charAt(0).toUpperCase() + first.slice(1);
   }
 
   function showSuccess(citizen_id) {
@@ -66,9 +59,24 @@
     setStatus('', null);
 
     const email = emailEl.value.trim();
+    const name  = nameEl.value.trim();
+    const radio = form.querySelector('input[name="reader_state"]:checked');
+    const reader_state = radio ? radio.value : '';
+
     if (!emailValid(email)) {
       setStatus('That comm channel address looks malformed.', 'error');
       emailEl.focus();
+      return;
+    }
+    if (!name) {
+      setStatus('Citizen designation is required.', 'error');
+      nameEl.focus();
+      return;
+    }
+    if (!reader_state) {
+      setStatus('Tell the colony where you are in the book.', 'error');
+      const firstRadio = form.querySelector('input[name="reader_state"]');
+      if (firstRadio) firstRadio.focus();
       return;
     }
 
@@ -83,8 +91,8 @@
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
           email,
-          name:          nameFromEmail(email),
-          reader_state:  'Just arriving',
+          name,
+          reader_state,
           signup_source: SOURCE,
         }),
       });

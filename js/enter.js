@@ -6,6 +6,20 @@
 (function () {
   const ENDPOINT = 'https://sscpikfblqtmcefegrpv.supabase.co/functions/v1/enter';
 
+  // Signup-source attribution. A landing page (e.g. join-muro.html) links here
+  // with ?src=<source>; we forward it to the edge function as signup_source so
+  // registrations are attributed to the page/campaign that sent them. The
+  // edge function whitelists known sources and ignores anything unrecognised,
+  // so this is safe to pass through verbatim.
+  function signupSource() {
+    try {
+      const src = new URLSearchParams(window.location.search).get('src');
+      return src ? src.trim() : '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   const SECTOR_COPY = {
     'G3': {
       tag:   'Homestead',
@@ -139,10 +153,14 @@
     setStatus('Routing your designation to the colony…', 'loading');
 
     try {
+      const payload = { email, name, reader_state };
+      const source  = signupSource();
+      if (source) payload.signup_source = source;
+
       const res = await fetch(ENDPOINT, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, name, reader_state }),
+        body:    JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
 

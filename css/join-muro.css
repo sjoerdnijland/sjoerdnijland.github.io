@@ -1,8 +1,9 @@
 /* ============================================================
    JOIN · MURO — /join-muro.html
    Standalone Muro-centric landing page (PBI #43). Cold-arrival
-   story hook + email capture that funnels to the existing
-   citizen signup flow. No site chrome.
+   story hook + inline email capture that funnels to the existing
+   citizen signup flow (/functions/v1/enter, signup_source =
+   commons_muro). No site chrome.
 
    Scoped entirely under .join-muro-page / .jm-* so it cannot
    collide with any other page's styles. Deliberately does NOT
@@ -63,18 +64,42 @@ body.join-muro-page::before {
   padding: 84px 28px 96px;
 }
 
-/* ── Header / hook ── */
+/* ── Header / hook — Muro hero image behind the copy ── */
 .jm-head {
+  position: relative;
+  overflow: hidden;
   margin-bottom: 44px;
-  padding-bottom: 34px;
+  padding: 300px 28px 34px;
   border-bottom: 1px dashed var(--jm-line-dashed);
+  border-radius: 2px;
+  /* frank_muro.png hero, referenced directly per lead's steer. */
+  background-image: url("../assets/char/frank_muro.png");
+  background-size: cover;
+  background-position: center 22%;
+  background-repeat: no-repeat;
+}
+/* Legibility scrim — keeps the ember/mono copy readable over the photo. */
+.jm-head-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10,9,8,0.15) 0%,
+    rgba(10,9,8,0.45) 55%,
+    rgba(10,9,8,0.88) 100%
+  );
+}
+.jm-head-content {
+  position: relative;
+  z-index: 1;
 }
 .jm-channel {
   font-family: var(--jm-mono);
   font-size: 0.72rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--jm-ember);
+  color: #f0c9bf;
   margin-bottom: 20px;
 }
 .jm-channel .glyph { margin-right: 6px; }
@@ -83,17 +108,19 @@ body.join-muro-page::before {
   font-weight: 500;
   font-size: clamp(2.2rem, 5.4vw, 3.2rem);
   line-height: 1.08;
-  color: var(--jm-ink);
+  color: #f7f2e8;
   margin: 0 0 16px;
   letter-spacing: -0.01em;
+  text-shadow: 0 2px 18px rgba(0,0,0,0.55);
 }
 .jm-tagline {
   font-family: var(--jm-serif);
   font-style: italic;
-  color: var(--jm-ink-muted);
+  color: #e6ddce;
   font-size: 1.16rem;
   line-height: 1.5;
   max-width: 540px;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.5);
 }
 
 /* ── Story hook ── */
@@ -173,6 +200,7 @@ body.join-muro-page::before {
 .jm-capture-body em { font-style: italic; }
 
 .jm-form { margin: 0; }
+.jm-field { margin-bottom: 18px; }
 .jm-form-label {
   display: block;
   font-family: var(--jm-mono);
@@ -183,14 +211,8 @@ body.join-muro-page::before {
   margin-bottom: 8px;
 }
 .jm-form-label .req { color: var(--jm-ember); margin-left: 4px; }
-.jm-form-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
 .jm-input {
-  flex: 1 1 220px;
-  min-width: 0;
+  width: 100%;
   background: var(--jm-paper);
   border: 1px solid rgba(45,40,32,0.25);
   border-radius: 2px;
@@ -209,9 +231,68 @@ body.join-muro-page::before {
   background: #fffdf6;
   box-shadow: 0 0 0 3px rgba(139,58,47,0.1);
 }
+
+/* ── Reader-state radio group ── */
+.jm-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+.jm-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.jm-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid rgba(45,40,32,0.2);
+  border-radius: 2px;
+  background: var(--jm-paper);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.jm-option:hover { border-color: rgba(45,40,32,0.45); }
+.jm-option input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--jm-ink-muted);
+  border-radius: 50%;
+  margin: 0;
+  flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.jm-option input[type="radio"]:checked { border-color: var(--jm-ember); }
+.jm-option input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  background: var(--jm-ember);
+  border-radius: 50%;
+}
+.jm-option input[type="radio"]:focus-visible {
+  outline: 2px solid var(--jm-ember);
+  outline-offset: 3px;
+}
+.jm-option:has(input:checked) {
+  border-color: rgba(139,58,47,0.55);
+  background: rgba(139,58,47,0.05);
+}
+.jm-option-label {
+  font-family: var(--jm-serif);
+  font-size: 1.05rem;
+  color: var(--jm-ink);
+  line-height: 1.3;
+}
+
 .jm-submit {
-  flex: 0 0 auto;
-  padding: 13px 26px;
+  width: 100%;
+  padding: 14px 26px;
   background: var(--jm-ink);
   border: 1px solid var(--jm-ink);
   color: var(--jm-paper-card);
@@ -354,12 +435,12 @@ body.join-muro-page::before {
 
 @media (max-width: 520px) {
   .jm-wrap { padding: 56px 20px 64px; }
+  .jm-head { padding: 220px 20px 30px; }
   .jm-tagline { font-size: 1.04rem; }
   .jm-story p { font-size: 1.04rem; }
   .jm-story p.jm-story-lede { font-size: 1.12rem; }
   .jm-quote { padding: 16px 18px; font-size: 1.06rem; }
   .jm-capture { padding: 30px 22px 28px; }
-  .jm-submit { flex: 1 1 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -388,6 +469,14 @@ body.join-muro-page::before {
     mix-blend-mode: screen;
     opacity: 0.04;
   }
+  .jm-head-scrim {
+    background: linear-gradient(
+      to bottom,
+      rgba(6,5,4,0.25) 0%,
+      rgba(6,5,4,0.55) 55%,
+      rgba(6,5,4,0.92) 100%
+    );
+  }
   .jm-quote { border-left-color: rgba(217,117,89,0.4); }
   .jm-capture {
     border-top-color: var(--jm-ember);
@@ -403,6 +492,14 @@ body.join-muro-page::before {
   }
   .jm-input::placeholder { color: rgba(143,134,118,0.6); }
   .jm-input:focus { background: #14110f; }
+  .jm-option {
+    background: #0f0d0b;
+    border-color: rgba(232,227,214,0.16);
+  }
+  .jm-option:has(input:checked) {
+    border-color: rgba(217,117,89,0.55);
+    background: rgba(217,117,89,0.08);
+  }
   .jm-submit { background: var(--jm-ember); border-color: var(--jm-ember); color: #1a1815; }
   .jm-submit:hover { background: #c25c43; border-color: #c25c43; }
   .jm-id-card { background: #14110f; }
