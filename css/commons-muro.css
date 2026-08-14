@@ -1,5 +1,5 @@
 /* ============================================================
-   COMMONS · MURO — F. Muro watch log feed + public landing page
+   COMMONS · MURO — F. Muro watch log feed
    Standalone page. Paper aesthetic, no site chrome.
    Palette matches the welcome emails: cream paper, dark ink,
    muted-brown monospace, ember-red accent.
@@ -62,7 +62,7 @@ body.muro-page::before {
 
 /* ── Header ── */
 .muro-head {
-  margin-bottom: 40px;
+  margin-bottom: 56px;
   padding-bottom: 32px;
   border-bottom: 1px dashed var(--line-dashed);
 }
@@ -98,31 +98,6 @@ body.muro-page::before {
   font-size: 1.02rem;
   line-height: 1.55;
 }
-
-/* ── Intro / story context for cold arrivals ── */
-.muro-intro {
-  margin-bottom: 48px;
-  padding: 26px 28px;
-  border: 1px solid var(--line);
-  border-left: 3px solid rgba(139,58,47,0.4);
-  border-radius: 2px;
-  background: rgba(251,248,242,0.7);
-}
-.muro-intro p {
-  font-family: var(--serif);
-  font-size: 1.06rem;
-  line-height: 1.7;
-  color: var(--ink-2);
-  margin: 0 0 14px;
-}
-.muro-intro p:last-child { margin-bottom: 0; }
-.muro-intro p.muro-intro-lede {
-  font-size: 1.16rem;
-  font-style: italic;
-  color: var(--ink);
-}
-.muro-intro em { font-style: italic; }
-.muro-intro strong { font-weight: 600; color: var(--ink); }
 
 /* ── Entry ── */
 .muro-entry {
@@ -202,203 +177,16 @@ body.muro-page::before {
   font-style: normal;
 }
 
-/* ── Email capture ── */
-.muro-capture {
-  margin-top: 56px;
-  padding: 40px 34px 38px;
-  border: 1px solid var(--line-dashed);
-  border-top: 2px solid var(--ink);
-  border-bottom: 2px solid var(--ink);
-  border-radius: 2px;
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(139,58,47,0.06), transparent 60%),
-    var(--paper-card);
-}
-.muro-capture-eyebrow {
-  font-family: var(--mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ember);
-  margin-bottom: 14px;
-}
-.muro-capture-title {
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: clamp(1.5rem, 3.4vw, 2rem);
-  line-height: 1.15;
-  color: var(--ink);
-  margin: 0 0 14px;
-}
-.muro-capture-title:focus { outline: none; }
-.muro-capture-body {
-  font-family: var(--serif);
-  font-size: 1.12rem;
-  line-height: 1.65;
-  color: var(--ink-2);
-  margin: 0 0 26px;
-}
-.muro-capture-body em { font-style: italic; }
-
-.muro-form { margin: 0; }
-.muro-form-label {
-  display: block;
-  font-family: var(--mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-  margin-bottom: 8px;
-}
-.muro-form-label .req { color: var(--ember); margin-left: 4px; }
-.muro-form-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.muro-input {
-  flex: 1 1 220px;
-  min-width: 0;
-  background: var(--paper);
-  border: 1px solid rgba(45,40,32,0.25);
-  border-radius: 2px;
-  padding: 13px 14px;
-  color: var(--ink);
-  font-family: var(--serif);
-  font-size: 1.05rem;
-  line-height: 1.4;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
-}
-.muro-input::placeholder { color: rgba(107,99,88,0.6); }
-.muro-input:hover { border-color: rgba(45,40,32,0.5); }
-.muro-input:focus {
-  outline: none;
-  border-color: var(--ember);
-  background: #fffdf6;
-  box-shadow: 0 0 0 3px rgba(139,58,47,0.1);
-}
-.muro-submit {
-  flex: 0 0 auto;
-  padding: 13px 26px;
-  background: var(--ink);
-  border: 1px solid var(--ink);
-  color: var(--paper-card);
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  font-weight: 500;
-  border-radius: 2px;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
-}
-.muro-submit:hover  { background: var(--ember); border-color: var(--ember); }
-.muro-submit:active { transform: translateY(1px); }
-.muro-submit:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
-.muro-submit[disabled] {
-  background: rgba(26,26,26,0.5);
-  border-color: rgba(26,26,26,0.5);
-  cursor: not-allowed;
-}
-
-.muro-status {
-  min-height: 20px;
-  margin-top: 14px;
-  font-family: var(--mono);
-  font-size: 0.64rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.muro-status[data-tone="loading"] { color: var(--ink-muted); }
-.muro-status[data-tone="error"]   { color: #c72f63; }
-.muro-status[data-tone="success"] { color: #4f7f57; }
-
-.muro-form-note {
-  margin: 18px 0 0;
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 0.9rem;
-  color: var(--ink-muted);
-  line-height: 1.5;
-}
-.muro-form-note a { color: var(--ember); }
-
-/* ── Capture success state ── */
-.muro-capture-success {
-  animation: muro-fade-in 0.6s cubic-bezier(0.22,1,0.36,1);
-}
-@keyframes muro-fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: none; }
-}
-.muro-id-card {
-  position: relative;
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  padding: 22px 18px;
-  background: #efe9dd;
-  text-align: center;
-  margin: 6px 0 22px;
-}
-.muro-id-card::before {
-  content: "✓ ISSUED";
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #4f7f57;
-  color: #f4efe1;
-  font-family: var(--mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 2px;
-}
-.muro-id-label {
-  font-family: var(--mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ink-muted);
-  margin-bottom: 8px;
-}
-.muro-id {
-  font-family: var(--mono);
-  font-size: clamp(1.2rem, 4vw, 1.6rem);
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  color: var(--ink);
-  word-break: break-word;
-}
-.muro-success-link {
-  display: inline-block;
-  margin-top: 6px;
-  font-family: var(--mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ember);
-  text-decoration: none;
-}
-.muro-success-link:hover { text-decoration: underline; }
-.muro-success-link em { font-style: italic; text-transform: none; letter-spacing: 0; }
-
 @media (max-width: 520px) {
   .muro-wrap { padding: 48px 20px 64px; }
   .muro-name { font-size: 1.8rem; }
   .muro-tagline { font-size: 0.96rem; }
-  .muro-intro { padding: 20px 20px; }
-  .muro-intro p { font-size: 1rem; }
   .muro-body { font-size: 1.04rem; }
   .muro-body--poem {
     padding-left: 16px;
     font-size: 1.06rem;
     line-height: 1.8;
   }
-  .muro-capture { padding: 30px 22px 28px; }
-  .muro-submit { flex: 1 1 100%; }
 }
 
 /* Dark-mode variant — same warm palette, inverted contrast */
@@ -425,25 +213,4 @@ body.muro-page::before {
   .muro-body--poem {
     border-left-color: rgba(217,117,89,0.35);
   }
-  .muro-intro {
-    background: rgba(26,24,21,0.7);
-    border-left-color: rgba(217,117,89,0.45);
-  }
-  .muro-capture {
-    border-top-color: var(--ember);
-    border-bottom-color: var(--ember);
-    background:
-      radial-gradient(ellipse at 50% 0%, rgba(217,117,89,0.10), transparent 60%),
-      var(--paper-card);
-  }
-  .muro-input {
-    background: #0f0d0b;
-    border-color: rgba(232,227,214,0.18);
-    color: #e8e3d6;
-  }
-  .muro-input::placeholder { color: rgba(143,134,118,0.6); }
-  .muro-input:focus { background: #14110f; }
-  .muro-submit { background: var(--ember); border-color: var(--ember); color: #1a1815; }
-  .muro-submit:hover { background: #c25c43; border-color: #c25c43; }
-  .muro-id-card { background: #14110f; }
 }
