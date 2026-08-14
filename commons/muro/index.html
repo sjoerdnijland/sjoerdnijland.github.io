@@ -3,20 +3,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>F. Muro · Open Channel · Orbital Three — The Unfolding</title>
-<meta name="description" content="Watch logs from F. Muro — the last man on Orbital Three, listening to static since the colony was cut off. A personal feed from The Unfolding, a psychedelic space opera by S. Nyland."/>
-
-<!-- Open Graph / Social preview -->
-<meta property="og:type"        content="website"/>
-<meta property="og:title"       content="F. Muro · Open Channel — The Unfolding"/>
-<meta property="og:description" content="The last man on the comms station, broadcasting into the static. Read his logs — then stay on the channel."/>
-<meta property="og:image"       content="https://the-unfolding.net/assets/still-fold.jpg"/>
-<meta property="og:url"         content="https://the-unfolding.net/commons/muro/"/>
-<meta name="twitter:card"        content="summary_large_image"/>
-<meta name="twitter:title"       content="F. Muro · Open Channel — The Unfolding"/>
-<meta name="twitter:description" content="The last man on the comms station, broadcasting into the static. Read his logs — then stay on the channel."/>
-<meta name="twitter:image"       content="https://the-unfolding.net/assets/still-fold.jpg"/>
-
+<title>F. Muro · Open Channel · Orbital Three</title>
+<meta name="description" content="Watch logs from F. Muro, Lieutenant, Communications, Orbital Three. Personal feed. Updated when the watch is."/>
+<meta name="robots" content="noindex"/>
 <link rel="icon" href="../../favicon.ico" sizes="any"/>
 <link rel="icon" href="../../favicon.svg" type="image/svg+xml"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,22 +22,6 @@
     <h1 class="muro-name">F. Muro <span class="rank">· Lt.</span></h1>
     <p class="muro-tagline">Commons logs. Personal feed. </p>
   </header>
-
-  <!-- ── Story context for cold arrivals ── -->
-  <section class="muro-intro" aria-label="About this feed">
-    <p class="muro-intro-lede">
-      This is a live channel from <em>The Unfolding</em> — a psychedelic space opera by S. Nyland.
-    </p>
-    <p>
-      Humanity crossed the Fold to build its first colony beyond the solar system. Then the Fold
-      closed behind them. No way home. No word from Earth. Just a severed relay and the dark.
-    </p>
-    <p>
-      Lieutenant <strong>F. Muro</strong> mans the comms station — Orbital Three, <em>“the Ears”</em> —
-      alone, listening to static that no longer carries anyone. Below are his watch logs, in his own
-      hand. They start ordinary. They do not stay ordinary. Read them in order, newest first.
-    </p>
-  </section>
 
   <!-- ── Entry 1 — newest ── -->
   <article class="muro-entry" aria-labelledby="muro-e1">
@@ -125,65 +98,10 @@ Please wake me.
   </article>
 
   <footer class="muro-foot">
-    <p>[ end of available entries ]</p>
+    <p>[ end of available entries · stay tuned ]</p>
   </footer>
 
-  <!-- ── Email capture — “stay on the channel” ── -->
-  <section class="muro-capture" id="muro-capture" aria-label="Stay on the channel">
-    <div class="muro-capture-inner" id="muro-capture-form">
-      <div class="muro-capture-eyebrow">◈ Stay on the channel</div>
-      <h2 class="muro-capture-title">Muro is still listening.</h2>
-      <p class="muro-capture-body">
-        His logs continue. So does the story. Leave a comm channel and the Uplink
-        will reach you when the next transmissions come through — Muro’s feed,
-        colony dispatches, and a first look at <em>The Unfolding</em>.
-      </p>
-
-      <form class="muro-form" id="muro-form" novalidate>
-        <label class="muro-form-label" for="muro-email">Comm channel<span class="req" aria-hidden="true">*</span></label>
-        <div class="muro-form-row">
-          <input
-            class="muro-input"
-            id="muro-email"
-            name="email"
-            type="email"
-            inputmode="email"
-            autocomplete="email"
-            required
-            placeholder="your@email"
-            aria-required="true"
-          />
-          <button type="submit" class="muro-submit" id="muro-submit">Stay connected</button>
-        </div>
-        <div class="muro-status" id="muro-status" role="status" aria-live="polite"></div>
-      </form>
-
-      <p class="muro-form-note">
-        Roughly one transmission every two weeks. No sharing, no tracking pixels.
-        <a href="../../legal.html#privacy">Privacy notes</a>.
-      </p>
-    </div>
-
-    <!-- Success state (revealed after signup) -->
-    <div class="muro-capture-inner muro-capture-success" id="muro-capture-success" hidden>
-      <div class="muro-capture-eyebrow">◈ Channel open</div>
-      <h2 class="muro-capture-title" id="muro-success-title" tabindex="-1">You’re on the channel.</h2>
-      <div class="muro-id-card" id="muro-id-card" hidden>
-        <div class="muro-id-label">Citizen designation</div>
-        <div class="muro-id" id="muro-id"></div>
-      </div>
-      <p class="muro-capture-body">
-        The Uplink has your signal. Your first transmission is on its way. When it
-        quiets around you, open it — Muro will be there.
-      </p>
-      <a class="muro-success-link" href="../../index.html">Step into <em>The Unfolding</em> →</a>
-    </div>
-  </section>
-
 </main>
-
-<script src="../../js/analytics.js" defer></script>
-<script src="../../js/commons-muro.js" defer></script>
 
 </body>
 </html>
