@@ -29,6 +29,16 @@ const READER_STATES = {
 
 type ReaderState = keyof typeof READER_STATES;
 
+// Known signup origins. The value is stored verbatim in MailerLite's
+// signup_source custom field so the Email List Size KVM can be attributed
+// to the page/campaign a subscriber came in through. Unknown values fall
+// back to the default so a stray/spoofed field can't pollute the data.
+const SIGNUP_SOURCES = new Set([
+  'website-signup', // /enter.html + FoldGate (default)
+  'commons_muro',   // commons/muro landing page (PBI #43)
+]);
+const DEFAULT_SIGNUP_SOURCE = 'website-signup';
+
 // In-memory rate limit: 5 POSTs per IP per 60s rolling window.
 // Survives between warm invocations on the same instance. Cold starts reset
 // the counters — this is intentionally lightweight; trade off against the
@@ -62,11 +72,12 @@ async function generateCitizenId(email: string, sector: string): Promise<string>
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function validate(body: any): { ok: true; email: string; name: string; state: ReaderState } | { ok: false; error: string } {
+function validate(body: any): { ok: true; email: string; name: string; state: ReaderState; source: string } | { ok: false; error: string } {
   if (!body || typeof body !== 'object') return { ok: false, error: 'Invalid request body.' };
   const email = String(body.email || '').trim();
   const name  = String(body.name  || '').trim();
   const state = String(body.reader_state || '').trim();
+  const rawSource = String(body.signup_source || '').trim();
 
   if (!EMAIL_RE.test(email))         return { ok: false, error: 'Invalid comm channel address.' };
   if (email.length > 254)            return { ok: false, error: 'Comm channel address too long.' };
@@ -74,7 +85,10 @@ function validate(body: any): { ok: true; email: string; name: string; state: Re
   if (name.length > 80)              return { ok: false, error: 'Citizen designation too long.' };
   if (!(state in READER_STATES))     return { ok: false, error: 'Select where you are with The Unfolding.' };
 
-  return { ok: true, email, name, state: state as ReaderState };
+  // Only accept known sources; anything else (or missing) uses the default.
+  const source = SIGNUP_SOURCES.has(rawSource) ? rawSource : DEFAULT_SIGNUP_SOURCE;
+
+  return { ok: true, email, name, state: state as ReaderState, source };
 }
 
 function corsHeaders(origin: string | null): Record<string, string> {
@@ -165,7 +179,8 @@ Deno.serve(async (req: Request) => {
       name:           v.name,
       citizen_id,
       reader_state:   v.state,
-      signup_source:  'website-signup',
+      // Attribution: which page/campaign the subscriber came in through.
+      signup_source:  v.source,
       discount_code:  'CITIZEN25',
       signup_date:    new Date().toISOString(),
     },
