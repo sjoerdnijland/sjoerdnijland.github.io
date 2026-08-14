@@ -13,9 +13,10 @@ function Hero({ onBuy }) {
 
   return (
     <section className="hero">
-      {/* Cinematic backdrop */}
+      {/* Cinematic backdrop — decorative, behind a veil. Lazy + low priority so
+          it never competes with the LCP cover image for bandwidth. */}
       <div className="hero-cinema" style={{ opacity: fade }}>
-        <img src="assets/still-mairee.png" alt="" className="cinema-img" width="1638" height="1638" />
+        <img src="assets/still-mairee.png" alt="" className="cinema-img" width="1638" height="1638" loading="lazy" decoding="async" fetchpriority="low" />
         <div className="cinema-veil" />
       </div>
 
@@ -69,7 +70,8 @@ function Hero({ onBuy }) {
 
         <div className="hero-right" style={{ transform: `translateY(${parallax * 0.1}px) rotate(${-2 + scrollY * 0.005}deg)` }}>
           <div className="cover-wrap">
-            <img src="assets/cover.png" alt="The Unfolding — Part I: Mairee, by S. Nyland" className="cover-img" width="1500" height="2400" />
+            {/* LCP element — fetchpriority high so the browser loads it first. */}
+            <img src="assets/cover.png" alt="The Unfolding — Part I: Mairee, by S. Nyland" className="cover-img" width="1500" height="2400" fetchpriority="high" decoding="async" />
             <div className="cover-shadow" />
           </div>
           <div className="cover-caption">
