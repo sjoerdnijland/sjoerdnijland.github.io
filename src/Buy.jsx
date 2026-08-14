@@ -221,7 +221,7 @@ function Buy({ id = 'buy' }) {
               <div className="bl-card-label bl-card-label--hero">Hardcover</div>
               <div className="bl-card-price bl-card-price--hero">€32,50</div>
             </div>
-            <p className="bl-card-note bl-card-note--hero">Ships from the publisher · signed &amp; numbered first edition</p>
+            <p className="bl-card-note bl-card-note--hero">Ships from the publisher.</p>
 
             <div className="bl-store-list">
               <a
