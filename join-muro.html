@@ -39,11 +39,14 @@
 
   <!-- ── Hook ── -->
   <header class="jm-head">
-    <div class="jm-channel"><span class="glyph">◈</span>Orbital Three · “The Ears” · Open Channel</div>
-    <h1 class="jm-title">Nobody has answered<br/>in a very long time.</h1>
-    <p class="jm-tagline">
-      And yet Lieutenant F. Muro keeps the channel open. Every watch. Just in case.
-    </p>
+    <div class="jm-head-scrim"></div>
+    <div class="jm-head-content">
+      <div class="jm-channel"><span class="glyph">◈</span>Orbital Three · “The Ears” · Open Channel</div>
+      <h1 class="jm-title">Nobody has answered<br/>in a very long time.</h1>
+      <p class="jm-tagline">
+        And yet Lieutenant F. Muro keeps the channel open. Every watch. Just in case.
+      </p>
+    </div>
   </header>
 
   <!-- ── Story hook — Muro's loneliness ── -->
@@ -91,8 +94,8 @@
       </p>
 
       <form class="jm-form" id="jm-form" novalidate>
-        <label class="jm-form-label" for="jm-email">Comm channel<span class="req" aria-hidden="true">*</span></label>
-        <div class="jm-form-row">
+        <div class="jm-field">
+          <label class="jm-form-label" for="jm-email">Comm channel<span class="req" aria-hidden="true">*</span></label>
           <input
             class="jm-input"
             id="jm-email"
@@ -104,14 +107,48 @@
             placeholder="your@email"
             aria-required="true"
           />
-          <button type="submit" class="jm-submit" id="jm-submit">Stay connected</button>
         </div>
+
+        <div class="jm-field">
+          <label class="jm-form-label" for="jm-name">Citizen designation<span class="req" aria-hidden="true">*</span></label>
+          <input
+            class="jm-input"
+            id="jm-name"
+            name="name"
+            type="text"
+            autocomplete="given-name"
+            required
+            maxlength="80"
+            placeholder="First name"
+            aria-required="true"
+          />
+        </div>
+
+        <fieldset class="jm-fieldset">
+          <legend class="jm-form-label">Where are you with The Unfolding?<span class="req" aria-hidden="true">*</span></legend>
+          <div class="jm-options" role="radiogroup" aria-label="Where are you with The Unfolding?">
+            <label class="jm-option">
+              <input type="radio" name="reader_state" value="Just arriving" checked/>
+              <span class="jm-option-label">Just arriving</span>
+            </label>
+            <label class="jm-option">
+              <input type="radio" name="reader_state" value="Currently reading"/>
+              <span class="jm-option-label">Currently reading</span>
+            </label>
+            <label class="jm-option">
+              <input type="radio" name="reader_state" value="I've read Part 1"/>
+              <span class="jm-option-label">I've read Part 1</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="jm-submit" id="jm-submit">Stay connected</button>
         <div class="jm-status" id="jm-status" role="status" aria-live="polite"></div>
       </form>
 
       <p class="jm-alt">
         Prefer the full intake desk?
-        <a href="enter.html">Enter the Fold →</a>
+        <a href="enter.html?src=commons_muro">Enter the Fold →</a>
       </p>
 
       <p class="jm-form-note">
