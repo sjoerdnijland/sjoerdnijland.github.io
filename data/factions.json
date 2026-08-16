@@ -70,5 +70,17 @@
     "image": "/assets/char/eva_bellamy.png",
     "id": "orbital-command",
     "narration": "Bellamy's domain. The Corridor. The patrol craft. The haulers. Officially neutral. In practice — leaning whichever way the Director needs them to lean. She has good wine and bad nights."
+  },
+  {
+    "name": "Fleet Logistics Guard",
+    "tag": "org",
+    "role": "NA fleet security guild",
+    "affil": "Northern Alliance / Ulre Corbin",
+    "aliases": "The Guard, FLG, the Logistics Guard",
+    "desc": "A Northern Alliance security guild formed to protect Freya Fleet assets — matériel stockpiles, fabrication yards, rerouted mineral shipments, and the transit slots themselves — during the fleet's construction, when corruption had infiltrated nearly every supply chain and conscript labour was rationalised as 'fleet-volunteer' service. Its founding mandate, in NA's own value-bound language, was to 'protect fleet assets and ensure operational excellence' — a humanitarian gloss on what was, in practice, an enforcement arm for the Alliance's most strained and most stolen-from resource: the fleet that would carry the future of the species. Command fell to Ulre Corbin, then a logistics officer already responsible for tracking the very stockpiles the guild was raised to protect — an appointment of convenience that folded protection into procurement and gave one man visibility over both what existed and who was taking it.",
+    "chapter": null,
+    "image": null,
+    "id": "fleet-logistics-command",
+    "narration": "The Northern Alliance Logistics Guard, they called it. Orban commmand controlled both the assets and the ones protecting it. Operational Excellence. The Guard was supposed to control the goods, not the people. Until, well, the operation went, not so excellent."
   }
 ]

@@ -29,11 +29,11 @@
     "role": "Industrial freighter",
     "affil": "Westhoff / Jia",
     "aliases": "Dáinn",
-    "desc": "Carries critical industrial machinery including ore processors and reactor parts for the Plateau. Contains the Stingray shuttle, the Orrery lab, Mess Halls, and the Tank therapy space. Eventually hauled to the Yreus Station.",
-    "chapter": 3,
+    "desc": "Carries critical industrial machinery including ore processors and reactor parts for the Plateau. Contains the Stingray shuttle, the Orrery lab, Mess Halls, and the Tank therapy space.",
+    "chapter": 1,
     "image": "/assets/fleet/dainn.png",
     "id": "fns-dáinn",
-    "narration": "FNS Dáinn. The toolbox. Reactors. Ore processors. The engines of the next century. Without her, we are extremely well-organized cavemen."
+    "narration": "FNS Dáinn. The toolbox. Reactors. Ore processors. The engines of the next century. Without her, it's back to Stone Age."
   },
   {
     "name": "FNS Yggdrasil",

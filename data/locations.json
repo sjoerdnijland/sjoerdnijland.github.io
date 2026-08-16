@@ -165,7 +165,7 @@
     "chapter": 3,
     "image": "",
     "id": "the-corridor",
-    "narration": "Bellamy's tightrope. A guidance lattice that lets ships move between settlements without hitting the weather. Also tells the Directorate where you are. Both, at all times."
+    "narration": "Bellamy's tightrope. A guidance lattice that lets ships move between settlements without hitting the weather. At least, that was the idea."
   },
   {
     "id": "muspel",
@@ -334,5 +334,29 @@
     "image": "assets/locations/holm.png",
     "id": "yreus-station-the-holm",
     "narration": "A covert station at the Yreus relay. Asymmetrical. Sketchy. Commandeered by General Reed for purposes he has not yet explained. He will. Probably."
+  },
+  {
+    "name": "Homestead Dome",
+    "tag": "loc",
+    "role": "Civic assembly space",
+    "affil": "Freya Homestead",
+    "aliases": "The Hearth, The Hearth of the Homestead",
+    "desc": "A shimmering, semi-transparent dome structure at the heart of the Homestead — the community's site for assemblies, quorums, and announcements. Reflects Mairee's light in shifting colors. Astrid Vilde addressed the settlers here at the moment of the Unfolding; the site of the Directorate's first gravitic-suppressor action against her.",
+    "chapter": 1,
+    "image": "",
+    "id": "homestead-dome",
+    "narration": "The Hearth. A soap bubble at the center of everything. We gather here when there's something to say. We were gathered here when the lights went out."
+  },
+  {
+    "name": "Comms-Bay",
+    "tag": "loc",
+    "role": "Communications hub",
+    "affil": "Freya Homestead / Fleet Command",
+    "aliases": "",
+    "desc": "The colony's central communications center aboard the FNS Freya, staffed by ensigns and technicians monitoring fleet and Fold traffic. Site of Astrid Vilde's first confrontation with Muro's report of the Fold's collapse.",
+    "chapter": 1,
+    "image": "",
+    "id": "comms-bay",
+    "narration": "The communications center at Freya Homestead. The one place connecting humanities most remote settlement back to Earth. The one place you don't want to go silent."
   }
 ]

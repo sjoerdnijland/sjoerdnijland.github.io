@@ -80,6 +80,8 @@
     "chapter": 2,
     "image": "/assets/char/frank_muro.png",
     "id": "frank-muro",
+    "link": "join-muro.html",
+    "linkLabel": "Reach out to Muro →",
     "voice_id": "eVKQybPTL0poBPxBa8L6",
     "narration": "I cannae shut my eyes without dreamin' meself awake."
   },

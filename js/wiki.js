@@ -500,6 +500,7 @@ function openModal(item) {
           <p>${item.appearance}</p>
         </div>` : ''}
       <div class="modal-desc">${body}</div>
+      ${item.link ? `<a href="${item.link}" class="lore-link-btn" target="_blank" rel="noopener" onclick="event.stopPropagation()">${item.linkLabel || 'Open →'}</a>` : ''}
     </div>
   `;
   document.getElementById('detail-overlay').classList.add('open');
