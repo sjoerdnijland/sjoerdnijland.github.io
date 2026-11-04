@@ -157,17 +157,6 @@ body.join-muro-page::before {
   margin-top: 12px;
   color: var(--jm-ember);
 }
-.jm-quote--transmission {
-  font-family: var(--jm-mono);
-  font-style: normal;
-  font-size: 0.98rem;
-  line-height: 1.7;
-  letter-spacing: 0.01em;
-}
-.jm-quote--transmission .jm-quote-turn {
-  font-family: var(--jm-mono);
-  letter-spacing: 0.08em;
-}
 .jm-story-close {
   margin-top: 26px !important;
 }
